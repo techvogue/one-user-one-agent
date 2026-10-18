@@ -1,0 +1,85 @@
+{
+  "config": {
+    "pack_path": "../one_user_one_agent_pack",
+    "stale_trigger_s": 600,
+    "max_event_age_days": 30,
+    "grace_provisional_h": 24,
+    "grace_final_days": 7,
+    "profile_max_age_h": 48,
+    "clock_skew_report_s": 60
+  },
+  "ingest": [
+    {
+      "source": "history",
+      "lines": 142906,
+      "status_counts": {
+        "new": 140730,
+        "duplicate": 2176
+      },
+      "malformed_lines": []
+    }
+  ],
+  "duplicates": {
+    "history": {
+      "delivered_lines": 142906,
+      "unique_events": 140730,
+      "duplicate_event_ids": 2176,
+      "extra_deliveries": 2176,
+      "payload_conflicts": 0,
+      "gap_between_copies_s": {
+        "min": 1.206,
+        "median": 311.90049999999997,
+        "max": 599.537
+      },
+      "duplicates_by_event_type": {
+        "app_open": 574,
+        "home_viewed": 467,
+        "play_progress": 416,
+        "title_viewed": 239,
+        "play_started": 233,
+        "episode_completed": 98,
+        "search": 46,
+        "login_success": 45,
+        "signup_completed": 16,
+        "subscription_renewed": 14,
+        "message_delivered": 12,
+        "paywall_viewed": 6,
+        "app_dialect_changed": 5,
+        "purchase_completed": 4,
+        "subscription_lapsed": 1
+      },
+      "example_event_ids": [
+        "acee8ef0-5ebc-4164-8cb0-63cbe419aa88",
+        "d1c6c4b1-e79c-4874-8fc9-5a85cfb82585",
+        "dcbb747f-afba-443c-921f-f4a0ece4b27f",
+        "3cbdb07f-47ef-47be-a6d8-4fafd171f6cf",
+        "98f9b22f-adf3-4253-bcf7-dcd9d838cbfd"
+      ],
+      "handling": "first-received copy kept; later copies counted (D-004)"
+    }
+  },
+  "clocks": {
+    "history": {
+      "events": 140730,
+      "skewed_clock_events": 4319,
+      "skewed_clock_users": 123,
+      "max_abs_clock_skew_h": 29.55,
+      "buffered_over_10min": 15402,
+      "buffered_over_1day": 7400,
+      "buffer_delay_h_percentiles": {
+        "p50": 0.0,
+        "p90": 0.48,
+        "p95": 32.56,
+        "p99": 174.81,
+        "max": 215.92
+      },
+      "arrival_share_pct": {
+        "within_24h": 94.74,
+        "within_72h": 96.2,
+        "within_7d": 98.85
+      },
+      "clock_anomalies": {},
+      "handling": "event_time = received_at - (sent_at - occurred_at); anomalies fall back to received_at (D-005)"
+    }
+  }
+}

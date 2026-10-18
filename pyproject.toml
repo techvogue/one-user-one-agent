@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ott-agent"
+version = "0.1.0"
+description = "One User, One Agent: a per-viewer decision agent for a regional-dialect OTT platform"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = []  # standard library only at runtime (D-017)
+
+[project.optional-dependencies]
+dev = ["pytest>=7", "ruff>=0.4"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py310"
