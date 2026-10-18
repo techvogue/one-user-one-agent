@@ -666,7 +666,8 @@ Lapsed users with no lapse event are **not** eligible: recency cannot be proven.
 Interpretation (`A-G07-1`): the viewer
 1. has a `play_started` (or progress) on a **show or micro-drama** slug (any language variant);
 2. has **episodes not yet completed** for that slug (`episode_completed` count < episodes in `episodes.csv`);
-3. has **not played that slug for ≥ 72 h** (event_time) before the trigger.
+3. has **not played that slug for ≥ 72 h** (event_time) before the trigger, **but did play it within the last 14 days**
+   (added by D-031: a series tried a month ago is not "in progress").
 
 If several series qualify, the most recently played one is chosen. Success: `play_started` on the **same slug**
 (any variant) within 72 h. About 1,034 trigger users qualify.
@@ -783,5 +784,6 @@ actions; (3) the served-vs-unserved number is only ever shown as the wrong compa
 |---|---|
 | 2026-10-18 | Created; Trap 1 (duplicate events) agreed and documented. |
 | 2026-10-18 | Trap 2 (late events and wrong phone clocks) agreed and documented. |
+| 2026-10-18 | Trap 11: G07 14-day recency limit (D-031). |
 | 2026-10-18 | Trap 4: status-regression contradiction added (14 users, D-027). |
 | 2026-10-18 | Traps 3–13 agreed and documented. Corrected the 3-way dialect conflict count from 133 to 56 (deeplink parsing error in the first analysis). |

@@ -23,6 +23,7 @@ from .timeutil import compute_event_time, iso, ist_day, parse_ts
 DEEPLINK = re.compile(r"^ott://c/([A-Za-z0-9_-]+)/([A-Za-z0-9]+)/title/(T\d+)$")
 SERIES_TYPES = frozenset({"show", "micro_drama"})
 BILLING_EVENTS = ("purchase_completed", "subscription_renewed", "subscription_lapsed")
+PLAY_DAYS_WINDOW_DAYS = 14  # window of the play_ist_days_14d fact (G09 rule text: "in the last 14 days")
 
 # Freshness class per fact (D-027):
 #   immutable  never goes stale (signup time)
@@ -45,6 +46,8 @@ FACT_CLASS = {
     "play_ist_days_14d": "history",
     "series_in_progress": "history",
     "top_genre": "history",
+    "last_lapsed_at": "history",
+    "last_activity_at": "history",
 }
 
 
@@ -332,6 +335,18 @@ def _subscription(add, profile: Profile | None, events, props, at: datetime, pla
             + [f"profile_row@{r['updated_at']}:{r['subscription_status']}" for r in paid_rows],
         )
     )
+    # When the viewer last lapsed (G06 "recently lapsed", D-014); None if no lapse event was seen.
+    lapses = [r for r in billing if r["event"] == "subscription_lapsed"]
+    last_lapse = lapses[-1] if lapses else None
+    add(
+        Fact(
+            "last_lapsed_at",
+            last_lapse["event_time"] if last_lapse else None,
+            f"event:{last_lapse['event_id']}" if last_lapse else "derived:events",
+            last_lapse["first_received_at"] if last_lapse else None,
+            evidence=[f"event:{last_lapse['event_id']}"] if last_lapse else [],
+        )
+    )
 
 
 def _consent(channel: str, field_name: str, profile: Profile | None, events, props) -> Fact:
@@ -483,13 +498,26 @@ def _history(add, catalogue: Catalogue, events, props, at: datetime, trigger_id:
     """Watch and visit history in corrected event time (D-005), content identified by slug (D-010)."""
     plays = [r for r in events if r["event"] == "play_started"]
     completes = [r for r in events if r["event"] == "episode_completed"]
+    # Any playback evidence proves a play started (a play_started event can be late or missing).
+    playback = [r for r in events if r["event"] in ("play_started", "play_progress", "episode_completed")]
     opens = [r for r in events if r["event"] == "app_open" and r["event_id"] != trigger_id]
+    activity = [r for r in events if r["event_id"] != trigger_id]
     last_seen = events[-1]["first_received_at"] if events else None
 
     def refs(rows, n=3):
         return [f"event:{r['event_id']}" for r in rows[-n:]]
 
-    add(Fact("has_played", bool(plays), "derived:events", last_seen, evidence=refs(plays)))
+    add(Fact("has_played", bool(playback), "derived:events", last_seen, evidence=refs(playback)))
+    last_act = max(activity, key=lambda r: r["event_time"]) if activity else None
+    add(
+        Fact(
+            "last_activity_at",
+            last_act["event_time"] if last_act else None,
+            "derived:events",
+            last_seen,
+            evidence=[f"event:{last_act['event_id']}"] if last_act else [],
+        )
+    )
     add(Fact("has_completed_episode", bool(completes), "derived:events", last_seen, evidence=refs(completes)))
     last_open = max(opens, key=lambda r: r["event_time"]) if opens else None
     add(
@@ -502,15 +530,11 @@ def _history(add, catalogue: Catalogue, events, props, at: datetime, trigger_id:
         )
     )
 
-    since = at - timedelta(days=14)
-    recent_play_days = sorted(
-        {
-            ist_day(parse_ts(r["event_time"])).isoformat()
-            for r in plays
-            if since <= parse_ts(r["event_time"]) <= at
-        }
-    )
-    add(Fact("play_ist_days_14d", recent_play_days, "derived:events", last_seen, evidence=refs(plays)))
+    # IST days with any playback in the last 14 days (G09 "plays on at most 1 day in the last 14 days").
+    since = at - timedelta(days=PLAY_DAYS_WINDOW_DAYS)
+    recent = [r for r in playback if since <= parse_ts(r["event_time"]) <= at]
+    recent_play_days = sorted({ist_day(parse_ts(r["event_time"])).isoformat() for r in recent})
+    add(Fact("play_ist_days_14d", recent_play_days, "derived:events", last_seen, evidence=refs(recent)))
 
     genres: dict[str, int] = {}
     series: dict[str, dict] = {}

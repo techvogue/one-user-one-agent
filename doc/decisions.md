@@ -357,6 +357,58 @@ Rules:
   checked, stated as an assumption.
 - Why: One consistent expiry rule for both sources; prevents goals chosen on an expired plan.
 
+### D-029: Goal planner lifecycle and eligibility refinements (Step 2)
+- Date: 2026-10-18 · Status: Accepted · Decided by: candidate
+- Context: Building Step 2 ("Choose a goal"); tests exposed two eligibility gaps.
+- Decision:
+  1. **Measurability** is checked generically at load and after every correction (success event must be an
+     observable event type, condition and window defined): G10 and G11 are disabled with their reasons.
+  2. **Eligibility uses only usable facts** (D-027); structured fields in goals.json are applied as written;
+     text-only rules use the D-014 interpretations (thresholds in config.py, assumption IDs in every decision).
+  3. **One open goal per viewer**, enforced by a unique index. Lifecycle: KEEP while valid; close and re-plan when a
+     state condition breaks (status changed, the "no prior event" happened, G05 viewer has paid) or the deadline
+     passes; entry windows (e.g. "signed up within 2 days") are **not** re-checked for an open goal, so it keeps its
+     full success window. Goal start = commit time; deadline = start + window.
+  4. Planning and committing are separate (`plan_goal` / `commit_plan`) so the Step 5 verifier can reject first.
+  5. **Rule corrections** create a new rule version and update **only open goals of that goal type**; history kept.
+  6. `has_played` counts any playback evidence (`play_started`, `play_progress`, `episode_completed`), since a
+     `play_started` can be late or missing. G12 absence = no `app_open` **and no other activity** in 14 days
+     (new fact `last_activity_at`); also requires signup > 14 days ago. New fact `last_lapsed_at` for G06.
+- Why: Goals only from evidence; stable plans; corrections never reprocess every viewer.
+
+### D-030: G09 ranks above G08 (resolves P-004)
+- Date: 2026-10-18 · Status: Accepted · Decided by: candidate · Changes D-019 (priority order)
+- Context: Every G09-eligible viewer (active subscriber who watched on ≤ 1 day in 14) is also G08-eligible (any active
+  subscriber). With G08 above G09, G09 could never be chosen (0 of 1,504 in the dry run).
+- Decision: Order is now G04 → G01 → G02 (new) → G03 → G07 → G12 → G02 → **G09 → G08** → G06 → G05. The more
+  specific goal (rarely-watching subscriber) comes before the general one.
+- Why: A goal that can never be selected cannot be defended; the specific need (build a habit) is served first, and
+  subscribers who watch often still get G08.
+- Effect (dry run, 1,504 replay users): G09 0 → 46.
+
+### D-031: G07 "series in progress" must have been watched within 14 days (resolves P-005)
+- Date: 2026-10-18 · Status: Accepted · Decided by: candidate · Refines D-014 (A-G07-1)
+- Context: Any unfinished show/micro-drama left ≥ 72 h qualified, however long ago; G07 took 920 of 1,504 users (61 %),
+  including viewers who tried one episode weeks ago and moved on.
+- Decision: A-G07-1 is now: unfinished series last played **between 72 h and 14 days** before the trigger
+  (`g07_max_age_days = 14`, configurable).
+- Why: A series watched two weeks ago is in progress; one tried a month ago is not.
+- Effect (dry run): G07 920 → 672; those viewers now get G02 (+54), G05 (+70), G12 (+31), G06 (+18), G08/G09; NO_GOAL
+  2 → 7 (all lapsed/uncertain viewers with no provable goal, checked one by one).
+
+### D-032: Step 2 review fixes
+- Date: 2026-10-19 · Status: Accepted · Decided by: candidate
+- Context: Review of Step 2 against the guide (logic, code quality, tests).
+- Decision:
+  1. An open goal is also closed and re-planned when: its **G07 series is no longer available** (withdrawn/ended);
+     its **rule is no longer measurable**; or its **goal no longer exists** in the goal catalogue.
+  2. A rule correction that makes a rule unmeasurable **closes** the open goals of that type (logged); a correction
+     for an unknown goal is rejected with a clear error.
+  3. G09 play days count **any playback event** (same rule as `has_played`, D-029); the 14-day window is one named
+     constant (the unused `g09_lookback_days` setting was removed).
+- Why: No goal may stay open when it can no longer be achieved or judged; no setting may silently do nothing.
+- Effect (dry run, 1,504 users): G09 46 → 45, G08 105 → 106 (one viewer has playback on 2 days).
+
 ---
 
 ## Pending (under discussion, not approved)
@@ -364,7 +416,6 @@ Rules:
 | ID | Topic | Current proposal | Where discussed |
 |---|---|---|---|
 | — | _(none)_ | | |
-
 ---
 
 ## Change log
@@ -379,6 +430,9 @@ Rules:
 | 2026-10-18 | D-017 accepted (tech stack); P-001 closed. |
 | 2026-10-18 | D-018 accepted (repository layout). |
 | 2026-10-18 | D-019 accepted (goal priority); D-020 accepted (folder renamed to `submission/`). |
+| 2026-10-19 | D-032 accepted (Step 2 review fixes). |
+| 2026-10-18 | D-030, D-031 accepted; P-004, P-005 closed. |
+| 2026-10-18 | D-029 accepted (goal planner); P-004, P-005 opened. |
 | 2026-10-18 | D-028 accepted (plan expiry for event-derived status). |
 | 2026-10-18 | D-027 accepted (freshness per fact; status cannot regress). |
 | 2026-10-18 | D-021 to D-026 accepted (quiet hours, LLM scope, messaging, page reuse, goal.id, git); P-002, P-003 closed. |

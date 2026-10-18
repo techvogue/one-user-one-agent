@@ -12,8 +12,9 @@ AT = parse_ts("2026-10-01T10:00:00.000Z")
 
 
 def setup(tmp_path, conn, cfg, events, profile_rows):
+    start = conn.execute("SELECT COUNT(*) FROM event_deliveries").fetchone()[0]  # continue line numbers
     with conn:
-        for i, e in enumerate(events, 1):
+        for i, e in enumerate(events, start + 1):
             ingest_event(conn, e, "history", i, cfg)
     write_csv(tmp_path / "profiles.csv", PROFILE_COLS, profile_rows)
     return load_profiles(tmp_path / "profiles.csv"), make_catalogue(tmp_path)

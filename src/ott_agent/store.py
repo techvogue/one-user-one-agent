@@ -52,6 +52,33 @@ CREATE TABLE IF NOT EXISTS facts_snapshots (
     PRIMARY KEY (user_id, at, trigger_event_id)
 );
 
+-- Goals owned by each viewer's agent (Step 2). At most one open goal per viewer, enforced by the database.
+CREATE TABLE IF NOT EXISTS goal_instances (
+    goal_instance_id  TEXT PRIMARY KEY,
+    user_id           TEXT NOT NULL,
+    goal_id           TEXT NOT NULL,
+    goal_name         TEXT NOT NULL,
+    rule_version      TEXT NOT NULL,   -- the success rule this goal is judged by (updated by corrections)
+    status            TEXT NOT NULL,   -- open | closed
+    close_reason      TEXT,
+    start_at          TEXT NOT NULL,
+    deadline          TEXT NOT NULL,
+    closed_at         TEXT,
+    shadow            INTEGER NOT NULL DEFAULT 0,  -- holdout: decided but never acted on (D-016)
+    goal_json         TEXT NOT NULL    -- evidence, assumptions, success signal, detail
+);
+CREATE UNIQUE INDEX IF NOT EXISTS one_open_goal_per_user ON goal_instances (user_id) WHERE status = 'open';
+CREATE INDEX IF NOT EXISTS idx_goals_open_by_goal ON goal_instances (goal_id, status);
+
+-- Every change to a viewer's goal: opened, kept, closed, rule corrected (auditability).
+CREATE TABLE IF NOT EXISTS goal_log (
+    user_id           TEXT NOT NULL,
+    at                TEXT NOT NULL,
+    goal_instance_id  TEXT,
+    change            TEXT NOT NULL,
+    detail_json       TEXT NOT NULL
+);
+
 CREATE INDEX IF NOT EXISTS idx_events_user_time ON events (user_id, event_time);
 CREATE INDEX IF NOT EXISTS idx_events_user_received ON events (user_id, first_received_at);
 CREATE INDEX IF NOT EXISTS idx_events_type ON events (event);

@@ -32,6 +32,15 @@ kept visible; precedence and freshness rules written in ARCHITECTURE.md §5.1 (D
 **Verified (review, 2026-10-18):** 48 tests pass (incl. plan-expiry fix, D-028) on Python 3.10; ruff lint + format clean; independent re-implementation
 matches the resolver on all 2,679 unique replay triggers × 11 facts (0 mismatches); 7 bugs found and fixed in review.
 
+## Guide loop step 2: Choose a goal ✅
+
+One measurable goal from evidence with deadline and success signal, or NO_GOAL with reasons; one active goal per
+viewer; re-planned on situation change or deadline; rule corrections touch only open goals of that type (D-029).
+**Verified (review, 2026-10-19):** 86 tests pass; ruff lint + format clean; independent re-implementation of
+eligibility (12 goals) and goal choice matches the planner on all 2,679 unique replay triggers (0 mismatches); facts
+cross-check re-run (0 mismatches). Dry run on 1,504 replay users: 1,497 goals, 7 NO_GOAL (each checked); G07 672 ·
+G02 365 · G05 144 · G12 108 · G08 106 · G09 45 · G06 31 · G01 23 · G04 2 · G03 1; G10/G11 never chosen.
+
 ## Step 2: Build the core
 
 | Task | Status |
@@ -39,7 +48,7 @@ matches the resolver on all 2,679 unique replay triggers × 11 facts (0 mismatch
 | Data loader + deduplication (D-004, D-005) | ✅ history ingestion + quality report; live/trigger ingestion reuses it in the harness |
 | Viewer state store with provenance | 🟡 facts with source, freshness, conflicts stored (`facts_snapshots`) + `inspect`; goal/decision/action tables come with the planner and harness |
 | Fact resolver with precedence rules (D-007–D-009, D-015) | ✅ profiles.py, catalogue.py, facts.py |
-| Goal eligibility + selection (D-013, D-014) | ⏳ |
+| Goal eligibility + selection (D-013, D-014) | ✅ goals.py, planner.py (D-029, D-030, D-031) |
 | Intervention planner (home page, message, no action) (D-009–D-011) | ⏳ |
 | Independent verifier (rules.md Rule 10, D-012) | ⏳ |
 | Mock model provider (D-003) | ⏳ |

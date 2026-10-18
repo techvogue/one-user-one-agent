@@ -59,13 +59,29 @@ as evidence ([D-003](doc/decisions.md)).
   directly: they identify affected viewers and ask **their** agent to re-plan or re-judge.
 - Holdout viewers have an agent too, which decides a **shadow goal** but never acts (D-016).
 
-## 4. Planning
+## 4. Planning (Step 2: choose a goal)
 
-- **Event-driven re-planning**, not on a schedule: a fresh trigger, a purchase, a dialect change, a withdrawal or a
-  rule correction can cause a re-plan of the affected viewer only (D-005 Choice 3, D-015).
-- Goal selection: measurable goals only (D-013) → eligibility from evidence → one goal by priority **[PENDING: Q7
-  goal priority]** → deadline = start + window.
-- The active goal persists across triggers until it succeeds, fails, expires or the situation changes.
+Implemented in `src/ott_agent/goals.py` and `src/ott_agent/planner.py` (D-013, D-014, D-019, D-029).
+
+1. **Measurable goals only.** At load (and after every correction) each goal's success rule is checked: the success
+   event must be an observable event type and the condition and window defined. G10 (no event) and G11
+   (`tv_app_open` never occurs) are disabled with their reasons.
+2. **Eligibility from evidence.** Each goal is evaluated from *usable* facts only. Structured fields from goals.json
+   (`signed_up_within_days`, `requires_no_prior_event`, `subscription_status`) are applied as written; rules given
+   only in text use recorded interpretations (A-G05-1, A-G06-1, A-G07-1 incl. the 14-day recency limit of D-031,
+   A-G09-1, A-G12-1; thresholds in `config.py`). Every evaluation returns eligible/reason, evidence references and assumptions.
+3. **One goal by priority** (D-019, D-030, `cfg.goal_priority`): G04 → new-user funnel (G01 → G02 → G03) → G07 → G12 →
+   G02 (existing users) → G09 → G08 → G06 → G05. The decision records why the goal beat the other eligible ones.
+4. **Deadline and signal:** start = commit time, deadline = start + window, success signal from the rule version.
+5. **NO_GOAL** is a valid outcome, with the reason for every goal.
+6. **One active goal per viewer** (unique index on open goals). Event-driven lifecycle: KEEP while valid; close and
+   re-plan when a state condition breaks (status changed, e.g. after a purchase; the "no prior event" happened; a G05
+   viewer has paid), the G07 series is no longer available, the rule is no longer measurable, the goal no longer
+   exists, or the deadline passes (D-029, D-032). Entry windows are not re-checked for an open goal.
+7. **Rule corrections** create a new version and update only the open goals of that goal type (`goal_log` records
+   each change); closed goals and other goal types are untouched. If the corrected rule is unmeasurable, those goals
+   are closed.
+8. `plan_goal` decides, `commit_plan` persists, so the verifier (Step 5) can reject a plan before it is written.
 
 ## 5. Memory (durable per-viewer state)
 

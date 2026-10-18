@@ -3,6 +3,7 @@
 Commands so far:
   load     ingest the pack's 30-day history into the state store and write data_quality_report.json
   inspect  show what the agent knows about one viewer at a moment (facts with source, freshness, conflicts)
+           and which goal it would choose (dry run)
 """
 
 from __future__ import annotations
@@ -18,7 +19,9 @@ from pathlib import Path
 from .catalogue import load_catalogue
 from .config import Config
 from .facts import resolve, save_snapshot
+from .goals import GoalCatalogue
 from .ingest import ingest_file
+from .planner import plan_goal
 from .pricing import load_plan_days
 from .profiles import load_profiles
 from .quality import build_report, write_report
@@ -84,8 +87,10 @@ def cmd_inspect(args: argparse.Namespace) -> int:
     if args.save:
         with conn:
             save_snapshot(conn, vf)
+    goals = GoalCatalogue.from_file(cfg.pack_path / "config" / "goals.json")
+    plan = plan_goal(conn, vf, at, goals, catalogue, cfg)  # dry run: nothing is committed
     if args.json:
-        print(json.dumps(vf.to_dict(), indent=2, ensure_ascii=False))
+        print(json.dumps({**vf.to_dict(), "goal_plan": plan.to_dict()}, indent=2, ensure_ascii=False))
         return 0
     print(f"viewer {vf.user_id} as known at {vf.at}  (only events received by then)")
     print(f"{'fact':22} {'value':46} {'source':28} {'freshness':9} use  conflicts / assumption")
@@ -97,6 +102,22 @@ def cmd_inspect(args: argparse.Namespace) -> int:
         )
     if vf.flags:
         print("flags:", ", ".join(vf.flags))
+    print("\ngoal evaluation (dry run, nothing committed)")
+    for gid, why in plan.evaluations.items():
+        print(
+            f"  {gid}  {'ELIGIBLE' if why == 'eligible' else '-':8}  {'' if why == 'eligible' else _short(why, 90)}"
+        )
+    if plan.goal:
+        g = plan.goal
+        print(
+            f"\n=> {plan.outcome}: {g['goal_id']} {g['name']}  start {g['start']}  deadline {g['deadline']}"
+        )
+        print(f"   success signal: {g['success_signal']}")
+        print(f"   why: {plan.reason}")
+        for a in g["assumptions"]:
+            print(f"   assumption: {a}")
+    else:
+        print(f"\n=> {plan.outcome}: {_short(plan.reason, 160)}")
     return 0
 
 

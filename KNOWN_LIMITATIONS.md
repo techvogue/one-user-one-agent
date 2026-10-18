@@ -22,6 +22,14 @@
 
 ## Pending (to be filled in as decisions are made)
 
+- An open goal whose success already happened (e.g. the G07 series was resumed) stays open until its deadline; detecting
+  success early is part of outcome judging (guide Step 6). Status-type goals (G04/G05/G06) and "first" goals (G01/G02)
+  are already re-planned as soon as their condition changes.
+
+- G01/G03 need a provable signup time. Brand-new viewers sign up in the replay's live events, so these goals only
+  become available once the replay harness ingests live events (Step 4); a history-only dry run picks G01 for 23
+  users.
+
 - The "event time before signup" plausibility check (D-005 choice 4) needs the viewer's signup fact, so it runs in the
   fact resolver, not at ingestion.
 - History ingestion takes ~17 s for 143k lines (row-by-row SQLite inserts). Acceptable for the replay; batching would

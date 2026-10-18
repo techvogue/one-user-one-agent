@@ -383,7 +383,7 @@ Actions go to `actions.jsonl` in the **exact simulator schema** from the pack RE
 - One active goal per user at a time.
 
 ### 6.3 Goal priority when several apply
-**Decided → [D-019](decisions.md)**: G04 → new-user funnel (G01 → G02 → G03) → G07 → G12 → G02 (existing users) → G08 → G09 → G06 → G05.
+**Decided → [D-019](decisions.md), [D-030](decisions.md)**: G04 → new-user funnel (G01 → G02 → G03) → G07 → G12 → G02 (existing users) → G09 → G08 → G06 → G05.
 
 ---
 

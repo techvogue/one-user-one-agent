@@ -6,6 +6,25 @@
     "grace_provisional_h": 24,
     "grace_final_days": 7,
     "profile_max_age_h": 48,
+    "g06_recent_lapse_days": 30,
+    "g07_min_gap_h": 72,
+    "g09_lookback_days": 14,
+    "g09_max_play_days": 1,
+    "g12_absence_days": 14,
+    "new_user_days": 7,
+    "goal_priority": [
+      "G04",
+      "G01",
+      "G02:new_user",
+      "G03",
+      "G07",
+      "G12",
+      "G02",
+      "G08",
+      "G09",
+      "G06",
+      "G05"
+    ],
     "clock_skew_report_s": 60
   },
   "ingest": [

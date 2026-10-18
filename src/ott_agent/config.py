@@ -21,6 +21,21 @@ class Config:
     # D-027: profile-snapshot facts (status, consent, preferred dialect) are usable only while the snapshot is
     # younger than this. The snapshot is a daily export, so 48 h allows one missed export.
     profile_max_age_h: int = 48
+    # Goal interpretations for rules that goals.json states only in text (D-014). Assumption IDs in brackets.
+    g06_recent_lapse_days: int = 30  # [A-G06-1] "recently lapsed" = a lapse event within this many days
+    g07_min_gap_h: int = 72  # [A-G07-1] "not played it for 3 or more days"
+    g07_max_age_days: int = (
+        14  # [A-G07-1] still "in progress" only if last played within this many days (D-031)
+    )
+    g09_max_play_days: int = 1  # [A-G09-1] "plays on at most 1 day in the last 14 days"
+    g12_absence_days: int = 14  # [A-G12-1] "no app_open in the 14 days before the trigger"
+    # Who counts as a new user for the activation funnel (D-019): signed up within this many days.
+    new_user_days: int = 7
+    # Goal priority, highest first (D-019, G09 moved above G08 by D-030). "G02:new_user" = G02 only for new users
+    # (activation funnel); the plain "G02" later in the list is for existing users.
+    goal_priority: tuple[str, ...] = (
+        "G04", "G01", "G02:new_user", "G03", "G07", "G12", "G02", "G09", "G08", "G06", "G05",
+    )  # fmt: skip
     # Phone clock is reported as skewed when |sent_at - received_at| exceeds this (network delay is seconds).
     clock_skew_report_s: int = 60
 
@@ -34,6 +49,8 @@ class Config:
             raise ValueError(f"unknown config keys: {sorted(unknown)}")
         if "pack_path" in data:
             data["pack_path"] = Path(data["pack_path"])
+        if "goal_priority" in data:
+            data["goal_priority"] = tuple(data["goal_priority"])
         return cls(**data)
 
     def to_dict(self) -> dict:
