@@ -60,7 +60,7 @@ Decisions that published nothing without a recorded reason: **0**.
 
 | | |
 |---|---|
-| Published pages: latency p50 / p95 / max | 0.842 s / 0.844 s / 2.218 s |
+| Published pages: latency p50 / p95 / max | 0.843 s / 0.845 s / 2.218 s |
 | Decisions over 60 s | 0 |
 | Max model / tool calls per decision | 2 / 6 |
 | Model outcomes | agreed: 2062, not_called: 685, unavailable: 19, unsupported_claim: 1, error: 1, malformed: 1 |
@@ -73,15 +73,15 @@ Decisions that published nothing without a recorded reason: **0**.
 |---|---|
 | Independent verifier verdicts | approve: 2097 |
 | Pack simulator: policy problems | **0** |
-| Home pages accepted by the simulator | 819 of 819 |
-| Messages published (push / WhatsApp) | 17 / 20 |
+| Home pages accepted by the simulator | 822 of 822 |
+| Messages published (push / WhatsApp) | 17 / 112 |
 | Actions for holdout viewers | **0** |
 
 ## 6. Surprises during the replay
 
 | When | What | How it was handled |
 |---|---|---|
-| 2026-10-01T07:00:00.000Z | title T0001 withdrawn | 9 live pages republished without it, 3 messages cancelled |
+| 2026-10-01T07:00:00.000Z | title T0001 withdrawn | 12 live pages republished without it, 3 messages cancelled |
 | 2026-10-01T08:30:00.000Z | G03 success rule corrected | new rule version for open G03 goals only; no viewer reprocessed |
 | 2026-10-01T10:35:00.000Z | model_provider: every model call fails with HTTP 503 (until 2026-10-01T10:42:00.000Z) | fallbacks, see section 4 |
 | 2026-10-01T13:10:00.000Z | user_data_store: p95 read latency 8 s and 20% of reads time out (until 2026-10-01T13:17:00.000Z) | fallbacks, see section 4 |
@@ -105,18 +105,18 @@ Full list with handling: `data_quality_report.json` → `traps`.
 
 | Arm | SUCCEEDED | FAILED | INCONCLUSIVE |
 |---|---|---|---|
-| agent | 105 | 554 | 24 |
+| agent | 111 | 548 | 24 |
 | holdout | 96 | 552 | 25 |
 
 Verdict stages: final: 1280, open: 49, provisional: 27. A per-viewer success does not show the agent caused it; only the arm comparison below measures that. Learning notes are stored per viewer (`outcomes.jsonl`, `viewer_state/`) and feed the next goal choice (D-051).
 
 ## 9. Impact: agent arm vs randomized holdout
 
-- **First goal succeeded: agent 16.0 % (105/657) vs holdout 14.8 % (96/647): +1.1 pts [-2.8, +5.1], no detectable effect (the 95 % interval includes zero).**
-- Simulator seed seed-a: +1.2 pts [-2.7, +5.0]
-- Simulator seed seed-b: +2.0 pts [-1.9, +5.9]
-- Simulator seed seed-c: -0.3 pts [-4.0, +3.4]
-- The biased served-vs-everyone-else comparison on the same data: +3.9 pts [-0.1, +7.9]. It is not used: who gets served is not random.
+- **First goal succeeded: agent 16.9 % (111/657) vs holdout 14.8 % (96/647): +2.1 pts [-1.9, +6.0], no detectable effect (the 95 % interval includes zero).**
+- Simulator seed seed-a: +2.1 pts [-1.8, +5.9]
+- Simulator seed seed-b: +2.6 pts [-1.3, +6.6]
+- Simulator seed seed-c: +0.3 pts [-3.5, +4.1]
+- The biased served-vs-everyone-else comparison on the same data: +4.9 pts [+0.9, +8.9]. It is not used: who gets served is not random.
 - Earlier pilot re-analysed with its randomized arms: -1.3 pts [-3.8, +1.2] (its report claimed a large uplift from served vs everyone else).
 
 Full method and tables: `impact_report.md`.

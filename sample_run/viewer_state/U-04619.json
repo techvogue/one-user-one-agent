@@ -350,6 +350,26 @@
     "usable": true,
     "value": "Family"
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T14:27:43.777Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:ee051183-b2f2-4dcb-b678-28ea94f40a22",
+     "event:743dd92c-9011-42b7-92f8-a79280ad9bd6",
+     "event:cbe0280d-25c2-47da-b4f2-b7a66f9a05cb"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Family",
+     "Devotional",
+     "Crime"
+    ]
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-10-01T14:27:43.777Z",

@@ -31,7 +31,7 @@
   }
  ],
  "actions": [
-  "A-00229"
+  "A-00232"
  ],
  "last_known_facts": {
   "at": "2026-10-01T07:11:37.556Z",
@@ -325,6 +325,26 @@
     "source": "derived:events+catalogue",
     "usable": true,
     "value": "Thriller"
+   },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T07:11:37.556Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:c5bf8186-0c74-4f7b-9ec5-3c7ca7a40c0a",
+     "event:dbe8be11-2b12-4540-92f4-8dba2c91f90e",
+     "event:409b9f0e-48c2-45ed-9ce5-b02da38d5480"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Thriller",
+     "Crime",
+     "Romance"
+    ]
    },
    "watched_slugs": {
     "age_s": 0.0,

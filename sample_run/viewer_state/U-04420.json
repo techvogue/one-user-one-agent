@@ -31,7 +31,7 @@
   }
  ],
  "actions": [
-  "A-00574"
+  "A-00577"
  ],
  "last_known_facts": {
   "at": "2026-10-01T14:35:07.690Z",
@@ -329,6 +329,26 @@
     "usable": true,
     "value": "Devotional"
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T14:35:07.690Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:7e520537-8dba-48c8-8aa0-e61f580f899c",
+     "event:5afb5693-62b9-4038-9f65-075c6dc00ca4",
+     "event:2d1670fb-93be-43d6-b576-47b3a97c8512"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Devotional",
+     "Romance",
+     "Action"
+    ]
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-10-01T14:35:07.690Z",
@@ -387,12 +407,12 @@
    "reason": "2 attributable signal(s) in the window",
    "success_events": [
     {
-     "event_id": "oua-027712",
+     "event_id": "oua-027891",
      "event": "play_started",
      "event_time": "2026-10-01T14:39:20.690Z"
     },
     {
-     "event_id": "oua-027723",
+     "event_id": "oua-027902",
      "event": "play_started",
      "event_time": "2026-10-05T04:12:49.000Z"
     }

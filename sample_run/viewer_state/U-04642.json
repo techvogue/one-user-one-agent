@@ -97,8 +97,8 @@
   }
  ],
  "actions": [
-  "A-00396",
-  "A-00477"
+  "A-00399",
+  "A-00480"
  ],
  "last_known_facts": {
   "at": "2026-10-01T15:04:26.056Z",
@@ -410,6 +410,26 @@
     "source": "derived:events+catalogue",
     "usable": true,
     "value": "Devotional"
+   },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T15:04:26.056Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:329e4250-cac4-4040-b2ae-50eff8fdc791",
+     "event:44609f2c-637d-4ca2-96ac-ba1349e094d6",
+     "event:7add595d-158a-43a0-980b-73f2e8384cc2"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Devotional",
+     "Family",
+     "Comedy"
+    ]
    },
    "watched_slugs": {
     "age_s": 0.0,

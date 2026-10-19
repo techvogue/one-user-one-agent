@@ -44,9 +44,9 @@
   }
  ],
  "actions": [
-  "A-00265",
-  "A-00790",
-  "A-00830"
+  "A-00268",
+  "A-00793",
+  "A-00868"
  ],
  "last_known_facts": {
   "at": "2026-10-01T17:27:25.854Z",
@@ -285,6 +285,18 @@
     "usable": true,
     "value": null
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T17:27:25.854Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": []
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-10-01T17:27:25.854Z",
@@ -333,7 +345,7 @@
    "reason": "1 attributable signal(s) in the window",
    "success_events": [
     {
-     "event_id": "oua-008952",
+     "event_id": "oua-009014",
      "event": "play_started",
      "event_time": "2026-10-01T07:55:09.661Z"
     }

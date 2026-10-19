@@ -307,6 +307,24 @@
     "usable": true,
     "value": "Action"
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T07:05:06.906Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:31ed3cae-039e-4893-81a6-5a6241ed19ea",
+     "event:ff6d2a73-7958-4cd2-86ab-04f7d6d71d5d"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Action",
+     "Romance"
+    ]
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-10-01T07:05:06.906Z",

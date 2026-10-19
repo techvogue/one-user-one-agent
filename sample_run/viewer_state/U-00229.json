@@ -31,7 +31,7 @@
   }
  ],
  "actions": [
-  "A-00586"
+  "A-00589"
  ],
  "last_known_facts": {
   "at": "2026-10-01T14:46:40.861Z",
@@ -324,6 +324,26 @@
     "usable": true,
     "value": "Action"
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T14:46:40.861Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:02df2ab5-6909-4cb0-9723-94854a203a8c",
+     "event:79c81a60-27ef-4977-a24b-79c7bbb10291",
+     "event:42e5c3c5-0724-434b-8b5a-e10ed717d25a"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Action",
+     "Romance",
+     "Family"
+    ]
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-10-01T14:46:40.861Z",
@@ -375,21 +395,27 @@
     "deadline": "2026-10-04T14:46:40.861Z",
     "judged_until": "2026-10-04T14:46:40.861Z"
    },
-   "verdict": "FAILED",
+   "verdict": "SUCCEEDED",
    "stage": "final",
-   "reason": "no attributable signal by the deadline (2026-10-04T14:46:40.861Z) + 24 h",
-   "success_events": [],
+   "reason": "1 attributable signal(s) in the window",
+   "success_events": [
+    {
+     "event_id": "oua-001571",
+     "event": "play_started",
+     "event_time": "2026-10-01T14:51:21.861Z"
+    }
+   ],
    "exposure": {
     "pages_shown": 1,
     "messages_delivered": 0,
     "messages_clicked": 0,
     "first_page_shown_at": "2026-10-01T14:46:58.861Z"
    },
-   "learned": "G07 failed: no resume_series_3d signal within the window; our page was shown",
+   "learned": "G07 succeeded 0.0 days after the goal started; our page was shown",
    "judged_at": "2026-10-15T17:58:40.000Z"
   }
  ],
  "learned": [
-  "G07 failed: no resume_series_3d signal within the window; our page was shown"
+  "G07 succeeded 0.0 days after the goal started; our page was shown"
  ]
 }

@@ -316,6 +316,23 @@
     "usable": true,
     "value": "Action"
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T16:47:45.225Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:f2af2445-fdca-44a9-b45b-be1596e657f8"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Action",
+     "Family"
+    ]
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-10-01T16:47:45.225Z",

@@ -85,8 +85,8 @@
  ],
  "actions": [
   "A-00077",
-  "A-00280",
-  "A-00523"
+  "A-00283",
+  "A-00526"
  ],
  "last_known_facts": {
   "at": "2026-10-01T14:00:57.753Z",
@@ -352,6 +352,25 @@
     "usable": true,
     "value": "Devotional"
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T14:00:57.753Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:ef33548e-1ee6-42ce-8a53-cf97f6a7e2c1",
+     "event:7d1d14da-eb04-4b49-ad65-5a291b65df04",
+     "event:b6070424-5189-4def-9424-d5a021b3b14e"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Devotional",
+     "Romance"
+    ]
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-10-01T14:00:57.753Z",
@@ -406,17 +425,17 @@
    "reason": "3 attributable signal(s) in the window",
    "success_events": [
     {
-     "event_id": "oua-029245",
+     "event_id": "oua-029430",
      "event": "play_started",
      "event_time": "2026-10-01T08:18:27.916Z"
     },
     {
-     "event_id": "oua-029250",
+     "event_id": "oua-029437",
      "event": "play_started",
      "event_time": "2026-10-02T15:42:48.000Z"
     },
     {
-     "event_id": "oua-029255",
+     "event_id": "oua-029442",
      "event": "play_started",
      "event_time": "2026-10-08T16:22:38.000Z"
     }

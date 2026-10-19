@@ -31,7 +31,8 @@
   }
  ],
  "actions": [
-  "A-00707"
+  "A-00710",
+  "A-00935"
  ],
  "last_known_facts": {
   "at": "2026-10-01T15:51:21.229Z",
@@ -312,6 +313,25 @@
     "usable": true,
     "value": "Devotional"
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T15:51:21.229Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:8dc4c9f3-0385-43a0-98b7-b7fe4381ddc7",
+     "event:bb574bd3-a2b1-4e4c-8609-1a812e14aee3",
+     "event:391b304d-dfa7-482f-8cab-31711156bee4"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Devotional",
+     "Family"
+    ]
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-10-01T15:51:21.229Z",
@@ -368,15 +388,15 @@
    "success_events": [],
    "exposure": {
     "pages_shown": 1,
-    "messages_delivered": 0,
+    "messages_delivered": 1,
     "messages_clicked": 0,
     "first_page_shown_at": "2026-10-01T15:51:45.229Z"
    },
-   "learned": "G07 failed: no resume_series_3d signal within the window; our page was shown",
+   "learned": "G07 failed: no resume_series_3d signal within the window; our page was shown; reminder delivered, not clicked",
    "judged_at": "2026-10-15T17:58:40.000Z"
   }
  ],
  "learned": [
-  "G07 failed: no resume_series_3d signal within the window; our page was shown"
+  "G07 failed: no resume_series_3d signal within the window; our page was shown; reminder delivered, not clicked"
  ]
 }

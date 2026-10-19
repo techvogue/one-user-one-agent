@@ -31,7 +31,7 @@
   }
  ],
  "actions": [
-  "A-00712"
+  "A-00715"
  ],
  "last_known_facts": {
   "at": "2026-10-01T15:57:41.607Z",
@@ -321,6 +321,26 @@
     "source": "derived:events+catalogue",
     "usable": true,
     "value": "Devotional"
+   },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T15:57:41.607Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:733b0506-1e71-4d62-a8ca-1d857343c612",
+     "event:e18136f7-b723-4a4c-a9b3-da66a2cde5c7",
+     "event:2017eb3e-b263-4269-a74e-52cb2abfacd2"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Devotional",
+     "Romance",
+     "Crime"
+    ]
    },
    "watched_slugs": {
     "age_s": 0.0,

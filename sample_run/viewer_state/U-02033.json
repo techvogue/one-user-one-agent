@@ -31,7 +31,7 @@
   }
  ],
  "actions": [
-  "A-00706"
+  "A-00709"
  ],
  "last_known_facts": {
   "at": "2026-10-01T15:50:19.038Z",
@@ -290,6 +290,24 @@
     "usable": true,
     "value": "Drama"
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T15:50:19.038Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:633d8d87-1dd0-43d6-b0ac-e384f6ff496a",
+     "event:d8f682a9-14a4-4f13-ba7e-365b47f1cbe1"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Drama",
+     "Family"
+    ]
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-10-01T15:50:19.038Z",
@@ -340,21 +358,27 @@
     "deadline": "2026-10-08T15:50:19.038Z",
     "judged_until": "2026-10-08T15:50:19.038Z"
    },
-   "verdict": "FAILED",
+   "verdict": "SUCCEEDED",
    "stage": "final",
-   "reason": "no attributable signal by the deadline (2026-10-08T15:50:19.038Z) + 24 h",
-   "success_events": [],
+   "reason": "1 attributable signal(s) in the window",
+   "success_events": [
+    {
+     "event_id": "oua-013345",
+     "event": "play_started",
+     "event_time": "2026-10-01T15:55:17.038Z"
+    }
+   ],
    "exposure": {
     "pages_shown": 1,
     "messages_delivered": 0,
     "messages_clicked": 0,
     "first_page_shown_at": "2026-10-01T15:50:53.038Z"
    },
-   "learned": "G08 failed: no try_new_release_7d signal within the window; our page was shown",
+   "learned": "G08 succeeded 0.0 days after the goal started; our page was shown",
    "judged_at": "2026-10-15T17:58:40.000Z"
   }
  ],
  "learned": [
-  "G08 failed: no try_new_release_7d signal within the window; our page was shown"
+  "G08 succeeded 0.0 days after the goal started; our page was shown"
  ]
 }

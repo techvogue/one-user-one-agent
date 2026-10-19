@@ -295,6 +295,23 @@
     "usable": true,
     "value": "Devotional"
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T12:19:45.316Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:8f6609b1-b2a6-498f-8b35-a8919cf7b844"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Devotional",
+     "Romance"
+    ]
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-10-01T12:19:45.316Z",
@@ -347,7 +364,7 @@
    "reason": "1 attributable signal(s) in the window",
    "success_events": [
     {
-     "event_id": "oua-026619",
+     "event_id": "oua-026794",
      "event": "episode_completed",
      "event_time": "2026-10-01T12:55:36.316Z"
     }

@@ -31,7 +31,7 @@
   }
  ],
  "actions": [
-  "A-00346"
+  "A-00349"
  ],
  "last_known_facts": {
   "at": "2026-10-01T09:40:52.950Z",
@@ -302,6 +302,25 @@
     "source": "derived:events+catalogue",
     "usable": true,
     "value": "Family"
+   },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T09:40:52.950Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:c80735c3-bf3f-44a0-a712-379fd20f56ca",
+     "event:2291adda-a381-4b02-9bcc-4b0bf3036cbd",
+     "event:f87f1970-1374-4e51-95d1-028d03c3928b"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Family",
+     "Action"
+    ]
    },
    "watched_slugs": {
     "age_s": 0.0,

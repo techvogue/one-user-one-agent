@@ -269,6 +269,23 @@
     "usable": true,
     "value": "Action"
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T12:03:01.260Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:2c7ed889-4796-4604-973f-8e57bde05c20"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Action",
+     "Devotional"
+    ]
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-10-01T12:03:01.260Z",

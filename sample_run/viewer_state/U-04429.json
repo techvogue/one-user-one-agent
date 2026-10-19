@@ -32,7 +32,7 @@
  ],
  "actions": [
   "A-00188",
-  "A-00219"
+  "A-00221"
  ],
  "last_known_facts": {
   "at": "2026-10-01T06:25:02.174Z",
@@ -317,6 +317,26 @@
     "source": "derived:events+catalogue",
     "usable": true,
     "value": "Action"
+   },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T06:25:02.174Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:48e102db-a569-4ac1-b72d-e5424439f8b5",
+     "event:1022997b-f66c-493a-a1f7-a39a11f8bfee",
+     "event:5093590b-91fa-4ad9-8403-cf801f32ae6d"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Action",
+     "Drama",
+     "Family"
+    ]
    },
    "watched_slugs": {
     "age_s": 0.0,

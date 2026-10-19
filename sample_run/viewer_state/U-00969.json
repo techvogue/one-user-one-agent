@@ -320,6 +320,25 @@
     "usable": true,
     "value": "Family"
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T16:25:35.975Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:e98f13dd-49e6-4bf9-857d-3e56da83857c",
+     "event:c3561288-2b20-44f6-9dc7-4aaa20bc66a5",
+     "event:9e2e8e5e-d7f0-4095-a368-6ed133772277"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Family",
+     "Action"
+    ]
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-10-01T16:25:35.975Z",

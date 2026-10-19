@@ -288,6 +288,23 @@
     "usable": true,
     "value": "Crime"
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-09-30T18:36:53.265Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:177d9d78-03db-42ec-a3d1-ffecc68c2298"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Crime",
+     "Romance"
+    ]
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-09-30T18:36:53.265Z",

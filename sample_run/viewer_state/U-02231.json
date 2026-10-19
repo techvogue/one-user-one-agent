@@ -325,6 +325,26 @@
     "usable": true,
     "value": "Action"
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T16:50:47.522Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:e89a8a94-357d-41e0-aa23-69fdc9c26dd3",
+     "event:c9d1341e-6b32-4cf9-b31f-eff0ead1b370",
+     "event:177221f7-4b9a-4baa-b1ae-8df25dd5dc1a"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Action",
+     "Romance",
+     "Devotional"
+    ]
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-10-01T16:50:47.522Z",

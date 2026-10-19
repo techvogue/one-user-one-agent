@@ -308,6 +308,24 @@
     "usable": true,
     "value": "Action"
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T15:15:40.627Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:ce951d24-cb83-4550-bc1f-c405befd58a0",
+     "event:6008c8a2-b28a-4df4-a1ba-d23c95671017"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Action",
+     "Family"
+    ]
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-10-01T15:15:40.627Z",

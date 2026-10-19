@@ -110,10 +110,10 @@
  ],
  "actions": [
   "A-00179",
-  "A-00389",
-  "A-00475",
-  "A-00692",
-  "A-00796"
+  "A-00392",
+  "A-00478",
+  "A-00695",
+  "A-00799"
  ],
  "last_known_facts": {
   "at": "2026-10-01T17:40:15.823Z",
@@ -382,6 +382,24 @@
     "source": "derived:events+catalogue",
     "usable": true,
     "value": "Crime"
+   },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T17:40:15.823Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:42b61cb6-395c-4937-bafe-7bb643f62ed0",
+     "event:5ed1de26-56e2-4310-9cce-6f9ed6bf76b5"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Crime",
+     "Family"
+    ]
    },
    "watched_slugs": {
     "age_s": 0.0,

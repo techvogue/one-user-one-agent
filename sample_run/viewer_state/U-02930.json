@@ -303,6 +303,25 @@
     "usable": true,
     "value": "Action"
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T15:12:49.243Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:c04bcf48-0337-4559-9ff5-44349b625428",
+     "event:f65c6465-30c4-4d36-afa8-f9e51469238b"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Action",
+     "Crime",
+     "Devotional"
+    ]
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-10-01T15:12:49.243Z",
@@ -358,12 +377,12 @@
    "reason": "2 attributable signal(s) in the window",
    "success_events": [
     {
-     "event_id": "oua-018286",
+     "event_id": "oua-018410",
      "event": "play_started",
      "event_time": "2026-10-01T15:17:39.243Z"
     },
     {
-     "event_id": "oua-018289",
+     "event_id": "oua-018413",
      "event": "play_started",
      "event_time": "2026-10-06T17:11:59.000Z"
     }

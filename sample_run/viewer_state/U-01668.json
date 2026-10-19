@@ -84,7 +84,7 @@
  ],
  "actions": [
   "A-00057",
-  "A-00723"
+  "A-00726"
  ],
  "last_known_facts": {
   "at": "2026-10-01T17:27:51.983Z",
@@ -364,6 +364,25 @@
     "usable": true,
     "value": "Romance"
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T17:27:51.983Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:44987f4c-4359-4b6a-a69f-59cf1c162f16",
+     "event:1874c593-8868-44bf-802e-f0bfdebf2d0e",
+     "event:1242e5fc-ce9b-4b01-b998-cab08824e2d6"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Romance",
+     "Family"
+    ]
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-10-01T17:27:51.983Z",
@@ -419,27 +438,27 @@
    "reason": "7 attributable signal(s) in the window",
    "success_events": [
     {
-     "event_id": "oua-011054",
+     "event_id": "oua-011139",
      "event": "play_started",
      "event_time": "2026-10-01T02:36:52.703Z"
     },
     {
-     "event_id": "oua-011068",
+     "event_id": "oua-011153",
      "event": "play_started",
      "event_time": "2026-10-02T16:08:09.000Z"
     },
     {
-     "event_id": "oua-011075",
+     "event_id": "oua-011160",
      "event": "play_started",
      "event_time": "2026-10-04T06:38:24.000Z"
     },
     {
-     "event_id": "oua-011078",
+     "event_id": "oua-011163",
      "event": "play_started",
      "event_time": "2026-10-06T04:28:49.000Z"
     },
     {
-     "event_id": "oua-011083",
+     "event_id": "oua-011168",
      "event": "play_started",
      "event_time": "2026-10-10T13:53:29.000Z"
     }

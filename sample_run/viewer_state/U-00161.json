@@ -31,7 +31,7 @@
   }
  ],
  "actions": [
-  "A-00295"
+  "A-00298"
  ],
  "last_known_facts": {
   "at": "2026-10-01T08:26:38.594Z",
@@ -294,6 +294,26 @@
     "source": "derived:events+catalogue",
     "usable": true,
     "value": "Action"
+   },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T08:26:38.594Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:60dcf9c7-d9b5-428d-af05-fa7059e715cc",
+     "event:360a6bd0-14f0-49a8-9c0e-4fc18814da0f",
+     "event:7ff47d9f-6b06-44be-9ab1-eda556cb9f81"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Action",
+     "Devotional",
+     "Family"
+    ]
    },
    "watched_slugs": {
     "age_s": 0.0,

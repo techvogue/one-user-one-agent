@@ -302,6 +302,24 @@
     "usable": true,
     "value": "Family"
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T17:18:51.526Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:67720e50-ad47-40ea-82ba-697a0952039b",
+     "event:28ab72d3-71e6-4c88-bb39-bfd23c9cb7cd"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Family",
+     "Crime"
+    ]
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-10-01T17:18:51.526Z",

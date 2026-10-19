@@ -31,7 +31,7 @@
   }
  ],
  "actions": [
-  "A-00448"
+  "A-00451"
  ],
  "last_known_facts": {
   "at": "2026-10-01T12:18:00.619Z",
@@ -300,6 +300,23 @@
     "source": "derived:events+catalogue",
     "usable": true,
     "value": "Action"
+   },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T12:18:00.619Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:dd34c852-f63a-45f6-8565-661ff4ea2315"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Action",
+     "Romance"
+    ]
    },
    "watched_slugs": {
     "age_s": 0.0,

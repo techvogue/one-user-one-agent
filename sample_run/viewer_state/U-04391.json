@@ -300,6 +300,26 @@
     "usable": true,
     "value": "Action"
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T14:57:07.953Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:92b275d2-542e-4e90-b89e-434c934cd0f1",
+     "event:b2e0785e-f7de-49f2-bb8f-1a3a55d9e38a",
+     "event:b49cf290-8851-4e91-94fc-4158a6bca424"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Action",
+     "Thriller",
+     "Romance"
+    ]
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-10-01T14:57:07.953Z",
@@ -355,7 +375,7 @@
    "reason": "1 attributable signal(s) in the window",
    "success_events": [
     {
-     "event_id": "oua-027609",
+     "event_id": "oua-027788",
      "event": "play_started",
      "event_time": "2026-10-01T14:58:33.953Z"
     }

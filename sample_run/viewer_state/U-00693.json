@@ -31,7 +31,7 @@
   }
  ],
  "actions": [
-  "A-00691"
+  "A-00694"
  ],
  "last_known_facts": {
   "at": "2026-10-01T15:35:48.553Z",
@@ -307,6 +307,26 @@
     "source": "derived:events+catalogue",
     "usable": true,
     "value": "Devotional"
+   },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T15:35:48.553Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:e48f4656-9127-4482-a099-8f7ec9607f58",
+     "event:ae2ff2b5-db7a-46f6-b523-90bf48912c07",
+     "event:dd9a9056-4d75-46f3-83e5-50c4a38e6aa5"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Devotional",
+     "Action",
+     "Drama"
+    ]
    },
    "watched_slugs": {
     "age_s": 0.0,

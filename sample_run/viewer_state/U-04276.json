@@ -38,7 +38,7 @@
   }
  ],
  "actions": [
-  "A-00456"
+  "A-00459"
  ],
  "last_known_facts": {
   "at": "2026-10-01T12:25:00.912Z",
@@ -289,6 +289,18 @@
     "usable": true,
     "value": null
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T12:25:00.912Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": []
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-10-01T12:25:00.912Z",
@@ -337,7 +349,7 @@
    "reason": "1 attributable signal(s) in the window",
    "success_events": [
     {
-     "event_id": "oua-026975",
+     "event_id": "oua-027150",
      "event": "episode_completed",
      "event_time": "2026-10-01T13:06:08.872Z"
     }

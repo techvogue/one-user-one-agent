@@ -31,7 +31,8 @@
   }
  ],
  "actions": [
-  "A-00580"
+  "A-00583",
+  "A-00919"
  ],
  "last_known_facts": {
   "at": "2026-10-01T14:40:20.711Z",
@@ -340,6 +341,26 @@
     "usable": true,
     "value": "Romance"
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T14:40:20.711Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:b7bbfcf0-abef-4c0d-9ce6-94febd25b4a0",
+     "event:87d6db2b-99fb-4a02-8eef-1a5c296d8da6",
+     "event:5cae2a57-636b-4d93-ad01-dc5e78ea4246"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Romance",
+     "Comedy",
+     "Action"
+    ]
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-10-01T14:40:20.711Z",
@@ -400,15 +421,15 @@
    "success_events": [],
    "exposure": {
     "pages_shown": 1,
-    "messages_delivered": 0,
+    "messages_delivered": 1,
     "messages_clicked": 0,
     "first_page_shown_at": "2026-10-01T14:40:37.711Z"
    },
-   "learned": "G07 failed: no resume_series_3d signal within the window; our page was shown",
+   "learned": "G07 failed: no resume_series_3d signal within the window; our page was shown; reminder delivered, not clicked",
    "judged_at": "2026-10-15T17:58:40.000Z"
   }
  ],
  "learned": [
-  "G07 failed: no resume_series_3d signal within the window; our page was shown"
+  "G07 failed: no resume_series_3d signal within the window; our page was shown; reminder delivered, not clicked"
  ]
 }

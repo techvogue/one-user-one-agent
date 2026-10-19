@@ -31,7 +31,7 @@
   }
  ],
  "actions": [
-  "A-00700"
+  "A-00703"
  ],
  "last_known_facts": {
   "at": "2026-10-01T15:46:19.397Z",
@@ -315,6 +315,26 @@
     "usable": true,
     "value": "Thriller"
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T15:46:19.397Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:60a8e294-c311-4a4a-876f-506c98618dd9",
+     "event:e5359abc-7c60-4bd4-ad26-97a5b273bd89",
+     "event:ad7f7c76-8bcd-44fa-9866-a8f9ec2f4550"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Thriller",
+     "Comedy",
+     "Drama"
+    ]
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-10-01T15:46:19.397Z",
@@ -372,27 +392,27 @@
    "reason": "5 attributable signal(s) in the window",
    "success_events": [
     {
-     "event_id": "oua-015001",
+     "event_id": "oua-015102",
      "event": "play_started",
      "event_time": "2026-10-01T15:48:15.397Z"
     },
     {
-     "event_id": "oua-015005",
+     "event_id": "oua-015106",
      "event": "play_started",
      "event_time": "2026-10-02T16:22:14.000Z"
     },
     {
-     "event_id": "oua-015008",
+     "event_id": "oua-015109",
      "event": "play_started",
      "event_time": "2026-10-04T06:59:15.000Z"
     },
     {
-     "event_id": "oua-015013",
+     "event_id": "oua-015114",
      "event": "play_started",
      "event_time": "2026-10-12T13:27:26.000Z"
     },
     {
-     "event_id": "oua-015019",
+     "event_id": "oua-015120",
      "event": "play_started",
      "event_time": "2026-10-14T14:32:51.000Z"
     }

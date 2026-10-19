@@ -312,6 +312,26 @@
     "usable": true,
     "value": "Crime"
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T15:00:40.685Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:c2473b82-2e19-457a-83f9-02188eb77cc1",
+     "event:61cd6477-8d0b-45b7-acef-0037f0c22784",
+     "event:ee9c91ba-6ebd-413b-94d9-5940d22d0c3e"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Crime",
+     "Romance",
+     "Action"
+    ]
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-10-01T15:00:40.685Z",

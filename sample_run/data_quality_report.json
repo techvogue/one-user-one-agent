@@ -26,12 +26,16 @@
       "G06",
       "G05"
     ],
-    "page_max_rows": 4,
+    "page_max_rows": 5,
     "popularity_days": 30,
     "new_release_days": 30,
     "message_goals": [
       "G03",
+      "G07",
       "G12"
+    ],
+    "whatsapp_only_goals": [
+      "G07"
     ],
     "message_hour_ist": 19,
     "workers": 4,
@@ -270,7 +274,7 @@
     },
     "7_language_variants": {
       "slugs_with_several_title_ids": 514,
-      "published_page_titles_from_variant_slugs": 7166,
+      "published_page_titles_from_variant_slugs": 12604,
       "handling": "content identity = content_slug; one variant per page, by app language (D-010)"
     },
     "8_availability_windows": {
@@ -279,7 +283,7 @@
         {
           "title_id": "T0001",
           "at": "2026-10-01T07:00:00.000Z",
-          "pages_republished": 9,
+          "pages_republished": 12,
           "messages_cancelled": 3
         }
       ],

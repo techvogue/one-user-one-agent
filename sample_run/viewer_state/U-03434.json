@@ -350,6 +350,26 @@
     "usable": true,
     "value": "Romance"
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T09:16:17.803Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:1c68f2f2-8a01-44db-a2d0-24b841b4eb5b",
+     "event:0867938a-9b43-42af-979f-92694bd95ae9",
+     "event:54a7da59-18e2-42e3-8f96-a260eca13684"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Romance",
+     "Comedy",
+     "Family"
+    ]
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-10-01T09:16:17.803Z",

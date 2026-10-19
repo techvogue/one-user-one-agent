@@ -308,6 +308,25 @@
     "usable": true,
     "value": "Drama"
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T08:10:36.553Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:608d699d-161b-46e2-a161-a582668b901f",
+     "event:ca4019ad-e2fb-4f36-ab10-a9b8d59bea18",
+     "event:c785d7d9-ad17-456a-9589-ae944a8bcb8f"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Drama",
+     "Romance"
+    ]
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-10-01T08:10:36.553Z",
@@ -362,27 +381,27 @@
    "reason": "5 attributable signal(s) in the window",
    "success_events": [
     {
-     "event_id": "oua-027454",
+     "event_id": "oua-027633",
      "event": "play_started",
      "event_time": "2026-10-01T08:12:24.553Z"
     },
     {
-     "event_id": "oua-027457",
+     "event_id": "oua-027636",
      "event": "play_started",
      "event_time": "2026-10-05T04:19:49.000Z"
     },
     {
-     "event_id": "oua-027464",
+     "event_id": "oua-027643",
      "event": "play_started",
      "event_time": "2026-10-07T08:03:10.000Z"
     },
     {
-     "event_id": "oua-027467",
+     "event_id": "oua-027646",
      "event": "play_started",
      "event_time": "2026-10-09T17:04:54.000Z"
     },
     {
-     "event_id": "oua-027470",
+     "event_id": "oua-027649",
      "event": "play_started",
      "event_time": "2026-10-11T03:54:05.000Z"
     }

@@ -39,7 +39,7 @@
  ],
  "actions": [
   "A-00160",
-  "A-00828"
+  "A-00854"
  ],
  "last_known_facts": {
   "at": "2026-10-01T05:48:02.794Z",
@@ -278,6 +278,18 @@
     "usable": true,
     "value": null
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T05:48:02.794Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": []
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-10-01T05:48:02.794Z",
@@ -328,14 +340,14 @@
    "exposure": {
     "pages_shown": 1,
     "messages_delivered": 1,
-    "messages_clicked": 0,
+    "messages_clicked": 1,
     "first_page_shown_at": "2026-10-01T05:48:40.794Z"
    },
-   "learned": "G12 failed: no return_after_absence_7d signal within the window; our page was shown; reminder delivered, not clicked",
+   "learned": "G12 failed: no return_after_absence_7d signal within the window; our page was shown; reminder delivered, clicked",
    "judged_at": "2026-10-15T17:58:40.000Z"
   }
  ],
  "learned": [
-  "G12 failed: no return_after_absence_7d signal within the window; our page was shown; reminder delivered, not clicked"
+  "G12 failed: no return_after_absence_7d signal within the window; our page was shown; reminder delivered, clicked"
  ]
 }

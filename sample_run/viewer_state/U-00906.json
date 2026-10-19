@@ -297,6 +297,25 @@
     "usable": true,
     "value": "Crime"
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T15:21:03.487Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:df4180ad-812b-44d3-82c4-0ab8d62c3436",
+     "event:5cc3b260-36aa-4692-973b-678995de573c"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Crime",
+     "Family",
+     "Thriller"
+    ]
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-10-01T15:21:03.487Z",
@@ -352,7 +371,7 @@
    "reason": "1 attributable signal(s) in the window",
    "success_events": [
     {
-     "event_id": "oua-006057",
+     "event_id": "oua-006107",
      "event": "play_started",
      "event_time": "2026-10-04T08:09:28.000Z"
     }

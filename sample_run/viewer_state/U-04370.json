@@ -308,6 +308,26 @@
     "usable": true,
     "value": "Comedy"
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-09-30T21:31:48.758Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:e447be09-c2b7-4a3d-bab1-0c70db851a70",
+     "event:d4d443af-868c-451a-a770-d39be835fd46",
+     "event:babc3a97-f133-4b9f-b02f-858f6d5c8854"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Comedy",
+     "Drama",
+     "Romance"
+    ]
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-09-30T21:31:48.758Z",
@@ -364,17 +384,17 @@
    "reason": "3 attributable signal(s) in the window",
    "success_events": [
     {
-     "event_id": "oua-027474",
+     "event_id": "oua-027653",
      "event": "play_started",
      "event_time": "2026-09-30T21:40:15.260Z"
     },
     {
-     "event_id": "oua-027478",
+     "event_id": "oua-027657",
      "event": "play_started",
      "event_time": "2026-10-04T13:30:49.000Z"
     },
     {
-     "event_id": "oua-027488",
+     "event_id": "oua-027667",
      "event": "play_started",
      "event_time": "2026-10-08T16:59:09.000Z"
     }

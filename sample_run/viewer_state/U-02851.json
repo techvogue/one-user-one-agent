@@ -309,6 +309,26 @@
     "usable": true,
     "value": "Action"
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T10:56:48.453Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:b81e06e6-421a-4756-b3f9-063f3023a591",
+     "event:b0462032-1204-4c9a-8ba6-c9494188b79f",
+     "event:1c744896-9374-469e-9eab-cfc9f91d2111"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Action",
+     "Devotional",
+     "Family"
+    ]
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-10-01T10:56:48.453Z",

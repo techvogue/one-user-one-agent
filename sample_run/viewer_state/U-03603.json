@@ -31,7 +31,7 @@
   }
  ],
  "actions": [
-  "A-00625"
+  "A-00628"
  ],
  "last_known_facts": {
   "at": "2026-10-01T15:03:09.648Z",
@@ -291,6 +291,23 @@
     "source": "derived:events+catalogue",
     "usable": true,
     "value": "Action"
+   },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T15:03:09.648Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:8219ced8-ac46-446f-8bc6-6bf06f29f6e1"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Action",
+     "Devotional"
+    ]
    },
    "watched_slugs": {
     "age_s": 0.0,

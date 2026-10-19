@@ -313,6 +313,25 @@
     "usable": true,
     "value": "Crime"
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T03:53:14.346Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:a37c9778-13be-47ed-a09c-b63bce36e478",
+     "event:f9cb4594-207a-46ce-9420-c0714fac3799",
+     "event:7ab49786-447d-45bf-b5ac-ff65c72d4549"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Crime",
+     "Devotional"
+    ]
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-10-01T03:53:14.346Z",

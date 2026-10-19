@@ -331,6 +331,26 @@
     "usable": true,
     "value": "Action"
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T11:37:58.117Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:f3a372ca-0710-4892-a87d-9aa44bccb886",
+     "event:ff5aac25-bf19-4c05-b660-dd0854c3eda5",
+     "event:975e5ba6-6b56-4fbb-8243-6445eee983d5"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Action",
+     "Romance",
+     "Thriller"
+    ]
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-10-01T11:37:58.117Z",

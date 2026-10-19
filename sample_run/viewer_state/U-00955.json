@@ -333,6 +333,26 @@
     "usable": true,
     "value": "Family"
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T06:12:12.069Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:2f22a6ba-fceb-4fb9-8061-dca2a7ca7e61",
+     "event:606ba7e9-57e0-40ce-83a1-71e18ace37b4",
+     "event:c322e461-12a2-4e78-860c-bc2aca984233"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Family",
+     "Devotional",
+     "Thriller"
+    ]
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-10-01T06:12:12.069Z",

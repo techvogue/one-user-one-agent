@@ -52,8 +52,8 @@
  ],
  "actions": [
   "A-00067",
-  "A-00337",
-  "A-00822"
+  "A-00340",
+  "A-00833"
  ],
  "last_known_facts": {
   "at": "2026-10-01T09:26:59.327Z",
@@ -312,6 +312,23 @@
     "usable": true,
     "value": "Action"
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T09:26:59.327Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:afcbe1e2-e56d-4cbb-b1e7-2295d218af3a"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Action",
+     "Romance"
+    ]
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-10-01T09:26:59.327Z",
@@ -366,7 +383,7 @@
    "reason": "1 attributable signal(s) in the window",
    "success_events": [
     {
-     "event_id": "oua-031320",
+     "event_id": "oua-031517",
      "event": "play_started",
      "event_time": "2026-10-03T07:16:16.000Z"
     }

@@ -284,6 +284,22 @@
     "usable": true,
     "value": "Drama"
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T13:43:34.462Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:14d491ee-a885-4451-93ca-cf255e3ae3c3"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Drama"
+    ]
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-10-01T13:43:34.462Z",
@@ -338,7 +354,7 @@
    "reason": "1 attributable signal(s) in the window",
    "success_events": [
     {
-     "event_id": "oua-011170",
+     "event_id": "oua-011255",
      "event": "episode_completed",
      "event_time": "2026-10-01T13:52:20.462Z"
     }

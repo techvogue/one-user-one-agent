@@ -306,6 +306,24 @@
     "usable": true,
     "value": "Devotional"
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T16:08:01.388Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:79b2df8f-7314-486a-9bb3-68f4f58e39e1",
+     "event:0238178d-c514-431d-84c5-1018da58510b",
+     "event:6b049120-aa11-466a-a96e-f5a22af8236c"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Devotional"
+    ]
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-10-01T16:08:01.388Z",

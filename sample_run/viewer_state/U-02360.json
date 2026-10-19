@@ -302,6 +302,24 @@
     "usable": true,
     "value": "Action"
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T10:40:49.702Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:18eafb45-cfa4-4c51-8f03-0924410df25b",
+     "event:b857897c-8073-41b3-9789-e0f0dfaa2443",
+     "event:810bd8ef-fc74-49b2-8f53-e52e43b58f40"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Action"
+    ]
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-10-01T10:40:49.702Z",
@@ -357,7 +375,7 @@
    "reason": "1 attributable signal(s) in the window",
    "success_events": [
     {
-     "event_id": "oua-015072",
+     "event_id": "oua-015173",
      "event": "play_started",
      "event_time": "2026-10-02T16:16:20.000Z"
     }

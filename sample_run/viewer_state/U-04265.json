@@ -31,7 +31,7 @@
   }
  ],
  "actions": [
-  "A-00258"
+  "A-00261"
  ],
  "last_known_facts": {
   "at": "2026-10-01T07:46:45.324Z",
@@ -311,6 +311,26 @@
     "usable": true,
     "value": "Crime"
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T07:46:45.324Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:e935cfdb-cefd-4031-b571-d21456b73317",
+     "event:9b9a7d6e-13ce-432d-90bb-19448325f3ca",
+     "event:447b7ceb-d0d5-46da-aca0-bb7225b53d18"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Crime",
+     "Romance",
+     "Devotional"
+    ]
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-10-01T07:46:45.324Z",
@@ -366,7 +386,7 @@
    "reason": "1 attributable signal(s) in the window",
    "success_events": [
     {
-     "event_id": "oua-026844",
+     "event_id": "oua-027019",
      "event": "play_started",
      "event_time": "2026-10-05T07:42:59.000Z"
     }

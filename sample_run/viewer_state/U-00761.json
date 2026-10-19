@@ -293,6 +293,23 @@
     "usable": true,
     "value": "Action"
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T13:34:39.662Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:2f3023ec-6edc-4794-94f7-97ef962cbd17"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Action",
+     "Crime"
+    ]
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-10-01T13:34:39.662Z",

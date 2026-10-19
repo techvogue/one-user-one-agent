@@ -329,6 +329,26 @@
     "usable": true,
     "value": "Action"
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T16:22:22.679Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:75c3a472-8fe8-409d-8273-8be2a357f8fe",
+     "event:f6cb4731-82d4-4f50-b9f0-c77b3d509cb7",
+     "event:7e5dc16d-f903-4e2d-8da1-564b89ad4c2e"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Action",
+     "Family",
+     "Crime"
+    ]
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-10-01T16:22:22.679Z",

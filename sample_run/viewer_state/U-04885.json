@@ -44,7 +44,7 @@
   }
  ],
  "actions": [
-  "A-00401"
+  "A-00404"
  ],
  "last_known_facts": {
   "at": "2026-10-01T12:21:55.676Z",
@@ -302,6 +302,24 @@
     "source": "derived:events+catalogue",
     "usable": true,
     "value": "Crime"
+   },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T12:21:55.676Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:5ec57b09-9965-499d-a39d-489e94537aa6",
+     "event:f2be7df5-86a0-4d17-9624-fb944b7867b5"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Crime",
+     "Devotional"
+    ]
    },
    "watched_slugs": {
     "age_s": 0.0,

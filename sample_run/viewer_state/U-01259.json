@@ -51,7 +51,7 @@
   }
  ],
  "actions": [
-  "A-00388"
+  "A-00391"
  ],
  "last_known_facts": {
   "at": "2026-10-01T10:48:32.423Z",
@@ -279,6 +279,18 @@
     "source": "derived:events+catalogue",
     "usable": true,
     "value": null
+   },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T10:48:32.423Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": []
    },
    "watched_slugs": {
     "age_s": 0.0,

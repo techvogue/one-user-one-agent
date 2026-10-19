@@ -58,7 +58,7 @@
  ],
  "actions": [
   "A-00150",
-  "A-00425"
+  "A-00428"
  ],
  "last_known_facts": {
   "at": "2026-10-01T12:34:13.773Z",
@@ -355,6 +355,26 @@
     "usable": true,
     "value": "Action"
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T12:34:13.773Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:f37b19a9-5eea-4e92-9f88-b95a5aaec460",
+     "event:fa141932-e00e-4c44-8bf2-78cf95fb48b0",
+     "event:4660ccb5-d113-4f38-9974-e2da638633dc"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Action",
+     "Comedy",
+     "Romance"
+    ]
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-10-01T12:34:13.773Z",
@@ -414,7 +434,7 @@
    "reason": "1 attributable signal(s) in the window",
    "success_events": [
     {
-     "event_id": "oua-004118",
+     "event_id": "oua-004158",
      "event": "play_started",
      "event_time": "2026-10-01T05:32:26.016Z"
     }

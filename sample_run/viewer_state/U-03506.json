@@ -332,6 +332,26 @@
     "usable": true,
     "value": "Family"
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T09:27:51.110Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:e8b4b76e-91a7-47b6-b06f-13e7981a524b",
+     "event:a6b90a3f-da66-4e7b-818d-e877eb473ad3",
+     "event:774c8fd0-f52a-4b90-a85e-2602d4eb117b"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Family",
+     "Action",
+     "Comedy"
+    ]
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-10-01T09:27:51.110Z",

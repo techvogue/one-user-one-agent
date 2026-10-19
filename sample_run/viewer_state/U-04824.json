@@ -315,6 +315,25 @@
     "usable": true,
     "value": "Action"
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T15:09:01.677Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:a781139d-26a3-433b-bd6b-d0e09aa86d8b",
+     "event:dd50708e-f708-484c-a7aa-dd1691a51645"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Action",
+     "Crime",
+     "Romance"
+    ]
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-10-01T15:09:01.677Z",
@@ -370,7 +389,7 @@
    "reason": "1 attributable signal(s) in the window",
    "success_events": [
     {
-     "event_id": "oua-030218",
+     "event_id": "oua-030410",
      "event": "purchase_completed",
      "event_time": "2026-10-10T16:14:00.000Z"
     }

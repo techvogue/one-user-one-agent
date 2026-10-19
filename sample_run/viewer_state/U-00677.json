@@ -38,7 +38,7 @@
   }
  ],
  "actions": [
-  "A-00518"
+  "A-00521"
  ],
  "last_known_facts": {
   "at": "2026-10-01T13:52:45.661Z",
@@ -312,6 +312,25 @@
     "source": "derived:events+catalogue",
     "usable": true,
     "value": "Drama"
+   },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T13:52:45.661Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:04980835-faff-49ac-9cc0-5704fc2f3dce",
+     "event:6a8a10a9-dc18-4a95-8b28-1e24f2824b65",
+     "event:e979f8de-2d47-4df9-baa5-814585cae60f"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Drama",
+     "Thriller"
+    ]
    },
    "watched_slugs": {
     "age_s": 0.0,

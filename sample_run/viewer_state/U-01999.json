@@ -31,7 +31,8 @@
   }
  ],
  "actions": [
-  "A-00087"
+  "A-00087",
+  "A-00836"
  ],
  "last_known_facts": {
   "at": "2026-10-01T03:35:13.040Z",
@@ -306,6 +307,26 @@
     "usable": true,
     "value": "Comedy"
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T03:35:13.040Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:487f94cb-7243-4e59-aa45-56df60ade91b",
+     "event:c830026b-b831-4142-8e86-6b428cd625af",
+     "event:1bc32568-397a-49b6-b194-9b29701ef791"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Comedy",
+     "Action",
+     "Thriller"
+    ]
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-10-01T03:35:13.040Z",
@@ -362,15 +383,15 @@
    "success_events": [],
    "exposure": {
     "pages_shown": 1,
-    "messages_delivered": 0,
+    "messages_delivered": 1,
     "messages_clicked": 0,
     "first_page_shown_at": "2026-10-01T03:35:30.040Z"
    },
-   "learned": "G07 failed: no resume_series_3d signal within the window; our page was shown",
+   "learned": "G07 failed: no resume_series_3d signal within the window; our page was shown; reminder delivered, not clicked",
    "judged_at": "2026-10-15T17:58:40.000Z"
   }
  ],
  "learned": [
-  "G07 failed: no resume_series_3d signal within the window; our page was shown"
+  "G07 failed: no resume_series_3d signal within the window; our page was shown; reminder delivered, not clicked"
  ]
 }

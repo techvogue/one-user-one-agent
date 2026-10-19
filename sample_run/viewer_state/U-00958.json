@@ -110,9 +110,9 @@
  ],
  "actions": [
   "A-00111",
-  "A-00298",
-  "A-00528",
-  "A-00767"
+  "A-00301",
+  "A-00531",
+  "A-00770"
  ],
  "last_known_facts": {
   "at": "2026-10-01T16:59:09.052Z",
@@ -370,6 +370,22 @@
     "source": "derived:events+catalogue",
     "usable": true,
     "value": "Devotional"
+   },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T16:59:09.052Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:a1a4b317-1055-4c43-b815-848c33c3bfde"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Devotional"
+    ]
    },
    "watched_slugs": {
     "age_s": 0.0,

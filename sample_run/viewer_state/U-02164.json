@@ -302,6 +302,26 @@
     "usable": true,
     "value": "Thriller"
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-09-30T23:42:41.898Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:e1daecb2-eaab-4fc9-8442-bd72da8622b2",
+     "event:cf7c4ddd-c72d-4467-a674-4743870a92df",
+     "event:cdff7111-48d2-43af-8a06-4efe5adba02d"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Thriller",
+     "Action",
+     "Comedy"
+    ]
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-09-30T23:42:41.898Z",
@@ -358,17 +378,17 @@
    "reason": "3 attributable signal(s) in the window",
    "success_events": [
     {
-     "event_id": "oua-013979",
+     "event_id": "oua-014072",
      "event": "play_started",
      "event_time": "2026-10-03T15:07:08.000Z"
     },
     {
-     "event_id": "oua-013991",
+     "event_id": "oua-014084",
      "event": "play_started",
      "event_time": "2026-10-05T03:38:10.000Z"
     },
     {
-     "event_id": "oua-013988",
+     "event_id": "oua-014081",
      "event": "play_started",
      "event_time": "2026-10-05T15:28:07.000Z"
     }

@@ -317,6 +317,26 @@
     "usable": true,
     "value": "Family"
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T08:38:05.212Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:2c402610-7190-42af-8052-9ac7f6b833be",
+     "event:b8cf1009-18e9-4957-ae6e-c975125ef64b",
+     "event:10ab3ea1-8101-48a3-9ee2-5caf8103b071"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Family",
+     "Action",
+     "Romance"
+    ]
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-10-01T08:38:05.212Z",
@@ -373,27 +393,27 @@
    "reason": "5 attributable signal(s) in the window",
    "success_events": [
     {
-     "event_id": "oua-017483",
+     "event_id": "oua-017600",
      "event": "play_started",
      "event_time": "2026-10-05T14:39:26.000Z"
     },
     {
-     "event_id": "oua-017490",
+     "event_id": "oua-017607",
      "event": "play_started",
      "event_time": "2026-10-06T15:24:03.000Z"
     },
     {
-     "event_id": "oua-017493",
+     "event_id": "oua-017610",
      "event": "play_started",
      "event_time": "2026-10-11T17:03:35.000Z"
     },
     {
-     "event_id": "oua-017500",
+     "event_id": "oua-017617",
      "event": "play_started",
      "event_time": "2026-10-12T16:17:21.000Z"
     },
     {
-     "event_id": "oua-017504",
+     "event_id": "oua-017621",
      "event": "play_started",
      "event_time": "2026-10-15T07:13:35.000Z"
     }

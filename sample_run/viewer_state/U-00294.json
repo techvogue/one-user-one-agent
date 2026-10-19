@@ -51,9 +51,9 @@
   }
  ],
  "actions": [
-  "A-00332",
-  "A-00679",
-  "A-00834"
+  "A-00335",
+  "A-00682",
+  "A-00875"
  ],
  "last_known_facts": {
   "at": "2026-10-01T15:26:16.025Z",
@@ -313,6 +313,24 @@
     "usable": true,
     "value": "Crime"
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T15:26:16.025Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:3e02df84-780e-48e1-b2b1-a654d89fd296",
+     "event:273af919-a1e5-4d39-9809-8657737be727"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Crime",
+     "Thriller"
+    ]
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-10-01T15:26:16.025Z",
@@ -367,7 +385,7 @@
    "reason": "1 attributable signal(s) in the window",
    "success_events": [
     {
-     "event_id": "oua-002041",
+     "event_id": "oua-002065",
      "event": "play_started",
      "event_time": "2026-10-01T09:26:00.867Z"
     }

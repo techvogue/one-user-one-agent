@@ -329,6 +329,26 @@
     "usable": true,
     "value": "Action"
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T09:00:11.911Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:8a33b9fe-b49e-4997-956b-af4ab8a9ffc3",
+     "event:c527a5e9-840c-4cef-b81f-f2919c360a07",
+     "event:a7e5c3cb-1d2c-41f4-8c27-2d99b362d8b5"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Action",
+     "Crime",
+     "Devotional"
+    ]
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-10-01T09:00:11.911Z",

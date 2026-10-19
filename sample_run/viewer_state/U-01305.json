@@ -295,6 +295,22 @@
     "usable": true,
     "value": "Drama"
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T15:11:43.022Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:1e710c0b-0372-4c77-97d3-5de1bc24daeb"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Drama"
+    ]
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-10-01T15:11:43.022Z",

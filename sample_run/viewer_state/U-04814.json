@@ -60,8 +60,8 @@
   "A-00035",
   "A-00187",
   "A-00212",
-  "A-00754",
-  "A-00854"
+  "A-00757",
+  "A-00945"
  ],
  "last_known_facts": {
   "at": "2026-10-01T16:47:41.791Z",
@@ -304,6 +304,23 @@
     "usable": true,
     "value": "Action"
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T16:47:41.791Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:655f559c-19a7-4461-8d14-3445344f8ce2"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Action",
+     "Devotional"
+    ]
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-10-01T16:47:41.791Z",
@@ -356,7 +373,7 @@
    "reason": "1 attributable signal(s) in the window",
    "success_events": [
     {
-     "event_id": "oua-030145",
+     "event_id": "oua-030336",
      "event": "play_started",
      "event_time": "2026-10-01T16:50:02.791Z"
     }

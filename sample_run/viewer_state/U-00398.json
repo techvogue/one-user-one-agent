@@ -45,7 +45,7 @@
  ],
  "actions": [
   "A-00189",
-  "A-00588"
+  "A-00591"
  ],
  "last_known_facts": {
   "at": "2026-10-01T14:47:40.603Z",
@@ -299,6 +299,23 @@
     "usable": true,
     "value": "Comedy"
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T14:47:40.603Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:da39c5dd-a3ee-4acb-8de6-b04a2bd9e565"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Comedy",
+     "Drama"
+    ]
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-10-01T14:47:40.603Z",
@@ -346,21 +363,27 @@
     "deadline": "2026-10-04T06:26:06.864Z",
     "judged_until": "2026-10-04T06:26:06.864Z"
    },
-   "verdict": "FAILED",
+   "verdict": "SUCCEEDED",
    "stage": "final",
-   "reason": "no attributable signal by the deadline (2026-10-04T06:26:06.864Z) + 24 h",
-   "success_events": [],
+   "reason": "1 attributable signal(s) in the window",
+   "success_events": [
+    {
+     "event_id": "oua-002734",
+     "event": "episode_completed",
+     "event_time": "2026-10-01T15:27:34.603Z"
+    }
+   ],
    "exposure": {
     "pages_shown": 2,
     "messages_delivered": 0,
     "messages_clicked": 0,
     "first_page_shown_at": "2026-10-01T06:26:09.864Z"
    },
-   "learned": "G02 failed: no first_full_episode_3d signal within the window; our page was shown",
+   "learned": "G02 succeeded 0.4 days after the goal started; our page was shown",
    "judged_at": "2026-10-15T17:58:40.000Z"
   }
  ],
  "learned": [
-  "G02 failed: no first_full_episode_3d signal within the window; our page was shown"
+  "G02 succeeded 0.4 days after the goal started; our page was shown"
  ]
 }

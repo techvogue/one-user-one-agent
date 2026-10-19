@@ -18,24 +18,24 @@
     "PAGE_STILL_LIVE": 85
   },
   "actions": {
-    "home_page": 819,
-    "whatsapp": 20,
+    "home_page": 822,
+    "whatsapp": 112,
     "push": 17
   },
   "messages": {
-    "cancelled": 3,
-    "sent": 37
+    "sent": 129,
+    "cancelled": 3
   },
   "latency_s_all_decided": {
     "p50": 0.842,
-    "p95": 0.844,
-    "p99": 1.074,
+    "p95": 0.845,
+    "p99": 1.071,
     "max": 3.358
   },
   "latency_s_published_pages": {
-    "p50": 0.842,
-    "p95": 0.844,
-    "p99": 1.072,
+    "p50": 0.843,
+    "p95": 0.845,
+    "p99": 1.049,
     "max": 2.218
   },
   "over_60s": 0,
@@ -67,7 +67,7 @@
         "stale_share": 0.92,
         "decided": 16,
         "max_queue_s": 0.0,
-        "max_latency_s": 0.845,
+        "max_latency_s": 0.868,
         "model_skipped_under_load": 0
       },
       {
@@ -77,7 +77,7 @@
         "stale_share": 0.11,
         "decided": 40,
         "max_queue_s": 0.0,
-        "max_latency_s": 0.844,
+        "max_latency_s": 0.845,
         "model_skipped_under_load": 0
       },
       {
@@ -87,7 +87,7 @@
         "stale_share": 0.02,
         "decided": 154,
         "max_queue_s": 0.0,
-        "max_latency_s": 1.072,
+        "max_latency_s": 1.067,
         "model_skipped_under_load": 0
       },
       {
@@ -97,7 +97,7 @@
         "stale_share": 0.04,
         "decided": 35,
         "max_queue_s": 0.0,
-        "max_latency_s": 0.846,
+        "max_latency_s": 0.845,
         "model_skipped_under_load": 0
       },
       {
@@ -107,7 +107,7 @@
         "stale_share": 0.09,
         "decided": 34,
         "max_queue_s": 0.0,
-        "max_latency_s": 0.843,
+        "max_latency_s": 0.844,
         "model_skipped_under_load": 0
       }
     ]
@@ -269,7 +269,7 @@
       "effect": null
     }
   ],
-  "wall_clock_s": 17.2,
+  "wall_clock_s": 18.5,
   "budgets": {
     "max_model_calls": 8,
     "max_tool_calls": 20,

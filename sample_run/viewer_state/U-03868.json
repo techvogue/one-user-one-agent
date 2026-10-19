@@ -45,7 +45,7 @@
  ],
  "actions": [
   "A-00138",
-  "A-00711"
+  "A-00714"
  ],
  "last_known_facts": {
   "at": "2026-10-01T15:57:26.271Z",
@@ -313,6 +313,25 @@
     "source": "derived:events+catalogue",
     "usable": true,
     "value": "Devotional"
+   },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T15:57:26.271Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:ca0b3db2-115f-402f-994f-506e9649e495",
+     "event:266c929b-e26e-4c31-a73f-1fe34d3a5b02"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Devotional",
+     "Drama",
+     "Romance"
+    ]
    },
    "watched_slugs": {
     "age_s": 0.0,

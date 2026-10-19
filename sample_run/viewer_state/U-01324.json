@@ -326,6 +326,26 @@
     "usable": true,
     "value": "Devotional"
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T12:47:29.039Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:99828dff-ec79-4631-84bc-50b4b6b612f7",
+     "event:15e7d0bf-9951-406c-a9fb-1cde45121080",
+     "event:b41358e9-4811-4ced-bf99-a41b749d63da"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Devotional",
+     "Action",
+     "Comedy"
+    ]
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-10-01T12:47:29.039Z",

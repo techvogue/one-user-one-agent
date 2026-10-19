@@ -328,6 +328,26 @@
     "usable": true,
     "value": "Drama"
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-09-30T18:57:53.240Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:ff85e2e8-2ae0-41eb-ac86-ec3af57b5e50",
+     "event:07bd3a54-0ce8-4cfa-99b7-8994c771f999",
+     "event:651c9890-e358-4d3a-b2e5-7cdee2632026"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Drama",
+     "Comedy",
+     "Devotional"
+    ]
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-09-30T18:57:53.240Z",

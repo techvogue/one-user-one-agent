@@ -283,6 +283,23 @@
     "usable": true,
     "value": "Action"
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T18:10:25.614Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:5e49f651-c9ad-4cde-8a8b-aa895a0381af"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Action",
+     "Family"
+    ]
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-10-01T18:10:25.614Z",
@@ -336,7 +353,7 @@
    "reason": "1 attributable signal(s) in the window",
    "success_events": [
     {
-     "event_id": "oua-014573",
+     "event_id": "oua-014670",
      "event": "play_started",
      "event_time": "2026-10-01T18:14:29.614Z"
     }

@@ -283,6 +283,23 @@
     "usable": true,
     "value": "Comedy"
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T15:05:50.811Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:46158c17-0457-4e8e-af23-f480d2b6d84d"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Comedy",
+     "Thriller"
+    ]
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-10-01T15:05:50.811Z",
@@ -336,7 +353,7 @@
    "reason": "1 attributable signal(s) in the window",
    "success_events": [
     {
-     "event_id": "oua-013213",
+     "event_id": "oua-013304",
      "event": "episode_completed",
      "event_time": "2026-10-01T15:10:53.811Z"
     }

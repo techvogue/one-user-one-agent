@@ -31,7 +31,7 @@
   }
  ],
  "actions": [
-  "A-00266"
+  "A-00269"
  ],
  "last_known_facts": {
   "at": "2026-10-01T07:52:29.969Z",
@@ -302,6 +302,25 @@
     "source": "derived:events+catalogue",
     "usable": true,
     "value": "Crime"
+   },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T07:52:29.969Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:252ec868-3b87-426b-a5d6-f91383bbd52d",
+     "event:55118746-e59c-409e-8282-69e7a658c55c",
+     "event:da670058-2159-48d4-92f4-dd0d0f73fb0f"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Crime",
+     "Thriller"
+    ]
    },
    "watched_slugs": {
     "age_s": 0.0,

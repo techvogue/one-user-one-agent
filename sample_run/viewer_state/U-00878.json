@@ -307,6 +307,26 @@
     "usable": true,
     "value": "Romance"
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T11:21:21.884Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:770002ae-9ccf-43cd-b685-8a462e2e7f15",
+     "event:1ac18552-1ec6-4410-afca-4842af660424",
+     "event:46293e19-9a28-43d8-93ce-1fbede013c33"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Romance",
+     "Action",
+     "Devotional"
+    ]
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-10-01T11:21:21.884Z",
@@ -362,22 +382,22 @@
    "reason": "4 attributable signal(s) in the window",
    "success_events": [
     {
-     "event_id": "oua-005783",
+     "event_id": "oua-005833",
      "event": "play_started",
      "event_time": "2026-10-01T11:23:23.884Z"
     },
     {
-     "event_id": "oua-005787",
+     "event_id": "oua-005837",
      "event": "play_started",
      "event_time": "2026-10-02T13:35:39.000Z"
     },
     {
-     "event_id": "oua-005790",
+     "event_id": "oua-005840",
      "event": "play_started",
      "event_time": "2026-10-04T06:33:49.000Z"
     },
     {
-     "event_id": "oua-005796",
+     "event_id": "oua-005846",
      "event": "play_started",
      "event_time": "2026-10-08T16:15:57.000Z"
     }

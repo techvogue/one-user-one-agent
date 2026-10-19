@@ -38,7 +38,7 @@
   }
  ],
  "actions": [
-  "A-00442"
+  "A-00445"
  ],
  "last_known_facts": {
   "at": "2026-10-01T12:06:19.086Z",
@@ -323,6 +323,26 @@
     "source": "derived:events+catalogue",
     "usable": true,
     "value": "Action"
+   },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T12:06:19.086Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:c26f3bbe-f0b3-44ca-9206-da510f96907a",
+     "event:3fcd43ae-802c-4320-a37a-55abc1c7609e",
+     "event:2ebed001-446f-4441-96b0-e991ee7853ab"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Action",
+     "Crime",
+     "Family"
+    ]
    },
    "watched_slugs": {
     "age_s": 0.0,

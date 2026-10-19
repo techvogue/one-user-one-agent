@@ -287,6 +287,23 @@
     "usable": true,
     "value": "Action"
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-09-30T23:46:03.780Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:2864a16b-d6c3-4d88-9e9d-d8d0725b25a4"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Action",
+     "Romance"
+    ]
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-09-30T23:46:03.780Z",

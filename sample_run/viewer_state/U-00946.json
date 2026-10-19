@@ -331,6 +331,26 @@
     "usable": true,
     "value": "Thriller"
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T15:16:13.991Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:b2cfee52-29b1-4606-a0e0-f9b66ff3e1c0",
+     "event:c4352ad7-592f-4dd9-a76b-efe6687d286c",
+     "event:c2e22097-4ded-4b81-848e-7bebadf6f564"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Thriller",
+     "Drama",
+     "Devotional"
+    ]
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-10-01T15:16:13.991Z",
@@ -390,7 +410,7 @@
    "reason": "1 attributable signal(s) in the window",
    "success_events": [
     {
-     "event_id": "oua-006311",
+     "event_id": "oua-006362",
      "event": "play_started",
      "event_time": "2026-10-05T07:19:53.000Z"
     }

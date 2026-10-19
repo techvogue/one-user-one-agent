@@ -31,7 +31,7 @@
   }
  ],
  "actions": [
-  "A-00342"
+  "A-00345"
  ],
  "last_known_facts": {
   "at": "2026-10-01T09:33:50.325Z",
@@ -295,6 +295,26 @@
     "usable": true,
     "value": "Action"
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T09:33:50.325Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:092a862c-978b-434c-b417-d5031a53883b",
+     "event:b1d404de-58b2-464e-b0da-b73c6fd43a29",
+     "event:b77898c7-5ada-4426-9cfa-a7b2840e763d"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Action",
+     "Devotional",
+     "Drama"
+    ]
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-10-01T09:33:50.325Z",
@@ -351,17 +371,17 @@
    "reason": "3 attributable signal(s) in the window",
    "success_events": [
     {
-     "event_id": "oua-023391",
+     "event_id": "oua-023546",
      "event": "play_started",
      "event_time": "2026-10-01T09:34:35.325Z"
     },
     {
-     "event_id": "oua-023394",
+     "event_id": "oua-023549",
      "event": "play_started",
      "event_time": "2026-10-03T17:11:02.000Z"
     },
     {
-     "event_id": "oua-023402",
+     "event_id": "oua-023557",
      "event": "play_started",
      "event_time": "2026-10-11T17:01:49.000Z"
     }

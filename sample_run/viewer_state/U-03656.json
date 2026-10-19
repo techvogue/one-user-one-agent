@@ -301,6 +301,26 @@
     "usable": true,
     "value": "Family"
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T15:03:53.799Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:e2746d4a-90fd-435f-9963-d0d976ce0261",
+     "event:1f21abc2-6859-49e9-ac7d-5cff3f7279cf",
+     "event:8e0fa4c9-8bb1-49ee-9f6a-d6b4e4016849"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Family",
+     "Romance",
+     "Crime"
+    ]
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-10-01T15:03:53.799Z",
@@ -357,22 +377,22 @@
    "reason": "4 attributable signal(s) in the window",
    "success_events": [
     {
-     "event_id": "oua-023287",
+     "event_id": "oua-023442",
      "event": "play_started",
      "event_time": "2026-10-07T15:18:48.000Z"
     },
     {
-     "event_id": "oua-023291",
+     "event_id": "oua-023446",
      "event": "play_started",
      "event_time": "2026-10-09T08:13:03.000Z"
     },
     {
-     "event_id": "oua-023299",
+     "event_id": "oua-023454",
      "event": "play_started",
      "event_time": "2026-10-13T07:00:56.000Z"
     },
     {
-     "event_id": "oua-023303",
+     "event_id": "oua-023458",
      "event": "play_started",
      "event_time": "2026-10-14T13:36:57.000Z"
     }

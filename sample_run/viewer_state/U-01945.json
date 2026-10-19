@@ -330,6 +330,26 @@
     "usable": true,
     "value": "Comedy"
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T16:52:39.369Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:eb887036-66e8-456e-9949-16263a6fc193",
+     "event:5d0bf86e-20d3-4f86-a195-232689ea34bb",
+     "event:5270f398-d8f8-459d-9de7-7d0d31a9bc9b"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Comedy",
+     "Family",
+     "Drama"
+    ]
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-10-01T16:52:39.369Z",

@@ -322,6 +322,23 @@
     "usable": true,
     "value": "Drama"
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T15:22:57.501Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:d072a45f-fb3e-4215-a4f7-748f0dcab2c7"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Drama",
+     "Thriller"
+    ]
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-10-01T15:22:57.501Z",
@@ -376,22 +393,22 @@
    "reason": "4 attributable signal(s) in the window",
    "success_events": [
     {
-     "event_id": "oua-007465",
+     "event_id": "oua-007520",
      "event": "play_started",
      "event_time": "2026-10-03T15:56:21.000Z"
     },
     {
-     "event_id": "oua-007471",
+     "event_id": "oua-007526",
      "event": "play_started",
      "event_time": "2026-10-11T15:36:30.000Z"
     },
     {
-     "event_id": "oua-007477",
+     "event_id": "oua-007532",
      "event": "play_started",
      "event_time": "2026-10-13T17:24:39.000Z"
     },
     {
-     "event_id": "oua-007483",
+     "event_id": "oua-007538",
      "event": "play_started",
      "event_time": "2026-10-14T07:52:11.000Z"
     }

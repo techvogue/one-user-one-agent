@@ -283,6 +283,26 @@
     "usable": true,
     "value": "Thriller"
    },
+   "top_genres": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T06:14:36.716Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:1779ae3e-4acb-47a1-8a14-44bcf788b1d1",
+     "event:3ed3eb04-49b3-4ebe-8f48-53e0cec9d712",
+     "event:3eee4666-40bb-43b2-8dfc-cdbbe3dce070"
+    ],
+    "freshness": "fresh",
+    "name": "top_genres",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "Thriller",
+     "Comedy",
+     "Drama"
+    ]
+   },
    "watched_slugs": {
     "age_s": 0.0,
     "as_of": "2026-10-01T06:14:36.716Z",
