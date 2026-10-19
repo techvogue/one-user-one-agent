@@ -1,4 +1,4 @@
-start # Architecture: One User, One Agent
+# Architecture: One User, One Agent
 
 > Design of the submitted system. Every design choice links to its entry in [doc/decisions.md](doc/decisions.md)
 > (D-xxx), where the options considered and the reasons are recorded.
