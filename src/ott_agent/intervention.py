@@ -411,3 +411,35 @@ def decide_intervention(
     return Intervention(
         HOME_PAGE, reason, None, page, msg, note, content, evidence, assumptions + m_assumptions
     )
+
+
+def build_generic_page(
+    catalogue: Catalogue,
+    popularity: dict[str, int],
+    dialect: str,
+    language: str | None,
+    at: datetime,
+    rules: PlatformRules,
+) -> dict | None:
+    """Fallback page when the viewer's state cannot be read (D-036): popular titles in the app's dialect only.
+    Uses nothing about the viewer except what the app open itself says (dialect, language)."""
+    pool: dict[str, Title] = {}
+    for t in catalogue.titles.values():
+        if t.dialect != dialect or not catalogue.is_promotable(t, at, rules.page_ttl):
+            continue
+        cur = pool.get(t.slug)
+        if cur is None or (cur.language != language and t.language == language):
+            pool[t.slug] = t
+    ranked = sorted(pool, key=lambda s: (-popularity.get(s, 0), pool[s].title_id))
+    if not ranked:
+        return None
+    hero, rest = ranked[0], ranked[1 : 1 + rules.max_titles_per_row]
+    rows = [{"row_type": "popular_in_dialect", "title_ids": [pool[s].title_id for s in rest]}]
+    if len(rest) < rules.min_titles_per_row:
+        rows = []
+    return {
+        "dialect": dialect,
+        "hero_title_id": pool[hero].title_id,
+        "rows": rows,
+        "live_until": iso(at + rules.page_ttl),
+    }

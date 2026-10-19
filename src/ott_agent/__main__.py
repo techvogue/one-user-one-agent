@@ -2,6 +2,7 @@
 
 Commands so far:
   load     ingest the pack's 30-day history into the state store and write data_quality_report.json
+  replay   run the whole replay day (one command): decisions, actions, latency and quality reports
   inspect  show what the agent knows about one viewer at a moment (facts with source, freshness, conflicts)
            and which goal it would choose (dry run)
 """
@@ -157,6 +158,27 @@ def cmd_inspect(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_replay(args: argparse.Namespace) -> int:
+    from .harness import Replay, latency_summary
+    from .model import MockProvider, OllamaProvider
+
+    cfg = _config(args)
+    if not (cfg.pack_path / "replay" / "triggers.jsonl").exists():
+        print(f"error: no replay/triggers.jsonl under {cfg.pack_path} (use --pack)", file=sys.stderr)
+        return 2
+    if args.provider == "ollama":
+        provider = OllamaProvider(args.ollama_model, args.ollama_url, cfg.model_timeout_s)
+    else:
+        provider = MockProvider.from_pack(cfg.pack_path, cfg.model_latency_s)
+    rep = Replay(cfg.pack_path, Path(args.out), cfg, provider).run()
+    print(latency_summary(rep))
+    print(
+        f"outputs in {args.out}/: decisions.jsonl, actions.jsonl, control_log.jsonl, latency_report.json,"
+        " data_quality_report.json, viewer_state/"
+    )
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="ott_agent", description="One User, One Agent")
     parser.add_argument("-v", "--verbose", action="store_true")
@@ -171,6 +193,15 @@ def main(argv: list[str] | None = None) -> int:
     p = sub.add_parser("load", help="ingest history and write the data quality report")
     common(p)
     p.set_defaults(func=cmd_load)
+
+    p = sub.add_parser("replay", help="run the whole replay day: decisions, actions, reports")
+    common(p)
+    p.add_argument(
+        "--provider", choices=["mock", "ollama"], default="mock", help="model provider (default: mock)"
+    )
+    p.add_argument("--ollama-model", default="qwen2.5:3b-instruct")
+    p.add_argument("--ollama-url", default="http://localhost:11434")
+    p.set_defaults(func=cmd_replay)
 
     p = sub.add_parser("inspect", help="show what the agent knows about a viewer at a moment")
     common(p)

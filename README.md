@@ -1,7 +1,7 @@
 # One User, One Agent
 
 > **Status: in progress.** Implemented so far: ingestion (deduplication + corrected event time), the data quality
-> report, profile and catalogue loading, the per-viewer fact resolver, the goal planner and the intervention planner. The one-command replay will be added once the agent loop exists. This README is updated as work progresses.
+> report, profile and catalogue loading, the per-viewer fact resolver, the goal planner, the intervention planner and the replay harness (budgets, faults, fallbacks). The one-command replay will be added once the agent loop exists. This README is updated as work progresses.
 
 An agentic system that gives every viewer of a regional-dialect OTT platform one dedicated agent. On each app open the
 agent chooses one measurable goal, decides what to change (home page, one message, or nothing) from evidence it can
@@ -56,7 +56,21 @@ Load the 30-day history and write `sample_run/data_quality_report.json`:
 
 ## Run the replay (one command)
 
-_To be written._
+```bash
+.venv/bin/python -m ott_agent replay --pack ../one_user_one_agent_pack --out sample_run
+```
+
+Loads the history, plays the replay day (triggers, live events, control events, injected model faults) and writes
+`sample_run/decisions.jsonl`, `actions.jsonl`, `control_log.jsonl`, `latency_report.json`,
+`data_quality_report.json` and `viewer_state/`. Uses the mock model (no API key). Optional local model:
+`--provider ollama --ollama-model qwen2.5:3b-instruct`.
+
+Then run the pack's simulator on the published actions:
+
+```bash
+python ../one_user_one_agent_pack/simulator/simulate_outcomes.py --pack ../one_user_one_agent_pack \
+    --actions sample_run/actions.jsonl --out sample_run/sim
+```
 
 Show what the agent knows about one viewer at a moment (facts with source, freshness, usability and conflicts) and
 which goal it would choose, with the reason for every goal (dry run, nothing is committed):

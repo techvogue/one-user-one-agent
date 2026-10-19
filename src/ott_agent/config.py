@@ -42,6 +42,20 @@ class Config:
     new_release_days: int = 30  # "new release" = released in the last 30 days (same as G08's success rule)
     message_goals: tuple[str, ...] = ("G03", "G12")  # only goals that need a later visit get a reminder
     message_hour_ist: int = 19  # reminders at 19:00 IST the next day
+    # Acting within budget (D-037). Simulated clock: published_at = deliver_at + compute + dependency delays + queue.
+    workers: int = 4
+    store_latency_s: float = 0.02
+    store_timeout_s: float = 2.0
+    model_latency_s: float = 0.8
+    model_timeout_s: float = 3.0
+    model_fail_fast_s: float = 0.05  # an HTTP 503 comes back quickly
+    model_retries: int = 1  # one retry on a malformed answer
+    model_skip_after_s: float = 10.0  # skip the optional model when the decision is already this far behind
+    max_model_calls: int = 8
+    max_tool_calls: int = 20
+    publish_deadline_s: float = 60.0  # later than this: not published (FAILED_LATE)
+    degraded_timeout_share: float = 0.2  # degraded store: share of reads that time out
+    degraded_max_latency_s: float = 8.0  # degraded store: other reads take up to this long
     # Phone clock is reported as skewed when |sent_at - received_at| exceeds this (network delay is seconds).
     clock_skew_report_s: int = 60
 

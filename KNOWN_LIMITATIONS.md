@@ -22,14 +22,22 @@
 
 ## Pending (to be filled in as decisions are made)
 
+- The optional Ollama provider is implemented (HTTP, JSON-schema output) but was not run in this environment; all
+  results use the deterministic mock, as the brief requires for evaluators.
+- With our 2 s store timeout, the degraded window (p95 8 s) fails most reads, so most decisions in it use the generic
+  fallback page (12 of 13 in the replay).
+- The send-time re-check can only use events received by the end of the replay day; reminders are sent the next
+  evening, so anything that happens overnight is unknown to the replay.
+- Same-session re-decisions are triggered by a fixed list of state-changing event types (D-039).
+
 - WhatsApp `dialect_name` is filled with the catalogue's dialect code (e.g. `d3`): the pack has no dialect names and
   template variables may only come from the catalogue or pricing (D-034).
 - Push copy is a fixed rule-based text per app language (no model); the optional Ollama copywriter (D-022) is not
   wired in yet.
 - A `next_episode` row needs 3+ unfinished series in the page dialect, which is rare, so G07 pages usually carry the
   series as the hero instead. Pages in thin dialects (d3: 13 titles) may have fewer rows (118 of 2,086 pages have 1 row).
-- The per-day message cap and "page still live" checks need state across triggers; they are enforced by the replay
-  harness (Step 4) and re-checked by the verifier (Step 5). A stateless dry run cannot show them.
+- The per-day message cap and "page still live" checks need state across triggers; the replay harness enforces both
+  (verified: no viewer gets two messages on one IST day); Step 5's verifier re-checks them independently.
 
 - An open goal whose success already happened (e.g. the G07 series was resumed) stays open until its deadline; detecting
   success early is part of outcome judging (guide Step 6). Status-type goals (G04/G05/G06) and "first" goals (G01/G02)

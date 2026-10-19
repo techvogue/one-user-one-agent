@@ -50,6 +50,14 @@ is available for the page's lifetime and is in the dialect the viewer will see (
 checked independently against the raw catalogue, profiles, opt-outs and interventions.json: **0 violations**;
 3.6 ms per trigger (goal + intervention). Steps 1–2 cross-checks re-run: 0 mismatches.
 
+## Guide loop step 4: Act within budget ✅
+
+One-command replay; simulated clock; budgets 8 model / 20 tool calls counted per decision; 60 s publish limit;
+fallbacks for model faults/outage and data-store degradation (D-035–D-039).
+**Verified:** 131 tests pass; replay of all 2,769 triggers: 0 decisions over 60 s (pages p50 0.84 s, max 2.2 s);
+independent output validator: 0 violations (incl. 11/11 pages with withdrawn T0001 republished); **pack simulator:
+0 policy problems, 907/907 pages accepted, 828 shown**; two runs identical except publish timestamps (≤ 8 ms).
+
 ## Step 2: Build the core
 
 | Task | Status |
@@ -60,14 +68,14 @@ checked independently against the raw catalogue, profiles, opt-outs and interven
 | Goal eligibility + selection (D-013, D-014) | ✅ goals.py, planner.py (D-029, D-030, D-031) |
 | Intervention planner (home page, message, no action) (D-009–D-011) | ✅ intervention.py (D-033, D-034) |
 | Independent verifier (rules.md Rule 10, D-012) | ⏳ |
-| Mock model provider (D-003) | ⏳ |
+| Mock model provider (D-003) | ✅ model.py: mock reproduces model_faults.jsonl; optional Ollama (D-035) |
 
 ## Step 3: Replay and measure
 
 | Task | Status |
 |---|---|
 | Replay harness (deliver_at order, live + control events, model faults, latency) | ⏳ |
-| Write decisions.jsonl and actions.jsonl | ⏳ |
+| Write decisions.jsonl and actions.jsonl | ✅ (+ control_log, latency_report, viewer_state) |
 | Run the simulator and judge outcomes | ⏳ |
 | Impact report (agent vs holdout) and latency report | ⏳ |
 

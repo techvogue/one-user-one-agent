@@ -50,7 +50,7 @@ as evidence ([D-003](doc/decisions.md)).
 | 6 | Outcome judge | Succeeded / failed / inconclusive from attributable events; versioned rules; provisional + final verdicts | D-005, D-014 |
 | 7 | Impact reporter | ITT agent vs holdout with CI, per goal; pilot re-analysis; latency report | D-016 |
 | — | Model provider | `ModelProvider` interface: mock/replay (default) + optional local Ollama | D-003 |
-| — | Replay harness | Feeds triggers in `deliver_at` order with live and control events; injects failures; measures latency | D-017 |
+| — | Replay harness (`harness.py`, `tools.py`, `model.py`) | Feeds triggers in `deliver_at` order with live and control events; injects failures; enforces budgets; measures latency; writes outputs | D-017, D-035–D-039 |
 
 ## 3. Ownership
 
@@ -171,18 +171,28 @@ are marked uncertain (D-007).
 - Budgets per decision: ≤ 8 model calls, ≤ 20 tool calls, per-call timeouts (configurable).
 - Bursts: fresh triggers in a priority lane, stale ones in a cheap lane (D-006); optional model calls skipped under
   load.
-- Time model: **virtual clock** with a modelled worker pool; `published_at = deliver_at + measured compute time + simulated dependency delay + queueing delay` (D-017).
+- Time model: **virtual clock** with a modelled worker pool; `published_at = deliver_at + measured compute time + simulated dependency delay + queueing delay` (D-017, D-037).
+- Measured on the replay (2,769 triggers): published pages p50 0.84 s, p95 0.84 s, max 2.2 s (model call 0.8 s
+  simulated); data-store degradation pushes single decisions to 3.4 s; evening burst (×3) had no queueing with
+  4 workers; 0 decisions over 60 s. Budgets: max 2 model calls and ≤ 6 tool calls used per decision (limits 8 / 20).
 
 ## 8. Failure recovery
 
-| Failure | Response |
-|---|---|
-| Model provider down / timeout / malformed output | Safe parse → retry within budget → rules-only path → smaller safe action or `NO_ACTION` |
-| Data store slow / timing out | Timeouts; cached state; downgrade or `NO_ACTION`; never block past the budget |
-| Duplicate / late trigger | Durable idempotency key; stale lane (D-004, D-006) |
-| Crash mid-replay | Durable state + idempotency → rerun never publishes twice |
-| Title withdrawn | Affected live pages / pending messages found and fixed (D-011) |
-| Goal rule corrected | Versioned rules; only open goals of that type re-judged |
+Implemented in `src/ott_agent/tools.py` and `src/ott_agent/harness.py` (D-035 to D-039).
+
+| Failure | Response | Seen in the replay |
+|---|---|---|
+| Model says a viewer is eligible without evidence | Claim re-checked against evidence and rejected (`unsupported_claim` with the failing check); evidence-based goal kept | U-01991 (G04 "confirmed in billing" → rejected: status is never) |
+| Model returns broken JSON | One retry within budget, then rules only | U-02563: 2 calls, page published |
+| Model hangs / times out | Cut at 3 s, rules only | U-01090 (holdout shadow) |
+| Model provider down (503) | Rules only, page still published | 19 decisions 10:35–10:42 |
+| Data store slow / down | Last known facts (≤ 2 h, same dialect) or a generic popular page in the app's dialect; no message, no goal change | 13:10–13:17: 12 generic pages, 1 cached |
+| Budget exhausted (8 model / 20 tool calls) | No action, recorded `budget_exceeded` | tested |
+| Publishing would be > 60 s late | Not published, recorded `FAILED_LATE` | 0 in the replay; tested |
+| Duplicate / late (stale) trigger | `DUPLICATE_IGNORED` / `STALE_SKIPPED`, no model call | 90 / 424 |
+| Crash mid-replay | Each replay starts from a fresh store; ingestion is idempotent | — |
+| Title withdrawn | Live pages containing it republished, pending messages cancelled | T0001: 11 pages, 3 messages |
+| Goal rule corrected | New rule version on open goals of that type only | G03: 0 open at 08:30 |
 
 ## 9. Trust boundaries
 

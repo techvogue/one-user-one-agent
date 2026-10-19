@@ -445,6 +445,84 @@ Rules:
      dialect.
 - Why: Messages only where a later visit is the goal, at a time people watch, with copy that cannot go wrong.
 
+### D-035: The model gives a second opinion on the goal; it is never trusted (Step 4)
+- Date: 2026-10-19 · Status: Accepted · Decided by: candidate (accepted the recommendation) · Refines D-022
+- Context: All five injected model faults are answers to "is this viewer eligible for goal X?" (3 unsupported G04
+  claims, 1 malformed JSON, 1 45-second timeout), so the pack expects the agent to consult the model about goals.
+  Using the model only for push copy (61 pushes) would leave the faults almost never exercised.
+- Options: (a) second opinion on the goal for every fresh decision; (b) push copy only.
+- Decision: (a). For every fresh (non-stale) decision, agent and holdout-shadow alike, the model receives **typed facts
+  only** (no free text from the data) plus the planner's goal and asks for an opinion. The answer is never evidence:
+  - same goal → recorded as agreement (small confidence bonus);
+  - another goal the evidence also supports → recorded; the priority order still decides (D-019/D-030);
+  - a goal the evidence does **not** support → rejected, logged as `unsupported_claim` with the failing check;
+  - malformed output → one retry within budget, then rules only; timeout / 503 → rules only.
+  The decision never waits for the model to publish a page. Stale triggers never call the model (cheap lane, D-006).
+  Push copy stays rule-based for now (D-034).
+- Why: Shows the trust boundary the brief asks for ("a confident model output is not evidence") on real injected faults.
+
+### D-036: Fallback when the data store is slow or down (Step 4)
+- Date: 2026-10-19 · Status: Accepted · Decided by: candidate (accepted the recommendation)
+- Options: (a) smaller safe action; (b) no action during the outage.
+- Decision: (a). If reading the viewer's state fails or times out: use the **last known facts** for the viewer from this
+  run if they exist (marked as cached, with their age); otherwise publish a **generic page** of popular titles in the
+  dialect named by the app open itself (no store needed), with **no message and no goal change**, marked
+  `fallback_used: generic_page`. Invalid dialect or no titles → no action. Everything is recorded on the decision.
+- Why: The brief: "fall back to a smaller safe action or no action". A generic page in the right dialect cannot
+  break any rule; messages and goal changes need facts we do not have.
+
+### D-037: Time model, budgets and timing limits (Step 4)
+- Date: 2026-10-19 · Status: Accepted · Decided by: candidate (accepted the recommendation) · Details D-017
+- Decision (all configurable):
+  - Simulated clock: `published_at = deliver_at + measured compute time + simulated dependency delays + queue wait`.
+  - Normal simulated speed: data-store read 20 ms, mock model call 800 ms.
+  - Timeouts: data store 2 s, model 3 s (the injected 45 s hang costs 3 s).
+  - Budgets per decision: at most **8 model calls** and **20 tool calls**; every call is counted and recorded.
+  - 4 parallel workers; fresh triggers are processed before stale ones; stale triggers use the cheap lane.
+  - The model is skipped when the decision is already more than 10 s behind its trigger.
+  - Publishing more than **60 s** after the trigger is not done: the decision is recorded as `FAILED_LATE` (the brief
+    counts > 5 min as a failure; we stay well inside 60 s).
+  - Degraded data store (control event): deterministic per trigger, 20 % of reads time out, the rest take up to 8 s.
+- Why: Reproducible latency without waiting in real time, with explicit budgets and limits.
+
+### D-038: Replay harness design (Step 4)
+- Date: 2026-10-19 · Status: Accepted · Decided by: candidate (accepted the recommendation)
+- Decision:
+  1. One timeline in delivery order of triggers, live events and control events; live events are ingested with the same
+     path as history (D-004/D-005); control events withdraw titles, correct goal rules (only open goals of that type,
+     D-029) and switch dependencies down/slow for their window.
+  2. Per trigger: duplicate → `DUPLICATE_IGNORED`; same session with no relevant change → `SAME_SESSION`; stale →
+     `STALE_SKIPPED` (cheap lane); holdout → full decision, nothing published (`HOLDOUT_SHADOW`, shadow goal);
+     otherwise facts → goal → model second opinion → intervention → checks → publish.
+  3. Every trigger yields exactly one line in `decisions.jsonl` (brief's format, extended); published actions go to
+     `actions.jsonl` in the simulator's schema; `latency_report.json` summarises timing.
+  4. Reminder messages are held as pending until their send time and re-checked then (D-021, D-034); only messages that
+     pass are written as actions. A title withdrawal finds the live pages and pending messages that contain it: pages
+     are republished without it, messages cancelled; affected viewers are recorded.
+  5. Step 5's independent verifier plugs into the publish path; Step 4 runs basic checks only.
+- Why: Covers the "act within budget" step end to end with every decision auditable.
+
+### D-039: Step 4 implementation details
+- Date: 2026-10-19 · Status: Accepted · Decided by: candidate · Details D-036, D-038
+- Decision:
+  1. **Cached facts** (D-036) are used only if they are from this run, at most **2 hours** old, and the app open names
+     the **same dialect**; with cached facts no message is planned and no goal is committed.
+  2. An **unavailable** data store always fails the read (after the timeout); a **degraded** store fails 20 % of reads
+     outright and any read slower than the 2 s timeout.
+  3. **Holdout records** say `action: NO_ACTION` with reason `HOLDOUT`; the would-be decision is kept under
+     `shadow_action` (so nobody can read a holdout record as "we acted"). A viewer with **no arm** in arms.csv is treated
+     as holdout (never acted on).
+  4. **Same session:** a second trigger re-decides only if, since the first decision, a purchase/renewal/lapse,
+     opt-out, dialect change or signup event arrived, or the app dialect differs; otherwise `SAME_SESSION`.
+  5. **Send-time re-check** (basic, Step 5 completes it): the goal must still be open, the viewer must not have played
+     since the goal started, consent still usable, the title still available, outside quiet hours, one per IST day.
+     Knowledge at send time = events received by the earlier of the send time and the end of the replay.
+  6. **Withdrawal republishing** rebuilds the page from the facts and goal that produced it, at the withdrawal time;
+     if no personal page is possible, a generic page in the same dialect is published.
+  7. **Reproducibility:** every replay starts from a fresh state store; decisions and actions are identical across
+     runs except publish timestamps (measured compute time, a few ms).
+- Why: Make the fallback and audit behaviour explicit and testable.
+
 ---
 
 ## Pending (under discussion, not approved)
@@ -466,6 +544,8 @@ Rules:
 | 2026-10-18 | D-017 accepted (tech stack); P-001 closed. |
 | 2026-10-18 | D-018 accepted (repository layout). |
 | 2026-10-18 | D-019 accepted (goal priority); D-020 accepted (folder renamed to `submission/`). |
+| 2026-10-19 | D-039 accepted (Step 4 implementation details). |
+| 2026-10-19 | D-035 to D-038 accepted (Step 4: model role, fallback, timing, harness). |
 | 2026-10-19 | D-033, D-034 accepted (Step 3 intervention design; message timing replaces D-021's slot). |
 | 2026-10-19 | D-032 accepted (Step 2 review fixes). |
 | 2026-10-18 | D-030, D-031 accepted; P-004, P-005 closed. |
