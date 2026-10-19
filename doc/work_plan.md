@@ -24,6 +24,11 @@ Follows the step-by-step plan from the assignment guide. Every implementation st
 | git init | ✅ | D-026 |
 | Set up the repo structure | ✅ folders | D-018 (pyproject + package added with the first code step) |
 
+## Replay surprises (guide §9) ✅
+
+All ten checked against the real run (D-048 closed the one gap: purchases are now acted on when they arrive: 31
+reactions, 7 goals re-planned at the purchase time; bursts are reported in latency_report.json → load).
+
 ## Guide loop step 1: Understand the viewer ✅
 
 Facts collected (signup, subscription, dialect, consent, watch history) with source, time and freshness; conflicts

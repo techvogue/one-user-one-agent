@@ -32,7 +32,7 @@ from .intervention import (
     decide_intervention,
 )
 from .model import MockProvider, build_request, parse_review
-from .planner import NO_GOAL, apply_rule_correction, commit_plan, plan_goal
+from .planner import NO_GOAL, apply_rule_correction, commit_plan, get_open_goal, plan_goal
 from .pricing import load_plan_days
 from .profiles import load_profiles
 from .quality import build_report, write_report
@@ -55,6 +55,14 @@ STATE_CHANGE_EVENTS = (
     "signup_completed",
 )
 CACHED_FACTS_MAX_AGE = timedelta(hours=2)
+# Live events the agent reacts to as soon as they arrive (D-048).
+REACT_TO = (
+    "purchase_completed",
+    "subscription_renewed",
+    "subscription_lapsed",
+    "notification_opt_out",
+    "app_dialect_changed",
+)
 
 
 def _read_jsonl(path: Path) -> list[dict]:
@@ -204,18 +212,72 @@ class Replay:
             if kind == "control":
                 self.on_control(obj, at)
             elif kind == "live":
+                status = None
                 with self.conn:
                     try:
-                        self.ingest_stats["live"].add(ingest_event(self.conn, obj, "live", line_no, self.cfg))
+                        status = ingest_event(self.conn, obj, "live", line_no, self.cfg)
+                        self.ingest_stats["live"].add(status)
                     except (ValueError, TypeError) as exc:
                         self.ingest_stats["live"].malformed_lines.append(
                             {"line_no": line_no, "error": str(exc)}
                         )
+                if status == "new" and obj.get("event") in REACT_TO:
+                    self.react(obj, at)
             else:
                 self.on_trigger(obj, line_no)
         self.flush_messages()
         self.wall_s = time.perf_counter() - t0
         return self.write_outputs()
+
+    # --- reactions to state-changing live events (D-048) ---------------------------------------------------------
+
+    def react(self, e: dict, at: datetime) -> None:
+        """A purchase, renewal, lapse, opt-out or dialect change arrived: re-check the viewer's open goal and pending
+        reminders now, with the same planner rule and the independent verifier. No page (there is no visit)."""
+        user = e["user_id"]
+        gi = get_open_goal(self.conn, user)
+        pending = [m for m in self.pending_messages if m["user_id"] == user and m["status"] == "pending"]
+        if gi is None and not pending:
+            return
+        entry = {
+            "at": iso(at),
+            "type": "reaction_to_live_event",
+            "user_id": user,
+            "event": {"event_id": e["event_id"], "event": e["event"]},
+        }
+        if gi is not None:
+            vf = resolve(self.conn, self.profiles, self.catalogue, user, at, None, self.cfg, self.plan_days)
+            plan = plan_goal(self.conn, vf, at, self.goals, self.catalogue, self.cfg)
+            entry["goal_before"] = {"goal_instance_id": gi["goal_instance_id"], "goal_id": gi["goal_id"]}
+            if plan.closing:
+                if plan.goal and self.verifier.verify_goal(user, plan.goal, plan.outcome, at):
+                    entry["new_goal_rejected_by_verifier"] = plan.goal["goal_id"]
+                    plan.goal, plan.outcome = None, "NO_GOAL"
+                with self.conn:
+                    new_gi = commit_plan(self.conn, plan, shadow=bool(gi["shadow"]))
+                entry["goal_after"] = {
+                    "goal_instance_id": new_gi,
+                    "goal_id": plan.goal["goal_id"] if plan.goal else None,
+                    "reason": plan.closing["close_reason"],
+                }
+            else:
+                entry["goal_after"] = "kept: the situation change does not affect the open goal"
+        cancelled = []
+        for m in pending:
+            row = self.conn.execute(
+                "SELECT status FROM goal_instances WHERE goal_instance_id = ?", (m["goal_instance_id"],)
+            ).fetchone()
+            verdict = self.verifier.verify_send(m, at, goal_open=row is not None and row["status"] == "open")
+            if verdict.verdict != "approve":
+                m["status"] = "cancelled"
+                m["cancel_reason"] = f"after {e['event']} at {iso(at)}: " + "; ".join(
+                    f"{f['check']}: {f['detail']}" for f in verdict.failed
+                )
+                self.verifier.unschedule(m["decision_id"])
+                self.msg_days[(user, parse_ts(m["message"]["send_at"]).astimezone(IST).date())] -= 1
+                cancelled.append({"decision_id": m["decision_id"], "reason": m["cancel_reason"]})
+        entry["messages_cancelled"] = cancelled
+        self.control_log.append(entry)
 
     # --- control events ------------------------------------------------------------------------------------------
 
@@ -954,6 +1016,40 @@ class Replay:
         self.export_viewer_state()
         return latency
 
+    def load_report(self) -> dict:
+        """Notice traffic bursts (D-048): 10-minute windows at >= 2x the average, with how the agent coped."""
+        win = defaultdict(list)
+        for d in self.decisions:
+            t = parse_ts(d["trigger"]["deliver_at"])
+            win[t.replace(minute=t.minute // 10 * 10, second=0, microsecond=0)].append(d)
+        if not win:
+            return {}
+        avg = sum(len(v) for v in win.values()) / len(win)
+        bursts = []
+        for w, ds in sorted(win.items()):
+            if len(ds) >= 2 * avg:
+                timed = [d for d in ds if "latency_s" in d]
+                bursts.append(
+                    {
+                        "window_start": iso(w),
+                        "triggers": len(ds),
+                        "times_average": round(len(ds) / avg, 1),
+                        "stale_share": round(sum(d["status"] == STALE_SKIPPED for d in ds) / len(ds), 2),
+                        "decided": len(timed),
+                        "max_queue_s": max((d["queue_s"] for d in timed), default=None),
+                        "max_latency_s": max((d["latency_s"] for d in timed), default=None),
+                        "model_skipped_under_load": sum(
+                            d["model"].get("outcome") == "skipped" for d in timed
+                        ),
+                    }
+                )
+        return {
+            "average_triggers_per_10_min": round(avg, 1),
+            "workers": self.cfg.workers,
+            "model_skip_after_s": self.cfg.model_skip_after_s,
+            "bursts": bursts,
+        }
+
     def latency_report(self) -> dict:
         timed = [d for d in self.decisions if "latency_s" in d]
         lat = sorted(d["latency_s"] for d in timed)
@@ -994,6 +1090,7 @@ class Replay:
             "max_tool_calls_per_decision": max((d["tool_calls"] for d in self.decisions), default=0),
             "model_outcomes": dict(model),
             "fallbacks": dict(Counter(d["fallback_used"] for d in self.decisions if d.get("fallback_used"))),
+            "load": self.load_report(),
             "control_events": [
                 {"at": c["at"], "type": c["type"], "effect": c.get("effect")} for c in self.control_log
             ],

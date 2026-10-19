@@ -117,6 +117,10 @@ class Verifier:
     def unschedule(self, key: str) -> None:
         self.scheduled.pop(key, None)
 
+    def verify_goal(self, user: str, goal: dict, plan_outcome: str, at: datetime) -> str | None:
+        """Goal-only check (used when a goal is re-planned without a visit, D-048). None = supported by evidence."""
+        return self._goal_ok(user, goal, plan_outcome, at, None)
+
     def verify_page(self, page: dict, trigger: dict, pub: datetime) -> Verdict:
         """Page checks only (used when a live page is republished after a withdrawal)."""
         v = Verdict("approve")

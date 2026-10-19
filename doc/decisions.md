@@ -667,6 +667,26 @@ Rules:
   titles are also logged as a WARNING when the catalogue loads.
 - Effect: reporting only; actions unchanged.
 
+### D-048: React to state-changing events when they arrive; notice traffic bursts
+- Date: 2026-10-19 · Status: Accepted · Decided by: candidate (approved the proposal)
+- Context: Checking the replay surprises found that the agent only reacted at app opens: 38 live purchases arrived,
+  31 buyers had an open goal, and **none was re-planned** because none of them opened the app again that day (the guide:
+  "update the user's state, re-plan the goal and cancel pending messages that no longer make sense"). Traffic bursts were
+  handled (no queueing) but never reported, and the "skip the model under load" path had never run or been tested.
+- Decision:
+  1. When a purchase, renewal, lapse, opt-out or dialect-change event arrives for a viewer with an open goal or a
+     pending reminder, **in either arm**, the agent re-resolves the viewer's facts at that moment and re-checks the open
+     goal with the same planner rule used at app opens: if the situation changed, the goal is closed and the next goal
+     chosen (its eligibility re-checked by the verifier), logged in `goal_log`. The viewer's pending reminders are
+     re-checked by the verifier at once and cancelled if they no longer pass. Each reaction is written to
+     `control_log.jsonl` (`reaction_to_live_event`). No page is published (there is no visit to show it in).
+  2. `latency_report.json` gets a `load` section: triggers per 10 minutes, windows at ≥ 2× the average flagged as bursts
+     with their stale share, max queue, max latency and model calls skipped.
+  3. The load path (model skipped when a decision is > 10 s behind) gets a test.
+- Why: The agent must notice changes when they happen and find exactly which goals and messages they affect. Treating
+  both arms the same keeps the comparison fair; the primary impact metric uses each viewer's first goal, so it is
+  unaffected.
+
 ---
 
 ## Pending (under discussion, not approved)
@@ -688,6 +708,7 @@ Rules:
 | 2026-10-18 | D-017 accepted (tech stack); P-001 closed. |
 | 2026-10-18 | D-018 accepted (repository layout). |
 | 2026-10-18 | D-019 accepted (goal priority); D-020 accepted (folder renamed to `submission/`). |
+| 2026-10-19 | D-048 accepted (react to live state changes; notice bursts). |
 | 2026-10-19 | D-047 accepted (traps in the run output). |
 | 2026-10-19 | D-046 accepted (rule_version + specific assumptions). |
 | 2026-10-19 | D-045 accepted (complete decision records). |

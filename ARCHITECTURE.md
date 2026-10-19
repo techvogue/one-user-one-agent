@@ -37,6 +37,28 @@ as evidence ([D-003](doc/decisions.md)).
                                                             └────────► viewer state (learnings) ◄┘
 ```
 
+## 1b. Mapping to the suggested architecture
+
+| Suggested component | Implemented in | Notes |
+|---|---|---|
+| Data loader | `ingest.py`, `store.py`, `quality.py`, `traps.py` | dedupe, corrected time, data quality + trap report (D-004, D-005, D-047) |
+| Viewer state store | SQLite: `events`, `facts_snapshots`, `goal_instances`, `goal_log`, `goal_outcomes`; `sample_run/viewer_state/*.json` | facts with provenance, goals, decisions, actions, outcomes, learnings |
+| Fact resolver | `facts.py`, `profiles.py`, `catalogue.py` | precedence, freshness, conflicts (§5.1) |
+| Goal planner | `goals.py`, `planner.py` | eligibility from evidence, priority, deadline (§4) |
+| Intervention planner | `intervention.py` | page / reminder / no action with a reason (§4b) |
+| Model provider | `model.py` | mock by default (reproduces `model_faults.jsonl`), optional local Ollama (D-003, D-035) |
+| Verifier | `verifier.py` | separately written, can reject or downgrade (§6) |
+| Replay harness | `harness.py`, `tools.py` | delivery order, live + control events, faults, budgets, latency, reactions (D-037–D-039, D-048) |
+| Outcome judge | `judge.py` | rule versions incl. corrections (§6b) |
+| Impact reporter | `impact.py`, latency report | ITT vs holdout, seeds, pilot re-analysis (§6c) |
+
+**Design tips:** *one agent per viewer* is enforced by data, not by a long-lived object: at most one open goal per
+viewer (unique index) and only the planner writes goals: at an app open, when a state-changing event arrives (D-048),
+or (rule version only) at a rule correction. The agent = the viewer's durable state + the planner's rules, which is
+simple to persist and to scale by viewer. Idempotency key = trigger `event_id` (D-004). `published_at` = delivery +
+measured compute + simulated dependency time + queue (D-037). Every model answer is checked against evidence and never
+used as evidence (D-035, D-040).
+
 ## 2. Components
 
 | # | Component | Job | Key decisions |

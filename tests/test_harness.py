@@ -6,6 +6,7 @@ plus budgets, the latency limit, holdout, withdrawals, a corrected goal rule and
 import json
 from dataclasses import replace
 
+import pytest
 from conftest import GOALS, make_event, write_jsonl
 from test_intervention import INTERVENTIONS, catalogue_rows
 from test_profiles_catalogue import CAT_COLS, PROFILE_COLS, profile_row, write_csv
@@ -522,3 +523,76 @@ def test_data_quality_report_lists_every_trap(tmp_path, caplog):
     d = traps["6_dialect_conflicts"]
     assert d["triggers_with_invalid_app_dialect"] == 1 and d["three_different_dialects"] == 1
     assert traps["7_language_variants"]["slugs_with_several_title_ids"] == 1  # show-1 has hin + en
+
+
+# --- D-048: react to state changes when they arrive; notice bursts ------------------------------------------------
+
+
+def _live(eid, event, when, user="U-1", **props):
+    e = make_event(eid, user_id=user, event=event, occurred=when, received=when, properties=props)
+    e["deliver_at"] = when
+    return e
+
+
+def _completed_recently(user="U-1"):  # a completed episode 2 days ago: not G02, not G12
+    return make_event(
+        f"c-{user}",
+        user_id=user,
+        event="episode_completed",
+        occurred="2026-09-29T09:00:00.000Z",
+        received="2026-09-29T09:00:01.000Z",
+        properties={"title_id": "F3", "episode_id": "x"},
+    )
+
+
+@pytest.mark.parametrize("arm", ["agent", "holdout"])
+def test_purchase_after_decision_replans_the_goal_when_it_arrives(tmp_path, arm):
+    buy = _live("buy", "purchase_completed", "2026-10-01T09:02:00.000Z", plan_id="P_MONTH", is_trial=False)
+    pack = build_pack(tmp_path, [trig("t1")], history=[_completed_recently()],
+                      profiles=[profile_row("U-1", status="never")], live=[buy], arms={"U-1": arm})  # fmt: skip
+    r, _ = run(tmp_path, pack)
+    assert r.decisions[0]["goal"]["goal_id"] == "G05"  # first paid plan
+    [react] = [c for c in r.control_log if c["type"] == "reaction_to_live_event"]
+    assert react["at"] == "2026-10-01T09:02:00.000Z" and react["goal_before"]["goal_id"] == "G05"
+    assert "subscription status is now active" in react["goal_after"]["reason"]
+    rows = r.conn.execute(
+        "SELECT goal_id, status, closed_at, shadow FROM goal_instances ORDER BY rowid"
+    ).fetchall()
+    assert rows[0]["goal_id"] == "G05" and rows[0]["status"] == "closed"
+    assert rows[0]["closed_at"] == "2026-10-01T09:02:00.000Z"  # at the purchase, not at a later visit
+    assert rows[1]["status"] == "open" and rows[1]["goal_id"] in ("G08", "G09")
+    assert {x["shadow"] for x in rows} == {int(arm == "holdout")}  # both arms handled the same way
+    assert len([a for a in r.actions if a["type"] == "home_page"]) == (
+        1 if arm == "agent" else 0
+    )  # no extra page
+
+
+def test_opt_out_cancels_a_pending_reminder_when_it_arrives(tmp_path):
+    out = _live("out", "notification_opt_out", "2026-10-01T12:00:00.000Z", channel="whatsapp")
+    pack = build_pack(
+        tmp_path, [trig("t1")], profiles=[profile_row("U-1", whatsapp_opt_in="true")], live=[out]
+    )
+    r, _ = run(tmp_path, pack)
+    assert r.decisions[0]["message"]["channel"] == "whatsapp"  # a G12 reminder was planned at 09:00
+    [react] = [c for c in r.control_log if c["type"] == "reaction_to_live_event"]
+    assert react["goal_after"].startswith("kept") and react["messages_cancelled"]
+    assert "consent" in react["messages_cancelled"][0]["reason"]
+    assert r.decisions[0]["message"]["status"] == "cancelled"
+    assert not [a for a in r.actions if a["type"] in ("whatsapp", "push")]
+
+
+def test_burst_is_noticed_and_the_model_is_skipped_under_load(tmp_path):
+    users = [f"U-{i}" for i in range(1, 31)]
+    quiet = [
+        trig(f"q{i}", user="U-0", at=f"2026-10-01T0{i}:00:00.000Z") for i in range(1, 9)
+    ]  # an average to compare
+    burst = [trig(f"b{u}", user=u, at="2026-10-01T09:30:00.000Z") for u in users]
+    pack = build_pack(tmp_path, quiet + burst, profiles=[profile_row(u) for u in [*users, "U-0"]],
+                      arms={u: "agent" for u in [*users, "U-0"]})  # fmt: skip
+    r, rep = run(tmp_path, pack, workers=1)
+    [b] = rep["load"]["bursts"]
+    assert b["window_start"] == "2026-10-01T09:30:00.000Z" and b["triggers"] == 30
+    assert b["model_skipped_under_load"] > 0  # later decisions skip the optional model call
+    late = [d for d in r.decisions if d["trigger"]["event_id"].startswith("b")][-1]
+    assert late["model"]["outcome"] == "skipped" and late["status"] == "PUBLISHED"
+    assert all(d["latency_s"] <= 60 for d in r.decisions if "latency_s" in d)

@@ -22,6 +22,11 @@
 
 ## Pending (to be filled in as decisions are made)
 
+- Reactions to live events (D-048) re-plan goals and re-check reminders but never publish a page: without a visit
+  there is nothing to show it in. Only purchase, renewal, lapse, opt-out and dialect-change events trigger them.
+- With 4 workers the evening peak never queued, so the "skip the model under load" path ran only in its test, not in
+  the replay.
+
 - **Impact: no detectable effect** on one replay day (+1.2 pts, 95 % interval −2.5 to +4.9). With about 720 judged
   viewers per arm the study can only detect effects larger than about ±3.7 points; more replay days would be needed.
 - Outcomes come from the pack's simulator; the effect size reflects its behaviour model, not real viewers.
