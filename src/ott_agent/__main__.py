@@ -3,6 +3,7 @@
 Commands so far:
   load     ingest the pack's 30-day history into the state store and write data_quality_report.json
   replay   run the whole replay day (one command): decisions, actions, latency and quality reports
+  judge    after the simulator: ingest its outcome events, judge every goal, store outcomes and learnings
   inspect  show what the agent knows about one viewer at a moment (facts with source, freshness, conflicts)
            and which goal it would choose (dry run)
 """
@@ -28,7 +29,7 @@ from .pricing import load_plan_days
 from .profiles import load_profiles
 from .quality import build_report, write_report
 from .store import connect
-from .timeutil import parse_ts
+from .timeutil import iso, parse_ts
 
 
 def _config(args: argparse.Namespace) -> Config:
@@ -179,6 +180,43 @@ def cmd_replay(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_judge(args: argparse.Namespace) -> int:
+    import csv as _csv
+    from collections import Counter
+
+    from .judge import judge_all, update_viewer_state
+
+    cfg = _config(args)
+    out = Path(args.out)
+    sim = Path(args.sim) if args.sim else out / "sim" / "outcome_events.jsonl"
+    if not (out / "state.sqlite").exists() or not sim.exists():
+        print(f"error: need {out}/state.sqlite (run `replay`) and {sim} (run the simulator)", file=sys.stderr)
+        return 2
+    conn = connect(out / "state.sqlite")
+    stats = ingest_file(conn, sim, "outcome", cfg)  # same path as all events: dedupe, corrected time
+    judged_at = parse_ts(conn.execute("SELECT MAX(first_received_at) FROM events").fetchone()[0])
+    catalogue = load_catalogue(
+        cfg.pack_path / "data" / "catalogue.csv", cfg.pack_path / "data" / "episodes.csv"
+    )
+    with open(cfg.pack_path / "replay" / "arms.csv", encoding="utf-8", newline="") as f:
+        arms = {r["user_id"]: r["arm"] for r in _csv.DictReader(f)}
+    with open(out / "actions.jsonl", encoding="utf-8") as f:
+        ours = {json.loads(line)["action_id"] for line in f if line.strip()}
+    outcomes = judge_all(conn, catalogue, cfg, judged_at, arms, ours)
+    with open(out / "outcomes.jsonl", "w", encoding="utf-8") as f:
+        f.writelines(json.dumps(o.to_dict(), ensure_ascii=False) + "\n" for o in outcomes)
+    update_viewer_state(out, outcomes)
+    print(
+        f"ingested {stats.lines} outcome events: {stats.counts}; judged {len(outcomes)} goals as of {iso(judged_at)}"
+    )
+    for arm in ("agent", "holdout"):
+        c = Counter(o.verdict for o in outcomes if o.arm == arm)
+        print(f"  {arm:8} {dict(c)}")
+    print(f"  stages: {dict(Counter(o.stage for o in outcomes))}")
+    print(f"outputs: {out}/outcomes.jsonl, viewer_state/ (outcomes + learned)")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="ott_agent", description="One User, One Agent")
     parser.add_argument("-v", "--verbose", action="store_true")
@@ -202,6 +240,11 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--ollama-model", default="qwen2.5:3b-instruct")
     p.add_argument("--ollama-url", default="http://localhost:11434")
     p.set_defaults(func=cmd_replay)
+
+    p = sub.add_parser("judge", help="judge every goal from the simulator's outcome events")
+    common(p)
+    p.add_argument("--sim", help="outcome_events.jsonl (default <out>/sim/outcome_events.jsonl)")
+    p.set_defaults(func=cmd_judge)
 
     p = sub.add_parser("inspect", help="show what the agent knows about a viewer at a moment")
     common(p)

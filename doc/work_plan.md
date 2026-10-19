@@ -67,6 +67,15 @@ downgrade drops only the message); mutation test: 6/6 disabled checks caught. Fi
 157 G07 goals built on quarantined titles: a real planner bug, fixed (D-041) → 0 rejections. Replay: 0 decisions
 over 60 s; independent validators 0 violations; pack simulator 0 policy problems, 905/905 pages accepted.
 
+## Guide loop step 6: Close the loop ✅
+
+Every goal (agent + holdout shadow) judged SUCCEEDED / FAILED / INCONCLUSIVE from attributable signals in its window,
+by its rule version; stages provisional/final; exposure recorded; learning notes saved in the viewer's state.
+**Verified:** 178 tests pass (11 judge tests incl. the required corrected-goal-rule test); mutation test with bytecode
+caching disabled: 7/7 broken judge rules caught (and the verifier's 6/6 re-confirmed); independent re-judging of all
+1,487 goals from the raw files: 0 mismatches. Replay outcomes: agent 111 succeeded / 608 failed / 30 inconclusive;
+holdout 101 / 610 / 27 (comparison is Step 7).
+
 ## Step 2: Build the core
 
 | Task | Status |
@@ -85,7 +94,7 @@ over 60 s; independent validators 0 violations; pack simulator 0 policy problems
 |---|---|
 | Replay harness (deliver_at order, live + control events, model faults, latency) | ⏳ |
 | Write decisions.jsonl and actions.jsonl | ✅ (+ control_log, latency_report, viewer_state) |
-| Run the simulator and judge outcomes | ⏳ |
+| Run the simulator and judge outcomes | ✅ judge.py (D-042, D-043) |
 | Impact report (agent vs holdout) and latency report | ⏳ |
 
 ## Step 4: Test, document, submit

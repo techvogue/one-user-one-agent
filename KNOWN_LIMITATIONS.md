@@ -22,6 +22,13 @@
 
 ## Pending (to be filled in as decisions are made)
 
+- Goals with 14-day windows (G06, G09) end on the last observed day, so most are INCONCLUSIVE: the deadline + 24 h grace
+  is never observed. A longer observation period would turn them into results.
+- A per-viewer SUCCEEDED does not mean the agent caused it (e.g. scripted organic purchases); the agent's effect is only
+  measured agent arm vs holdout (Step 7). Learning notes record observations, never causes.
+- Judging happens once after the simulator (with the data known at its end); in production it would run whenever new
+  events arrive. The function supports that (pure, as-of time) and re-judging is tested.
+
 - The verifier is separately written but implements the **same documented interpretations** (A-G0x-1, D-0xx) and
   shares the event store and config thresholds; a misreading of the spec itself would be shared. Real-case unit tests
   and the pack simulator are the outside checks.

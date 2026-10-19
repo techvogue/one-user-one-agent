@@ -559,6 +559,42 @@ Rules:
 - Why: The decision step must not build goals on content it is not allowed to promote. This is the verifier working as
   intended: a separately written check disagreed and was right.
 
+### D-042: Judging goals (Step 6)
+- Date: 2026-10-19 · Status: Accepted · Decided by: candidate (accepted the recommendation) · Uses D-005, D-029
+- Context: The brief: judge each goal as succeeded, failed or inconclusive "from attributable signals only", when the
+  deadline passes or new events arrive. Outcome events come from the pack's simulator (14 days after the replay day);
+  they are ingested with the same path as all other events (dedupe, corrected time).
+- Decision:
+  1. **Every goal instance is judged, agent and holdout-shadow alike**, by the success rule **version it was opened or
+     corrected to** (G03 opened before the 08:30 correction is judged by the corrected rule, D-029).
+  2. **Attributable signal** = an event of the rule's success type whose corrected event time lies in
+     **[goal start, deadline]**, known by the judging time, matching the condition: G01/G12 any `play_started`; G02 any
+     `episode_completed`; G03 success event on a later IST day than the start; G04/G05/G06 `purchase_completed` with
+     `is_trial = false`; G07 `play_started` on the goal's series slug (any language variant); G08 `play_started` on a
+     title released in the 30 days before the start; G09 `play_started` on 3 distinct IST days.
+  3. Verdicts:
+     - **SUCCEEDED** as soon as an attributable signal exists (cannot be revoked);
+     - **FAILED** when the deadline + 24 h grace has passed within the observed data without a signal;
+     - **INCONCLUSIVE** when the outcome cannot be known: the observed data ends before deadline + 24 h; the goal was
+       closed early for a reason other than success (e.g. series withdrawn); the rule is not measurable.
+  4. **Stage** (D-005): `provisional` from deadline + 24 h, `final` from deadline + 7 days; early successes are
+     `provisional` until then. Judging is a pure function of (goal, events known by T), so it can be re-run whenever
+     new events arrive; a later run may move a verdict from INCONCLUSIVE to SUCCEEDED/FAILED, never the other way.
+  5. Each verdict records the success events (ids, times), the window, the rule version, the reason, and **exposure**:
+     our pages shown to the viewer in the window (`home_page_shown` with our `page_action_id`) and messages
+     delivered/clicked. Exposure is reported, not used to decide success (attribution to the agent is measured
+     against the holdout in Step 7, never per viewer).
+- Why: Honest verdicts that only count what can be tied to the goal window, and say "unknown" when it is unknown.
+
+### D-043: What is learned per viewer (Step 6)
+- Date: 2026-10-19 · Status: Accepted · Decided by: candidate (accepted the recommendation)
+- Decision: For each judged goal a short, factual **learning note** is stored in the viewer's state (`goal_outcomes`
+  table, `goal_log` entry `judged`, `viewer_state/<user>.json`), e.g. "G07 succeeded 1.2 days after start; resumed the
+  series after our page was shown" or "G12 failed: no play within 7 days; reminder delivered, not clicked". Notes state
+  observations only, never causes. `sample_run/outcomes.jsonl` holds one line per judged goal.
+- Why: The brief asks to "save what was learned in the user's state"; per-viewer notes cannot prove causation, so they
+  only record what happened.
+
 ---
 
 ## Pending (under discussion, not approved)
@@ -580,6 +616,7 @@ Rules:
 | 2026-10-18 | D-017 accepted (tech stack); P-001 closed. |
 | 2026-10-18 | D-018 accepted (repository layout). |
 | 2026-10-18 | D-019 accepted (goal priority); D-020 accepted (folder renamed to `submission/`). |
+| 2026-10-19 | D-042, D-043 accepted (judging goals; learning notes). |
 | 2026-10-19 | D-041 accepted (G07 needs a promotable series; found by the verifier). |
 | 2026-10-19 | D-040 accepted (independent verifier). |
 | 2026-10-19 | D-039 accepted (Step 4 implementation details). |

@@ -47,7 +47,7 @@ as evidence ([D-003](doc/decisions.md)).
 | 3 | Intervention planner (`intervention.py`) | Home page builder (dialect, slug dedupe, variants, availability through TTL), message choice, or `NO_ACTION` | D-009, D-010, D-011 |
 | 4 | Verifier (`verifier.py`) | Independent re-derivation of eligibility and every policy rule; can reject or downgrade | rules.md Rule 10, D-012, D-040 |
 | 5 | Publisher | Writes actions (simulator schema) and decisions; `published_at = deliver_at + measured time` | FR-9, FR-13 |
-| 6 | Outcome judge | Succeeded / failed / inconclusive from attributable events; versioned rules; provisional + final verdicts | D-005, D-014 |
+| 6 | Outcome judge (`judge.py`) | Succeeded / failed / inconclusive from attributable events; versioned rules; provisional + final verdicts; learning notes | D-005, D-014, D-042, D-043 |
 | 7 | Impact reporter | ITT agent vs holdout with CI, per goal; pilot re-analysis; latency report | D-016 |
 | — | Model provider | `ModelProvider` interface: mock/replay (default) + optional local Ollama | D-003 |
 | — | Replay harness (`harness.py`, `tools.py`, `model.py`) | Feeds triggers in `deliver_at` order with live and control events; injects failures; enforces budgets; measures latency; writes outputs | D-017, D-035–D-039 |
@@ -102,6 +102,28 @@ rules are read from `config/interventions.json`.
    WhatsApp (approved template, catalogue variables) if consented, else push (fixed copy checked for length, forbidden
    phrases and prices); no consent → none; at most one per viewer per IST day. Re-checked at send time (Step 5).
 5. In-app messages are not used. Holdout viewers: decided as normal, nothing published.
+
+## 6b. Closing the loop (Step 6: judge the outcomes)
+
+Implemented in `src/ott_agent/judge.py`; run with `python -m ott_agent judge` after the simulator (D-042, D-043).
+
+1. The simulator's outcome events are ingested with the same path as every other event (dedupe, corrected time); its
+   392 copies of the replay's live events are recognised as duplicates.
+2. **Every goal instance is judged**, agent and holdout shadow alike, by the success-rule version it carries (a G03 goal
+   corrected at 08:30 is judged by the corrected rule).
+3. **Attributable signal** = an event of the rule's success type whose corrected event time is inside
+   [goal start, deadline] (or the closing time of a goal closed early), known by the judging time, matching the
+   condition (later IST day for G03, paid not trial for G04–G06, same series slug for G07, a 30-day release for G08,
+   3 distinct IST days for G09).
+4. **SUCCEEDED** as soon as a signal exists; **FAILED** once deadline + 24 h is observed without one; **INCONCLUSIVE**
+   when the data ends earlier, the goal was closed early without success, or the rule is not measurable. Stage:
+   provisional from deadline + 24 h, final from deadline + 7 days. Judging is a pure function of (goal, events known
+   by T): re-running it as new events arrive can only turn "inconclusive" into a result.
+5. Each outcome records its success events, window, rule version, reason, the viewer's **exposure** to our actions
+   (pages shown with our `page_action_id`, messages delivered/clicked) and a factual **learning note**, stored in
+   `goal_outcomes`, `goal_log` (`judged`), `viewer_state/<user>.json` and `sample_run/outcomes.jsonl`.
+6. A success is not proof that the agent caused it (e.g. the scripted purchases arrive minutes after a goal starts in
+   both arms); causation is only measured agent arm vs holdout in Step 7.
 
 ## 5. Memory (durable per-viewer state)
 
