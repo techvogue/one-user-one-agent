@@ -118,12 +118,12 @@ report run); mutation test 4/4; headline recomputed independently from the outpu
 ## Final check before submitting (from the guide)
 
 - [ ] The replay runs with one command on a fresh clone, without an API key
-- [ ] Holdout users received zero actions
-- [ ] No push or WhatsApp in quiet hours, without consent, or more than once per IST day
-- [ ] All titles in the right dialect and available; no withdrawn titles after withdrawal
-- [ ] Every decision has evidence, confidence reason, assumptions, checks and timing
-- [ ] All decisions published within 60 seconds (latency report included)
+- [x] Holdout users received zero actions (simulator: 0 holdout actions)
+- [x] No push or WhatsApp in quiet hours, without consent, or more than once per IST day (simulator: 0 policy problems)
+- [x] All titles in the right dialect and available; no withdrawn titles after withdrawal (validator + verifier)
+- [x] Every decision has evidence, confidence reason, assumptions, checks and timing (D-045: 0 gaps in 2,769 records)
+- [x] All decisions published within 60 seconds (latency report included; max 2.2 s)
 - [x] Impact measured agent arm vs holdout arm, with the pilot report's mistake explained
-- [ ] Required tests pass
+- [x] Required tests pass (186)
 - [ ] All 4 docs written
 - [ ] sample_run folder complete

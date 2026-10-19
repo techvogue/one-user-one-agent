@@ -623,6 +623,23 @@ Rules:
   9. Results are reported as they come out, including zero or negative effects (rules.md Rule 6).
 - Why: The only comparison that answers "did the agent cause it" is between randomized arms, counted the same way.
 
+### D-045: Every decision record carries everything the brief requires
+- Date: 2026-10-19 · Status: Accepted · Decided by: candidate (approved the proposal) · Completes FR-13
+- Context: A check of all 2,769 records against the brief's "every decision must include" list found 688 gaps: the
+  short records for skipped triggers (stale, duplicate, same session) had no dialect block, no check results and no
+  freshness evidence; fallback decisions had no freshness evidence and 4 had neither a goal nor a stated reason. Only
+  dialect conflicts were visible on the record; other resolved conflicts lived only in the facts snapshot.
+- Decision:
+  1. Skipped triggers get a full record: dialect block from the app open ("not decided: nothing published"), the check
+     that decided them (stale → `freshness` failed; duplicate → `duplicate` failed; same session → passed), and the
+     trigger's own timing as freshness evidence.
+  2. Every decided record starts `evidence_detail` with the trigger's timing (received, corrected event time, true
+     age, live/stale); data-store failures are recorded as evidence; fallback pages carry a `goal_note`.
+  3. New top-level `conflicts`: every fact resolved from conflicting sources, with the value used, its source, the
+     conflicting values, whether it is usable, and how it was resolved (with the decision reference).
+  4. A test (`record_gaps`) fails if any record of any status lacks a required item.
+- Effect: 688 → 0 gaps; actions, outcomes and impact unchanged (records only).
+
 ---
 
 ## Pending (under discussion, not approved)
@@ -644,6 +661,7 @@ Rules:
 | 2026-10-18 | D-017 accepted (tech stack); P-001 closed. |
 | 2026-10-18 | D-018 accepted (repository layout). |
 | 2026-10-18 | D-019 accepted (goal priority); D-020 accepted (folder renamed to `submission/`). |
+| 2026-10-19 | D-045 accepted (complete decision records). |
 | 2026-10-19 | D-044 accepted (impact methodology). |
 | 2026-10-19 | D-042, D-043 accepted (judging goals; learning notes). |
 | 2026-10-19 | D-041 accepted (G07 needs a promotable series; found by the verifier). |

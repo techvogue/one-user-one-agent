@@ -63,6 +63,37 @@ def _read_jsonl(path: Path) -> list[dict]:
         return [json.loads(line) for line in f if line.strip()]
 
 
+# How each kind of conflicting fact is resolved (ARCHITECTURE.md §5.1).
+RESOLUTION = {
+    "page_dialect": "the app requests the page for its current setting (D-009)",
+    "message_dialect": "latest valid app setting, then events, then profile (D-009)",
+    "subscription_status": "newest profile row wins; billing events newer than it override it; contradictions make "
+    "it uncertain and unusable (D-007, D-015, D-027, D-028)",
+    "ever_paid": "any paid event or any profile row with a paid status counts (D-027)",
+    "push_consent": "an opt-out event withdraws consent; unknown means no consent (policy rule 1, D-008)",
+    "whatsapp_consent": "an opt-out event withdraws consent; unknown means no consent (policy rule 1, D-008)",
+    "signup_at": "profile, then earliest signup event, then first activity as a lower bound (D-008)",
+}
+
+
+def _resolved_conflicts(vf) -> list[dict]:
+    """Every fact the agent resolved from conflicting sources, with how (brief: conflicts and their resolution)."""
+    if vf is None:
+        return []
+    return [
+        {
+            "fact": f.name,
+            "used": f.value,
+            "source": f.source,
+            "usable": f.usable,
+            "conflicting": f.conflicts,
+            "resolution": RESOLUTION.get(f.name, "precedence rules in ARCHITECTURE.md §5.1"),
+        }
+        for f in vf.facts.values()
+        if f.conflicts
+    ]
+
+
 class Replay:
     def __init__(self, pack: Path, out: Path, cfg: Config, provider=None):
         self.pack, self.out, self.cfg = Path(pack), Path(out), cfg
@@ -220,7 +251,7 @@ class Replay:
             self.cfg.max_event_age_days,
         ).event_time
         age = round((deliver - et).total_seconds(), 1)
-        base = {"trigger": t, "deliver": deliver, "age": age, "arm": self.arms.get(user)}
+        base = {"trigger": t, "deliver": deliver, "age": age, "arm": self.arms.get(user), "event_time": et}
         if status in (DUPLICATE, DUPLICATE_CONFLICT):
             self._record(
                 base,
@@ -228,6 +259,7 @@ class Replay:
                 reason=f"duplicate delivery of trigger {eid}",
                 extra={"duplicate_of": self.by_trigger.get(eid)},
                 confidence=(0.99, "same event_id already decided"),
+                checks={"passed": [], "failed": ["duplicate"]},
             )
             return
         if age > self.cfg.stale_trigger_s:
@@ -237,6 +269,7 @@ class Replay:
                 reason=f"not a live visit: happened {age} s before delivery",
                 code="STALE_TRIGGER",
                 confidence=(0.95, "true age from server receipt time and phone delay"),
+                checks={"passed": [], "failed": ["freshness"]},
             )
             return
         key = (user, t.get("session_id"))
@@ -255,6 +288,7 @@ class Replay:
                     reason="second trigger of the same visit; nothing relevant changed",
                     extra={"covered_by": prev["decision_id"]},
                     confidence=(0.9, "same session_id"),
+                    checks={"passed": ["freshness", "same_session_no_change"], "failed": []},
                 )
                 return
             replan_reason = (
@@ -330,14 +364,23 @@ class Replay:
         }
         # Step 5: the independent verifier (D-040). Holdout: nothing will be published, but the goal is still checked.
         goal = plan.goal if (plan is not None and fallback is None) else None
-        verdict = self.verifier.verify({
-            "user": user, "trigger": t, "known_at": at, "publish_at": published,
-            "plan_outcome": plan.outcome if plan else None, "goal": goal,
-            "page": iv.page if (iv is not None and not holdout) else None,
-            "message": iv.message if (iv is not None and not holdout) else None,
-            "model": model_info, "model_calls": tb.model_calls, "tool_calls": tb.tool_calls,
-            "latency_s": latency_s, "fallback": fallback,
-        })  # fmt: skip
+        verdict = self.verifier.verify(
+            {
+                "user": user,
+                "trigger": t,
+                "known_at": at,
+                "publish_at": published,
+                "plan_outcome": plan.outcome if plan else None,
+                "goal": goal,
+                "page": iv.page if (iv is not None and not holdout) else None,
+                "message": iv.message if (iv is not None and not holdout) else None,
+                "model": model_info,
+                "model_calls": tb.model_calls,
+                "tool_calls": tb.tool_calls,
+                "latency_s": latency_s,
+                "fallback": fallback,
+            }
+        )
         if verdict.verdict == "downgrade" and iv is not None:
             dropped = "; ".join(f"{f['check']}: {f['detail']}" for f in verdict.failed)
             iv.message, iv.message_note = None, f"message dropped by the verifier ({dropped})"
@@ -471,7 +514,19 @@ class Replay:
     def _next_id(self, prefix: str, items: list) -> str:
         return f"{prefix}-{len(items) + 1:05d}"
 
-    def _record(self, base, status, reason, code=None, extra=None, confidence=(0.9, "")) -> dict:
+    def _trigger_timing(self, base) -> dict:
+        """Freshness evidence of the trigger itself (D-005, D-006): when it happened vs when it reached us."""
+        t = base["trigger"]
+        return {
+            "ref": f"event:{t['event_id']}",
+            "received_at": t["received_at"],
+            "event_time": iso(base["event_time"]),
+            "deliver_at": t["deliver_at"],
+            "age_s": base["age"],
+            "freshness": "live" if base["age"] <= self.cfg.stale_trigger_s else "stale",
+        }
+
+    def _record(self, base, status, reason, code=None, extra=None, confidence=(0.9, ""), checks=None) -> dict:
         t = base["trigger"]
         rec = {
             "decision_id": self._next_id("D", self.decisions),
@@ -487,13 +542,21 @@ class Replay:
             "goal": None,
             "action": NO_ACTION,
             "no_action_reason": {"code": code or status, "detail": reason},
-            "dialect": None,
+            "dialect": {
+                "used": None,
+                "source": "trigger.app_setting",
+                "app_setting": t.get("app_dialect"),
+                "conflicts": [],
+                "resolution": f"not decided ({status}): nothing was published, so no dialect was chosen",
+            },
             "content": [],
             "confidence": confidence[0],
             "confidence_reason": confidence[1],
             "evidence": [f"event:{t['event_id']}"],
+            "evidence_detail": [self._trigger_timing(base)],
             "assumptions": [],
-            "checks": {"passed": [], "failed": []},
+            "conflicts": [],
+            "checks": checks or {"passed": [], "failed": []},
             "model": {"outcome": "not_called"},
             "model_calls": 0,
             "tool_calls": 0,
@@ -522,7 +585,12 @@ class Replay:
         evidence = (
             [f"event:{t['event_id']}"] + (goal["evidence"] if goal else []) + (iv.evidence if iv else [])
         )
-        evidence_detail = []
+        evidence_detail = [self._trigger_timing(ctx)]
+        evidence_detail += [
+            {"ref": "dependency:user_data_store", "detail": n}
+            for n in ctx["notes"]
+            if n.startswith("data store")
+        ]
         if vf is not None:
             for name in (
                 "page_dialect",
@@ -574,7 +642,13 @@ class Replay:
                 if goal
                 else None
             ),
-            "goal_note": plan.reason if plan and plan.outcome == NO_GOAL else None,
+            "goal_note": (
+                plan.reason
+                if plan and plan.outcome == NO_GOAL
+                else "viewer state unreadable: goal not evaluated, generic page only (D-036)"
+                if ctx["fallback"] == "generic_page"
+                else None
+            ),
             "replan_reason": ctx["replan_reason"],
             "action": iv.action if iv else NO_ACTION,
             "no_action_reason": (
@@ -611,6 +685,7 @@ class Replay:
             "confidence_reason": conf_reason,
             "evidence": list(dict.fromkeys(evidence)),
             "evidence_detail": evidence_detail,
+            "conflicts": _resolved_conflicts(vf),
             "assumptions": list(dict.fromkeys(assumptions)),
             "checks": ctx["checks"],
             "verifier": ctx.get("verifier"),

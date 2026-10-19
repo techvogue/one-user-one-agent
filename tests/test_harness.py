@@ -388,3 +388,97 @@ def test_verifier_downgrade_drops_only_the_message(tmp_path, monkeypatch):
     assert d["status"] == PUBLISHED and d["verifier"]["verdict"] == "downgrade"
     assert "message dropped by the verifier" in d["message_note"] and "quiet_hours" in d["message_note"]
     assert [a["type"] for a in r.actions] == ["home_page"]
+
+
+# --- every decision record carries what the brief requires (D-045) ----------------------------------------------
+
+REQUIRED = {
+    "decision_id": str,
+    "viewer_id": str,
+    "trigger": dict,
+    "action": str,
+    "dialect": dict,
+    "content": list,
+    "confidence": (int, float),
+    "confidence_reason": str,
+    "evidence": list,
+    "evidence_detail": list,
+    "assumptions": list,
+    "conflicts": list,
+    "checks": dict,
+    "decided_in_ms": (int, float),
+    "status": str,
+}
+
+
+def record_gaps(d: dict) -> list[str]:
+    """The brief's "every decision must include" list, checked on one record."""
+    gaps = [f"missing {k}" for k, t in REQUIRED.items() if not isinstance(d.get(k), t)]
+    gaps += [
+        f"trigger.{k}" for k in ("event", "received_at", "event_age_s") if k not in (d.get("trigger") or {})
+    ]
+    if d.get("goal"):
+        gaps += [f"goal.{k}" for k in ("id", "deadline", "success_signal") if not d["goal"].get(k)]
+    elif not ((d.get("no_action_reason") or {}).get("detail") or d.get("goal_note")):
+        gaps.append("no goal and no reason")
+    if d.get("action") == "NO_ACTION" and not (d.get("no_action_reason") or {}).get("detail"):
+        gaps.append("no action without a reason")
+    if not d.get("confidence_reason"):
+        gaps.append("confidence without a reason")
+    if "resolution" not in (d.get("dialect") or {}):
+        gaps.append("dialect without a resolution")
+    if not any("freshness" in e or "age_s" in e for e in d.get("evidence_detail", [])):
+        gaps.append("evidence without freshness")
+    if not (d["checks"].get("passed") or d["checks"].get("failed")):
+        gaps.append("no check results")
+    return gaps
+
+
+def test_every_status_produces_a_complete_record(tmp_path, monkeypatch):
+    users = [f"U-{i}" for i in range(1, 7)]
+    old = trig("t-stale", user="U-2", occurred="2026-09-28T09:00:00.000Z", sent="2026-10-01T08:59:59.000Z")
+    first = trig("t1", user="U-1", session="S")
+    dup = {**trig("t1", user="U-1", at="2026-10-01T09:03:00.000Z", session="S"),
+           "occurred_at": first["occurred_at"], "sent_at": first["sent_at"]}  # fmt: skip
+    triggers = [first, trig("t1b", user="U-1", at="2026-10-01T09:00:02.000Z", session="S"), dup, old,
+                trig("t3", user="U-3"), trig("t4", user="U-4", dialect="d7"),
+                trig("t5", user="U-5", at="2026-10-01T09:20:00.000Z"), trig("t6", user="U-6")]  # fmt: skip
+    down = {"at": "2026-10-01T09:15:00.000Z", "type": "dependency_unavailable", "dependency": "user_data_store",
+            "until": "2026-10-01T09:30:00.000Z"}  # fmt: skip
+    pack = build_pack(tmp_path, triggers, profiles=[profile_row(u, status="lapsed", dialect="d1") for u in users]
+                      + [profile_row("U-1", dialect="d2")], control=[down],
+                      arms={"U-1": "agent", "U-2": "agent", "U-3": "holdout", "U-4": "agent", "U-5": "agent",
+                            "U-6": "agent"})  # fmt: skip
+    r, _ = run(tmp_path, pack)
+    statuses = {d["status"] for d in r.decisions}
+    assert {
+        "PUBLISHED",
+        "SAME_SESSION",
+        "DUPLICATE_IGNORED",
+        "STALE_SKIPPED",
+        "HOLDOUT_SHADOW",
+        "NO_ACTION",
+    } <= statuses
+    assert any(d["fallback_used"] == "generic_page" for d in r.decisions)
+    for d in r.decisions:
+        assert record_gaps(d) == [], (d["status"], record_gaps(d))
+    # budget exhausted and too late also produce complete records
+    for cfg in ({"max_tool_calls": 2}, {"publish_deadline_s": 0.5}):
+        r2, _ = run(tmp_path / str(cfg), build_pack(tmp_path / str(cfg), [trig("t1")]), **cfg)
+        assert record_gaps(r2.decisions[0]) == [], r2.decisions[0]["status"]
+
+
+def test_resolved_conflicts_are_listed_on_the_decision(tmp_path):
+    rows = [
+        profile_row("U-1", status="lapsed", dialect="d2", updated="2026-09-22T00:00:00.000Z"),
+        profile_row("U-1", status="never", dialect="d1"),
+    ]  # the U-04215 case
+    pack = build_pack(tmp_path, [trig("t1", dialect="d3")], profiles=rows)
+    r, _ = run(tmp_path, pack)
+    by_fact = {c["fact"]: c for c in r.decisions[0]["conflicts"]}
+    assert (
+        by_fact["subscription_status"]["used"] == "uncertain" and not by_fact["subscription_status"]["usable"]
+    )
+    assert "profile_row@2026-09-22T00:00:00.000Z:lapsed" in by_fact["subscription_status"]["conflicting"]
+    assert by_fact["page_dialect"]["used"] == "d3" and "profile:d1" in by_fact["page_dialect"]["conflicting"]
+    assert "D-009" in by_fact["page_dialect"]["resolution"]
