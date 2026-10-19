@@ -1,0 +1,17 @@
+{
+ "user_id": "U-04838",
+ "arm": "holdout",
+ "goals": [],
+ "goal_log": [],
+ "decisions": [
+  {
+   "decision_id": "D-02200",
+   "status": "STALE_SKIPPED",
+   "action": "NO_ACTION",
+   "goal": null,
+   "at": "2026-10-01T15:13:59.436Z"
+  }
+ ],
+ "actions": [],
+ "last_known_facts": null
+}

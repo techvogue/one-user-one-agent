@@ -1,0 +1,17 @@
+{
+ "user_id": "U-03537",
+ "arm": "agent",
+ "goals": [],
+ "goal_log": [],
+ "decisions": [
+  {
+   "decision_id": "D-00561",
+   "status": "STALE_SKIPPED",
+   "action": "NO_ACTION",
+   "goal": null,
+   "at": "2026-10-01T04:47:41.370Z"
+  }
+ ],
+ "actions": [],
+ "last_known_facts": null
+}

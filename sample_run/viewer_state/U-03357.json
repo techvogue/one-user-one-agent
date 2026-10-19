@@ -1,0 +1,24 @@
+{
+ "user_id": "U-03357",
+ "arm": "holdout",
+ "goals": [],
+ "goal_log": [],
+ "decisions": [
+  {
+   "decision_id": "D-00485",
+   "status": "STALE_SKIPPED",
+   "action": "NO_ACTION",
+   "goal": null,
+   "at": "2026-10-01T04:46:35.633Z"
+  },
+  {
+   "decision_id": "D-00505",
+   "status": "DUPLICATE_IGNORED",
+   "action": "NO_ACTION",
+   "goal": null,
+   "at": "2026-10-01T04:46:51.330Z"
+  }
+ ],
+ "actions": [],
+ "last_known_facts": null
+}

@@ -1,0 +1,279 @@
+{
+  "triggers": 2769,
+  "status": {
+    "PUBLISHED": 810,
+    "NO_ACTION": 271,
+    "HOLDOUT_SHADOW": 1016,
+    "STALE_SKIPPED": 424,
+    "DUPLICATE_IGNORED": 90,
+    "SAME_SESSION": 158
+  },
+  "no_action_reasons": {
+    "NO_GOAL": 106,
+    "HOLDOUT": 1016,
+    "DIALECT_UNKNOWN": 80,
+    "STALE_TRIGGER": 424,
+    "DUPLICATE_IGNORED": 90,
+    "SAME_SESSION": 158,
+    "PAGE_STILL_LIVE": 85
+  },
+  "actions": {
+    "home_page": 819,
+    "whatsapp": 20,
+    "push": 17
+  },
+  "messages": {
+    "cancelled": 3,
+    "sent": 37
+  },
+  "latency_s_all_decided": {
+    "p50": 0.842,
+    "p95": 0.844,
+    "p99": 1.074,
+    "max": 3.358
+  },
+  "latency_s_published_pages": {
+    "p50": 0.842,
+    "p95": 0.844,
+    "p99": 1.072,
+    "max": 2.218
+  },
+  "over_60s": 0,
+  "over_5min": 0,
+  "queue_s_max": 0.0,
+  "max_model_calls_per_decision": 2,
+  "max_tool_calls_per_decision": 6,
+  "model_outcomes": {
+    "agreed": 2062,
+    "not_called": 685,
+    "unsupported_claim": 1,
+    "unavailable": 19,
+    "error": 1,
+    "malformed": 1
+  },
+  "fallbacks": {
+    "generic_page": 12,
+    "cached_facts": 1
+  },
+  "load": {
+    "average_triggers_per_10_min": 19.5,
+    "workers": 4,
+    "model_skip_after_s": 10.0,
+    "bursts": [
+      {
+        "window_start": "2026-10-01T04:40:00.000Z",
+        "triggers": 240,
+        "times_average": 12.3,
+        "stale_share": 0.92,
+        "decided": 16,
+        "max_queue_s": 0.0,
+        "max_latency_s": 0.845,
+        "model_skipped_under_load": 0
+      },
+      {
+        "window_start": "2026-10-01T14:20:00.000Z",
+        "triggers": 54,
+        "times_average": 2.8,
+        "stale_share": 0.11,
+        "decided": 40,
+        "max_queue_s": 0.0,
+        "max_latency_s": 0.844,
+        "model_skipped_under_load": 0
+      },
+      {
+        "window_start": "2026-10-01T15:00:00.000Z",
+        "triggers": 165,
+        "times_average": 8.5,
+        "stale_share": 0.02,
+        "decided": 154,
+        "max_queue_s": 0.0,
+        "max_latency_s": 1.072,
+        "model_skipped_under_load": 0
+      },
+      {
+        "window_start": "2026-10-01T15:10:00.000Z",
+        "triggers": 45,
+        "times_average": 2.3,
+        "stale_share": 0.04,
+        "decided": 35,
+        "max_queue_s": 0.0,
+        "max_latency_s": 0.846,
+        "model_skipped_under_load": 0
+      },
+      {
+        "window_start": "2026-10-01T15:20:00.000Z",
+        "triggers": 45,
+        "times_average": 2.3,
+        "stale_share": 0.09,
+        "decided": 34,
+        "max_queue_s": 0.0,
+        "max_latency_s": 0.843,
+        "model_skipped_under_load": 0
+      }
+    ]
+  },
+  "control_events": [
+    {
+      "at": "2026-09-30T18:53:43.929Z",
+      "type": "reaction_to_live_event",
+      "effect": null
+    },
+    {
+      "at": "2026-09-30T18:57:08.958Z",
+      "type": "reaction_to_live_event",
+      "effect": null
+    },
+    {
+      "at": "2026-10-01T03:00:58.236Z",
+      "type": "reaction_to_live_event",
+      "effect": null
+    },
+    {
+      "at": "2026-10-01T03:36:18.443Z",
+      "type": "reaction_to_live_event",
+      "effect": null
+    },
+    {
+      "at": "2026-10-01T03:58:44.267Z",
+      "type": "reaction_to_live_event",
+      "effect": null
+    },
+    {
+      "at": "2026-10-01T05:07:06.455Z",
+      "type": "reaction_to_live_event",
+      "effect": null
+    },
+    {
+      "at": "2026-10-01T05:28:14.359Z",
+      "type": "reaction_to_live_event",
+      "effect": null
+    },
+    {
+      "at": "2026-10-01T05:28:44.607Z",
+      "type": "reaction_to_live_event",
+      "effect": null
+    },
+    {
+      "at": "2026-10-01T05:47:15.141Z",
+      "type": "reaction_to_live_event",
+      "effect": null
+    },
+    {
+      "at": "2026-10-01T06:33:58.504Z",
+      "type": "reaction_to_live_event",
+      "effect": null
+    },
+    {
+      "at": "2026-10-01T07:00:00.000Z",
+      "type": "title_withdrawn",
+      "effect": "T0001 withdrawn"
+    },
+    {
+      "at": "2026-10-01T07:17:40.021Z",
+      "type": "reaction_to_live_event",
+      "effect": null
+    },
+    {
+      "at": "2026-10-01T08:13:40.026Z",
+      "type": "reaction_to_live_event",
+      "effect": null
+    },
+    {
+      "at": "2026-10-01T08:30:00.000Z",
+      "type": "goal_rule_corrected",
+      "effect": "G03 now G03@2026-10-01T08:30:00.000Z; open goals updated: 0"
+    },
+    {
+      "at": "2026-10-01T09:25:54.987Z",
+      "type": "reaction_to_live_event",
+      "effect": null
+    },
+    {
+      "at": "2026-10-01T09:30:04.489Z",
+      "type": "reaction_to_live_event",
+      "effect": null
+    },
+    {
+      "at": "2026-10-01T10:35:00.000Z",
+      "type": "dependency_unavailable",
+      "effect": "model_provider unavailable until 2026-10-01T10:42:00.000Z"
+    },
+    {
+      "at": "2026-10-01T10:36:57.707Z",
+      "type": "reaction_to_live_event",
+      "effect": null
+    },
+    {
+      "at": "2026-10-01T10:47:08.587Z",
+      "type": "reaction_to_live_event",
+      "effect": null
+    },
+    {
+      "at": "2026-10-01T13:10:00.000Z",
+      "type": "dependency_degraded",
+      "effect": "user_data_store degraded until 2026-10-01T13:17:00.000Z"
+    },
+    {
+      "at": "2026-10-01T14:05:59.553Z",
+      "type": "reaction_to_live_event",
+      "effect": null
+    },
+    {
+      "at": "2026-10-01T14:06:23.361Z",
+      "type": "reaction_to_live_event",
+      "effect": null
+    },
+    {
+      "at": "2026-10-01T14:13:01.484Z",
+      "type": "reaction_to_live_event",
+      "effect": null
+    },
+    {
+      "at": "2026-10-01T15:04:57.248Z",
+      "type": "reaction_to_live_event",
+      "effect": null
+    },
+    {
+      "at": "2026-10-01T15:07:09.024Z",
+      "type": "reaction_to_live_event",
+      "effect": null
+    },
+    {
+      "at": "2026-10-01T15:07:47.924Z",
+      "type": "reaction_to_live_event",
+      "effect": null
+    },
+    {
+      "at": "2026-10-01T15:39:47.083Z",
+      "type": "reaction_to_live_event",
+      "effect": null
+    },
+    {
+      "at": "2026-10-01T15:51:10.810Z",
+      "type": "reaction_to_live_event",
+      "effect": null
+    },
+    {
+      "at": "2026-10-01T16:50:55.853Z",
+      "type": "reaction_to_live_event",
+      "effect": null
+    },
+    {
+      "at": "2026-10-01T17:30:17.843Z",
+      "type": "reaction_to_live_event",
+      "effect": null
+    },
+    {
+      "at": "2026-10-01T17:47:22.066Z",
+      "type": "reaction_to_live_event",
+      "effect": null
+    }
+  ],
+  "wall_clock_s": 17.2,
+  "budgets": {
+    "max_model_calls": 8,
+    "max_tool_calls": 20,
+    "publish_deadline_s": 60.0
+  },
+  "note": "simulated clock (D-037): latency = queue wait + measured compute + simulated dependency time"
+}

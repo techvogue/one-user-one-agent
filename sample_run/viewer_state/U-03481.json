@@ -1,0 +1,26 @@
+{
+ "user_id": "U-03481",
+ "arm": "agent",
+ "goals": [],
+ "goal_log": [],
+ "decisions": [
+  {
+   "decision_id": "D-01667",
+   "status": "PUBLISHED",
+   "action": "HOME_PAGE",
+   "goal": null,
+   "at": "2026-10-01T13:14:10.376Z"
+  },
+  {
+   "decision_id": "D-01669",
+   "status": "SAME_SESSION",
+   "action": "NO_ACTION",
+   "goal": null,
+   "at": "2026-10-01T13:14:13.629Z"
+  }
+ ],
+ "actions": [
+  "A-00488"
+ ],
+ "last_known_facts": null
+}

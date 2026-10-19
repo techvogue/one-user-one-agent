@@ -1,0 +1,389 @@
+{
+ "user_id": "U-01229",
+ "arm": "holdout",
+ "goals": [
+  {
+   "goal_instance_id": "GI-U-01229-1",
+   "goal_id": "G07",
+   "rule_version": "G07@2026-09-30",
+   "status": "open",
+   "close_reason": null,
+   "start_at": "2026-10-01T06:46:31.143Z",
+   "deadline": "2026-10-04T06:46:31.143Z",
+   "shadow": 1
+  }
+ ],
+ "goal_log": [
+  {
+   "at": "2026-10-01T06:46:31.143Z",
+   "goal_instance_id": "GI-U-01229-1",
+   "change": "opened",
+   "detail_json": "{\"goal_id\": \"G07\", \"reason\": \"G07 is the highest-priority eligible goal (goal priority D-019, D-030); also eligible, lower priority: G08\"}"
+  }
+ ],
+ "decisions": [
+  {
+   "decision_id": "D-00834",
+   "status": "HOLDOUT_SHADOW",
+   "action": "NO_ACTION",
+   "goal": "G07",
+   "at": "2026-10-01T06:46:31.143Z"
+  }
+ ],
+ "actions": [],
+ "last_known_facts": {
+  "at": "2026-10-01T06:46:31.143Z",
+  "facts": {
+   "app_language": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T06:46:31.143Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [],
+    "freshness": "fresh",
+    "name": "app_language",
+    "source": "trigger.app_setting",
+    "usable": true,
+    "value": "hin"
+   },
+   "deeplink": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T06:46:31.143Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [],
+    "freshness": "live",
+    "name": "deeplink",
+    "source": "trigger.deeplink",
+    "usable": true,
+    "value": {
+     "campaign": "cmp001",
+     "dialect": "d2",
+     "title_id": "T0523"
+    }
+   },
+   "ever_paid": {
+    "age_s": 110791.1,
+    "as_of": "2026-09-30T00:00:00.000Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:9900eda0-9996-4d9d-92b9-7f6b73bdb94e",
+     "profile_row@2026-09-28T22:47:38.011Z:active"
+    ],
+    "freshness": "recent",
+    "name": "ever_paid",
+    "source": "derived:billing_events+profile",
+    "usable": true,
+    "value": true
+   },
+   "finished_slugs": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T06:46:31.143Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:310ed32b-bd72-4dee-aeb0-568d0234bb49",
+     "event:d6de83de-a445-4c21-96a9-e85be34e157e"
+    ],
+    "freshness": "fresh",
+    "name": "finished_slugs",
+    "source": "derived:events+episodes",
+    "usable": true,
+    "value": []
+   },
+   "has_completed_episode": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T06:46:31.143Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:310ed32b-bd72-4dee-aeb0-568d0234bb49",
+     "event:d6de83de-a445-4c21-96a9-e85be34e157e"
+    ],
+    "freshness": "fresh",
+    "name": "has_completed_episode",
+    "source": "derived:events",
+    "usable": true,
+    "value": true
+   },
+   "has_played": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T06:46:31.143Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:c279928a-50a8-4290-8778-4ed88d459fb9",
+     "event:13935113-2492-4b97-845f-a9db2c483230",
+     "event:0ece6163-5cb5-4d12-8e63-b0f0656584da"
+    ],
+    "freshness": "fresh",
+    "name": "has_played",
+    "source": "derived:events",
+    "usable": true,
+    "value": true
+   },
+   "last_activity_at": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T06:46:31.143Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:3ac2f8e6-27be-4bce-90a9-1590c8bfcade"
+    ],
+    "freshness": "fresh",
+    "name": "last_activity_at",
+    "source": "derived:events",
+    "usable": true,
+    "value": "2026-09-24T02:45:47.997Z"
+   },
+   "last_app_open_at": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T06:46:31.143Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:0a3ef483-90f7-414f-a202-95bc1fda03f7"
+    ],
+    "freshness": "fresh",
+    "name": "last_app_open_at",
+    "source": "derived:events",
+    "usable": true,
+    "value": "2026-09-24T02:45:10.594Z"
+   },
+   "last_lapsed_at": {
+    "age_s": null,
+    "as_of": null,
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [],
+    "freshness": "unknown",
+    "name": "last_lapsed_at",
+    "source": "derived:events",
+    "usable": true,
+    "value": null
+   },
+   "message_dialect": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T06:46:31.143Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:a5065498-7bbd-4bfc-b079-7d7663d318ef"
+    ],
+    "freshness": "fresh",
+    "name": "message_dialect",
+    "source": "trigger.app_setting",
+    "usable": true,
+    "value": "d2"
+   },
+   "page_dialect": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T06:46:31.143Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:a5065498-7bbd-4bfc-b079-7d7663d318ef"
+    ],
+    "freshness": "live",
+    "name": "page_dialect",
+    "source": "trigger.app_setting",
+    "usable": true,
+    "value": "d2"
+   },
+   "play_ist_days_14d": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T06:46:31.143Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:c279928a-50a8-4290-8778-4ed88d459fb9",
+     "event:13935113-2492-4b97-845f-a9db2c483230",
+     "event:0ece6163-5cb5-4d12-8e63-b0f0656584da"
+    ],
+    "freshness": "fresh",
+    "name": "play_ist_days_14d",
+    "source": "derived:events",
+    "usable": true,
+    "value": [
+     "2026-09-20",
+     "2026-09-21"
+    ]
+   },
+   "push_consent": {
+    "age_s": 110791.1,
+    "as_of": "2026-09-30T00:00:00.000Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "profile:U-01229@2026-09-28T22:47:38.011Z"
+    ],
+    "freshness": "recent",
+    "name": "push_consent",
+    "source": "profile_snapshot",
+    "usable": true,
+    "value": true
+   },
+   "recent_failed_goals": {
+    "age_s": null,
+    "as_of": null,
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [],
+    "freshness": "unknown",
+    "name": "recent_failed_goals",
+    "source": "derived:past_outcomes",
+    "usable": true,
+    "value": []
+   },
+   "series_in_progress": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T06:46:31.143Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:13935113-2492-4b97-845f-a9db2c483230",
+     "event:d6de83de-a445-4c21-96a9-e85be34e157e",
+     "event:cdebcd81-3e0b-4e0a-b98b-6aa5e6df0972"
+    ],
+    "freshness": "fresh",
+    "name": "series_in_progress",
+    "source": "derived:events+episodes",
+    "usable": true,
+    "value": [
+     {
+      "episodes_completed": 1,
+      "episodes_total": 7,
+      "evidence": "event:13935113-2492-4b97-845f-a9db2c483230",
+      "last_play_at": "2026-09-21T09:46:46.364Z",
+      "slug": "molo-d2"
+     },
+     {
+      "episodes_completed": 1,
+      "episodes_total": 41,
+      "evidence": "event:d6de83de-a445-4c21-96a9-e85be34e157e",
+      "last_play_at": "2026-09-12T05:36:00.530Z",
+      "slug": "guka-kosusa-d2"
+     },
+     {
+      "episodes_completed": 0,
+      "episodes_total": 11,
+      "evidence": "event:cdebcd81-3e0b-4e0a-b98b-6aa5e6df0972",
+      "last_play_at": "2026-09-03T08:39:01.463Z",
+      "slug": "gisu-d2"
+     }
+    ]
+   },
+   "signup_at": {
+    "age_s": 110791.1,
+    "as_of": "2026-09-30T00:00:00.000Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "profile:U-01229@2026-09-28T22:47:38.011Z"
+    ],
+    "freshness": "n/a",
+    "name": "signup_at",
+    "source": "profile_snapshot",
+    "usable": true,
+    "value": "2026-02-05T23:54:28.976Z"
+   },
+   "subscription_status": {
+    "age_s": 110791.1,
+    "as_of": "2026-09-30T00:00:00.000Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "profile:U-01229@2026-09-28T22:47:38.011Z"
+    ],
+    "freshness": "recent",
+    "name": "subscription_status",
+    "source": "profile_snapshot",
+    "usable": true,
+    "value": "active"
+   },
+   "top_genre": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T06:46:31.143Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:8dd6673f-4d2e-4d44-9bb1-f347940e5916",
+     "event:ea39fa70-e5ff-4322-856b-701594108b51",
+     "event:13935113-2492-4b97-845f-a9db2c483230"
+    ],
+    "freshness": "fresh",
+    "name": "top_genre",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": "Romance"
+   },
+   "watched_slugs": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T06:46:31.143Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:c279928a-50a8-4290-8778-4ed88d459fb9",
+     "event:13935113-2492-4b97-845f-a9db2c483230",
+     "event:0ece6163-5cb5-4d12-8e63-b0f0656584da"
+    ],
+    "freshness": "fresh",
+    "name": "watched_slugs",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "molo-d2",
+     "guka-kosusa-d2",
+     "gisu-d2"
+    ]
+   },
+   "whatsapp_consent": {
+    "age_s": 110791.1,
+    "as_of": "2026-09-30T00:00:00.000Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "profile:U-01229@2026-09-28T22:47:38.011Z"
+    ],
+    "freshness": "recent",
+    "name": "whatsapp_consent",
+    "source": "profile_snapshot",
+    "usable": true,
+    "value": false
+   }
+  },
+  "flags": [],
+  "user_id": "U-01229"
+ },
+ "outcomes": [
+  {
+   "goal_instance_id": "GI-U-01229-1",
+   "user_id": "U-01229",
+   "goal_id": "G07",
+   "goal_name": "resume_series_3d",
+   "arm": "holdout",
+   "rule_version": "G07@2026-09-30",
+   "window": {
+    "start": "2026-10-01T06:46:31.143Z",
+    "deadline": "2026-10-04T06:46:31.143Z",
+    "judged_until": "2026-10-04T06:46:31.143Z"
+   },
+   "verdict": "FAILED",
+   "stage": "final",
+   "reason": "no attributable signal by the deadline (2026-10-04T06:46:31.143Z) + 24 h",
+   "success_events": [],
+   "exposure": {
+    "pages_shown": 0,
+    "messages_delivered": 0,
+    "messages_clicked": 0,
+    "first_page_shown_at": null
+   },
+   "learned": "G07 failed: no resume_series_3d signal within the window; holdout: nothing was shown",
+   "judged_at": "2026-10-15T17:58:40.000Z"
+  }
+ ],
+ "learned": [
+  "G07 failed: no resume_series_3d signal within the window; holdout: nothing was shown"
+ ]
+}

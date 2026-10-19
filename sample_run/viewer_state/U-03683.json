@@ -1,0 +1,31 @@
+{
+ "user_id": "U-03683",
+ "arm": "holdout",
+ "goals": [],
+ "goal_log": [],
+ "decisions": [
+  {
+   "decision_id": "D-01696",
+   "status": "STALE_SKIPPED",
+   "action": "NO_ACTION",
+   "goal": null,
+   "at": "2026-10-01T13:28:35.849Z"
+  },
+  {
+   "decision_id": "D-02656",
+   "status": "STALE_SKIPPED",
+   "action": "NO_ACTION",
+   "goal": null,
+   "at": "2026-10-01T17:27:07.464Z"
+  },
+  {
+   "decision_id": "D-02659",
+   "status": "DUPLICATE_IGNORED",
+   "action": "NO_ACTION",
+   "goal": null,
+   "at": "2026-10-01T17:27:32.054Z"
+  }
+ ],
+ "actions": [],
+ "last_known_facts": null
+}

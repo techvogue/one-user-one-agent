@@ -1,0 +1,359 @@
+{
+ "user_id": "U-02148",
+ "arm": "agent",
+ "goals": [],
+ "goal_log": [
+  {
+   "at": "2026-10-01T10:47:38.709Z",
+   "goal_instance_id": null,
+   "change": "no_goal",
+   "detail_json": "{\"reason\": \"no eligible measurable goal (G01: signed up 144.3 days ago (rule: within 7 days); G02: already has episode_completed; G03: signed up 144.3 days ago (rule: within 2 days); G04: subscription status is lapsed (rule: trial_active); G05: subscription status is lapsed (rule: never); G06: no lapse event seen: 'recently' cannot be proven; G07: no unfinished, promotable series last played between 72 h and 14 days ago; G08: subscription status is lapsed (rule: active); G09: subscription status is lapsed (rule: active); G10: not measurable: no success event defined; G11: not measurable: success event 'tv_app_open' is never emitted by the platform or simulator; G12: opened the app 2.0 days ago)\"}"
+  },
+  {
+   "at": "2026-10-01T13:46:08.112Z",
+   "goal_instance_id": null,
+   "change": "no_goal",
+   "detail_json": "{\"reason\": \"no eligible measurable goal (G01: signed up 144.5 days ago (rule: within 7 days); G02: already has episode_completed; G03: signed up 144.5 days ago (rule: within 2 days); G04: subscription status is lapsed (rule: trial_active); G05: subscription status is lapsed (rule: never); G06: no lapse event seen: 'recently' cannot be proven; G07: no unfinished, promotable series last played between 72 h and 14 days ago; G08: subscription status is lapsed (rule: active); G09: subscription status is lapsed (rule: active); G10: not measurable: no success event defined; G11: not measurable: success event 'tv_app_open' is never emitted by the platform or simulator; G12: opened the app 0.1 days ago)\"}"
+  },
+  {
+   "at": "2026-10-01T17:14:00.802Z",
+   "goal_instance_id": null,
+   "change": "no_goal",
+   "detail_json": "{\"reason\": \"no eligible measurable goal (G01: signed up 144.6 days ago (rule: within 7 days); G02: already has episode_completed; G03: signed up 144.6 days ago (rule: within 2 days); G04: subscription status is lapsed (rule: trial_active); G05: subscription status is lapsed (rule: never); G06: no lapse event seen: 'recently' cannot be proven; G07: no unfinished, promotable series last played between 72 h and 14 days ago; G08: subscription status is lapsed (rule: active); G09: subscription status is lapsed (rule: active); G10: not measurable: no success event defined; G11: not measurable: success event 'tv_app_open' is never emitted by the platform or simulator; G12: opened the app 0.1 days ago)\"}"
+  }
+ ],
+ "decisions": [
+  {
+   "decision_id": "D-01347",
+   "status": "NO_ACTION",
+   "action": "NO_ACTION",
+   "goal": null,
+   "at": "2026-10-01T10:47:38.709Z"
+  },
+  {
+   "decision_id": "D-01754",
+   "status": "NO_ACTION",
+   "action": "NO_ACTION",
+   "goal": null,
+   "at": "2026-10-01T13:46:08.112Z"
+  },
+  {
+   "decision_id": "D-01757",
+   "status": "STALE_SKIPPED",
+   "action": "NO_ACTION",
+   "goal": null,
+   "at": "2026-10-01T13:46:30.309Z"
+  },
+  {
+   "decision_id": "D-02621",
+   "status": "NO_ACTION",
+   "action": "NO_ACTION",
+   "goal": null,
+   "at": "2026-10-01T17:14:00.802Z"
+  }
+ ],
+ "actions": [],
+ "last_known_facts": {
+  "at": "2026-10-01T17:14:00.802Z",
+  "facts": {
+   "app_language": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T17:14:00.802Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [],
+    "freshness": "fresh",
+    "name": "app_language",
+    "source": "trigger.app_setting",
+    "usable": true,
+    "value": "hin"
+   },
+   "deeplink": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T17:14:00.802Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [],
+    "freshness": "live",
+    "name": "deeplink",
+    "source": "trigger.deeplink",
+    "usable": true,
+    "value": {
+     "campaign": "cmp040",
+     "dialect": "d6",
+     "title_id": "T1387"
+    }
+   },
+   "ever_paid": {
+    "age_s": 148440.8,
+    "as_of": "2026-09-30T00:00:00.000Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "profile_row@2026-09-29T12:49:18.476Z:lapsed"
+    ],
+    "freshness": "recent",
+    "name": "ever_paid",
+    "source": "derived:billing_events+profile",
+    "usable": true,
+    "value": true
+   },
+   "finished_slugs": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T17:14:00.802Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:d96ae84f-7175-46d4-b448-5985274b3f2a"
+    ],
+    "freshness": "fresh",
+    "name": "finished_slugs",
+    "source": "derived:events+episodes",
+    "usable": true,
+    "value": []
+   },
+   "has_completed_episode": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T17:14:00.802Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:d96ae84f-7175-46d4-b448-5985274b3f2a"
+    ],
+    "freshness": "fresh",
+    "name": "has_completed_episode",
+    "source": "derived:events",
+    "usable": true,
+    "value": true
+   },
+   "has_played": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T17:14:00.802Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:3362ca11-4769-4592-8c2f-eaa79eac61c3",
+     "event:ee37bc29-2f1a-4854-9fb2-1029e3ec76a6",
+     "event:d96ae84f-7175-46d4-b448-5985274b3f2a"
+    ],
+    "freshness": "fresh",
+    "name": "has_played",
+    "source": "derived:events",
+    "usable": true,
+    "value": true
+   },
+   "last_activity_at": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T17:14:00.802Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:d5ce5946-5637-420c-8665-27f28b325de1"
+    ],
+    "freshness": "fresh",
+    "name": "last_activity_at",
+    "source": "derived:events",
+    "usable": true,
+    "value": "2026-10-01T13:46:08.112Z"
+   },
+   "last_app_open_at": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T17:14:00.802Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:d5ce5946-5637-420c-8665-27f28b325de1"
+    ],
+    "freshness": "fresh",
+    "name": "last_app_open_at",
+    "source": "derived:events",
+    "usable": true,
+    "value": "2026-10-01T13:46:08.112Z"
+   },
+   "last_lapsed_at": {
+    "age_s": null,
+    "as_of": null,
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [],
+    "freshness": "unknown",
+    "name": "last_lapsed_at",
+    "source": "derived:events",
+    "usable": true,
+    "value": null
+   },
+   "message_dialect": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T17:14:00.802Z",
+    "assumption": null,
+    "conflicts": [
+     "deeplink:d6"
+    ],
+    "evidence": [
+     "event:413ab75d-81ed-44b9-892d-119bd17cf365"
+    ],
+    "freshness": "fresh",
+    "name": "message_dialect",
+    "source": "trigger.app_setting",
+    "usable": true,
+    "value": "d3"
+   },
+   "page_dialect": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T17:14:00.802Z",
+    "assumption": null,
+    "conflicts": [
+     "deeplink:d6"
+    ],
+    "evidence": [
+     "event:413ab75d-81ed-44b9-892d-119bd17cf365"
+    ],
+    "freshness": "live",
+    "name": "page_dialect",
+    "source": "trigger.app_setting",
+    "usable": true,
+    "value": "d3"
+   },
+   "play_ist_days_14d": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T17:14:00.802Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [],
+    "freshness": "fresh",
+    "name": "play_ist_days_14d",
+    "source": "derived:events",
+    "usable": true,
+    "value": []
+   },
+   "push_consent": {
+    "age_s": 148440.8,
+    "as_of": "2026-09-30T00:00:00.000Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "profile:U-02148@2026-09-29T12:49:18.476Z"
+    ],
+    "freshness": "recent",
+    "name": "push_consent",
+    "source": "profile_snapshot",
+    "usable": true,
+    "value": true
+   },
+   "recent_failed_goals": {
+    "age_s": 802545.8,
+    "as_of": "2026-09-22T10:18:15.000Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "G06 failed (pilot_outcomes.csv:line 1684, deadline 2026-09-22T10:18:15.000Z)"
+    ],
+    "freshness": "old",
+    "name": "recent_failed_goals",
+    "source": "pilot_outcomes.csv",
+    "usable": true,
+    "value": [
+     "G06"
+    ]
+   },
+   "series_in_progress": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T17:14:00.802Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:d96ae84f-7175-46d4-b448-5985274b3f2a"
+    ],
+    "freshness": "fresh",
+    "name": "series_in_progress",
+    "source": "derived:events+episodes",
+    "usable": true,
+    "value": [
+     {
+      "episodes_completed": 1,
+      "episodes_total": 23,
+      "evidence": "event:d96ae84f-7175-46d4-b448-5985274b3f2a",
+      "last_play_at": "2026-09-13T03:47:32.101Z",
+      "slug": "yatite-roloda-d3"
+     }
+    ]
+   },
+   "signup_at": {
+    "age_s": 148440.8,
+    "as_of": "2026-09-30T00:00:00.000Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "profile:U-02148@2026-09-29T12:49:18.476Z"
+    ],
+    "freshness": "n/a",
+    "name": "signup_at",
+    "source": "profile_snapshot",
+    "usable": true,
+    "value": "2026-05-10T02:53:36.662Z"
+   },
+   "subscription_status": {
+    "age_s": 148440.8,
+    "as_of": "2026-09-30T00:00:00.000Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "profile:U-02148@2026-09-29T12:49:18.476Z"
+    ],
+    "freshness": "recent",
+    "name": "subscription_status",
+    "source": "profile_snapshot",
+    "usable": true,
+    "value": "lapsed"
+   },
+   "top_genre": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T17:14:00.802Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:0aaff1cd-6d3f-414e-889e-134b33b6b8df"
+    ],
+    "freshness": "fresh",
+    "name": "top_genre",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": "Romance"
+   },
+   "watched_slugs": {
+    "age_s": 0.0,
+    "as_of": "2026-10-01T17:14:00.802Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "event:3362ca11-4769-4592-8c2f-eaa79eac61c3",
+     "event:ee37bc29-2f1a-4854-9fb2-1029e3ec76a6",
+     "event:d96ae84f-7175-46d4-b448-5985274b3f2a"
+    ],
+    "freshness": "fresh",
+    "name": "watched_slugs",
+    "source": "derived:events+catalogue",
+    "usable": true,
+    "value": [
+     "yatite-roloda-d3"
+    ]
+   },
+   "whatsapp_consent": {
+    "age_s": 148440.8,
+    "as_of": "2026-09-30T00:00:00.000Z",
+    "assumption": null,
+    "conflicts": [],
+    "evidence": [
+     "profile:U-02148@2026-09-29T12:49:18.476Z"
+    ],
+    "freshness": "recent",
+    "name": "whatsapp_consent",
+    "source": "profile_snapshot",
+    "usable": true,
+    "value": false
+   }
+  },
+  "flags": [],
+  "user_id": "U-02148"
+ }
+}

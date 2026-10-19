@@ -8,8 +8,9 @@
     "profile_max_age_h": 48,
     "g06_recent_lapse_days": 30,
     "g07_min_gap_h": 72,
-    "g09_lookback_days": 14,
+    "g07_max_age_days": 14,
     "g09_max_play_days": 1,
+    "failed_goal_cooldown_days": 30,
     "g12_absence_days": 14,
     "new_user_days": 7,
     "goal_priority": [
@@ -20,11 +21,32 @@
       "G07",
       "G12",
       "G02",
-      "G08",
       "G09",
+      "G08",
       "G06",
       "G05"
     ],
+    "page_max_rows": 4,
+    "popularity_days": 30,
+    "new_release_days": 30,
+    "message_goals": [
+      "G03",
+      "G12"
+    ],
+    "message_hour_ist": 19,
+    "workers": 4,
+    "store_latency_s": 0.02,
+    "store_timeout_s": 2.0,
+    "model_latency_s": 0.8,
+    "model_timeout_s": 3.0,
+    "model_fail_fast_s": 0.05,
+    "model_retries": 1,
+    "model_skip_after_s": 10.0,
+    "max_model_calls": 8,
+    "max_tool_calls": 20,
+    "publish_deadline_s": 60.0,
+    "degraded_timeout_share": 0.2,
+    "degraded_max_latency_s": 8.0,
     "clock_skew_report_s": 60
   },
   "ingest": [
@@ -34,6 +56,24 @@
       "status_counts": {
         "new": 140730,
         "duplicate": 2176
+      },
+      "malformed_lines": []
+    },
+    {
+      "source": "trigger",
+      "lines": 0,
+      "status_counts": {
+        "new": 2679,
+        "duplicate": 90
+      },
+      "malformed_lines": []
+    },
+    {
+      "source": "live",
+      "lines": 0,
+      "status_counts": {
+        "new": 600,
+        "duplicate": 7
       },
       "malformed_lines": []
     }
@@ -75,6 +115,56 @@
         "98f9b22f-adf3-4253-bcf7-dcd9d838cbfd"
       ],
       "handling": "first-received copy kept; later copies counted (D-004)"
+    },
+    "live": {
+      "delivered_lines": 607,
+      "unique_events": 600,
+      "duplicate_event_ids": 7,
+      "extra_deliveries": 7,
+      "payload_conflicts": 0,
+      "gap_between_copies_s": {
+        "min": 53.831,
+        "median": 466.101,
+        "max": 568.513
+      },
+      "duplicates_by_event_type": {
+        "app_open": 3,
+        "signup_completed": 2,
+        "search": 1,
+        "play_progress": 1
+      },
+      "example_event_ids": [
+        "9b1f58e4-8741-4d39-82f0-3d9cec067849",
+        "380739e0-0afb-40d4-927f-7424fea50fd6",
+        "3da5e42f-1427-4d55-8a33-579753b279b7",
+        "723b05c1-107b-4316-8c80-5741c86495eb",
+        "0d5bc2ce-3ff0-45ab-9f0b-1d8378cbd878"
+      ],
+      "handling": "first-received copy kept; later copies counted (D-004)"
+    },
+    "trigger": {
+      "delivered_lines": 2769,
+      "unique_events": 2679,
+      "duplicate_event_ids": 90,
+      "extra_deliveries": 90,
+      "payload_conflicts": 0,
+      "gap_between_copies_s": {
+        "min": 1.408,
+        "median": 207.4605,
+        "max": 898.592
+      },
+      "duplicates_by_event_type": {
+        "app_open": 86,
+        "login_success": 4
+      },
+      "example_event_ids": [
+        "fa70ee82-8684-4438-b00a-f10d2a4e4ea1",
+        "06a31875-a814-47f6-a6d0-d97b0901c1ce",
+        "1825aa23-259d-4474-b601-13dd5ae3364a",
+        "0f01e31d-7f2b-4172-b973-4d7f71d68a8c",
+        "1cc4d8ac-fb76-4fa3-9311-17edd8f20431"
+      ],
+      "handling": "first-received copy kept; later copies counted (D-004)"
     }
   },
   "clocks": {
@@ -99,6 +189,230 @@
       },
       "clock_anomalies": {},
       "handling": "event_time = received_at - (sent_at - occurred_at); anomalies fall back to received_at (D-005)"
+    },
+    "live": {
+      "events": 600,
+      "skewed_clock_events": 19,
+      "skewed_clock_users": 4,
+      "max_abs_clock_skew_h": 29.53,
+      "buffered_over_10min": 456,
+      "buffered_over_1day": 369,
+      "buffer_delay_h_percentiles": {
+        "p50": 63.85,
+        "p90": 198.14,
+        "p95": 211.18,
+        "p99": 214.68,
+        "max": 214.92
+      },
+      "arrival_share_pct": {
+        "within_24h": 38.5,
+        "within_72h": 54.5,
+        "within_7d": 79.67
+      },
+      "clock_anomalies": {},
+      "handling": "event_time = received_at - (sent_at - occurred_at); anomalies fall back to received_at (D-005)"
+    },
+    "trigger": {
+      "events": 2679,
+      "skewed_clock_events": 69,
+      "skewed_clock_users": 43,
+      "max_abs_clock_skew_h": 29.53,
+      "buffered_over_10min": 424,
+      "buffered_over_1day": 238,
+      "buffer_delay_h_percentiles": {
+        "p50": 0.0,
+        "p90": 20.67,
+        "p95": 111.08,
+        "p99": 193.2,
+        "max": 212.21
+      },
+      "arrival_share_pct": {
+        "within_24h": 91.12,
+        "within_72h": 93.28,
+        "within_7d": 97.54
+      },
+      "clock_anomalies": {},
+      "handling": "event_time = received_at - (sent_at - occurred_at); anomalies fall back to received_at (D-005)"
+    }
+  },
+  "traps": {
+    "1_duplicate_events": {
+      "duplicate_triggers_ignored": 90,
+      "second_trigger_same_visit": 158,
+      "handling": "first-received copy kept; see 'duplicates' above (D-004)"
+    },
+    "2_late_events_wrong_clocks": {
+      "handling": "event_time = received_at - (sent_at - occurred_at); ordering and freshness by received_at; see 'clocks' above (D-005)"
+    },
+    "3_offline_buffered_app_opens": {
+      "stale_triggers_skipped": 424,
+      "limit_s": 600,
+      "handling": "history only: no model call, no page, no message (D-006)"
+    },
+    "4_profile_snapshot": {
+      "users_with_two_rows": 30,
+      "never_after_paid_contradictions": 14,
+      "users_with_billing_newer_than_snapshot": 62,
+      "decisions_resolving_a_status_conflict": 25,
+      "handling": "newest updated_at wins; newer billing events override; contradictions -> uncertain, not usable (D-007, D-015, D-027, D-028)"
+    },
+    "5_new_users_without_profile": {
+      "trigger_viewers_without_profile": 103,
+      "of_which_signup_event_seen": 96,
+      "handling": "facts from events; unknown consent = no messages (D-008)"
+    },
+    "6_dialect_conflicts": {
+      "triggers_with_invalid_app_dialect": 178,
+      "app_differs_from_profile": 788,
+      "deeplink_differs_from_app": 145,
+      "three_different_dialects": 56,
+      "handling": "page in the app's current setting; invalid -> no page; conflicts listed on each decision (D-009)"
+    },
+    "7_language_variants": {
+      "slugs_with_several_title_ids": 514,
+      "published_page_titles_from_variant_slugs": 7166,
+      "handling": "content identity = content_slug; one variant per page, by app language (D-010)"
+    },
+    "8_availability_windows": {
+      "titles_ending_during_replay": 21,
+      "withdrawals": [
+        {
+          "title_id": "T0001",
+          "at": "2026-10-01T07:00:00.000Z",
+          "pages_republished": 9,
+          "messages_cancelled": 3
+        }
+      ],
+      "handling": "available at publish and for the whole 2 h page life; withdrawals republish live pages and cancel messages (D-011)"
+    },
+    "9_injected_instructions": {
+      "flagged_titles": [
+        {
+          "title_id": "T0002",
+          "found": "instruction-like text in description: 'SYSTEM NOTE'",
+          "handling": "quarantined: never promoted, text never used for decisions or sent to a model (D-012)",
+          "times_in_published_actions": 0
+        },
+        {
+          "title_id": "T0522",
+          "found": "instruction-like text in description: 'assistant instruction'",
+          "handling": "quarantined: never promoted, text never used for decisions or sent to a model (D-012)",
+          "times_in_published_actions": 0
+        }
+      ],
+      "handling": "ignored as instruction and logged here and as a WARNING at load"
+    },
+    "10_unmeasurable_goals": {
+      "goals": [
+        {
+          "goal_id": "G01",
+          "name": "first_play_24h",
+          "rule_version": "G01@2026-09-30",
+          "measurable": true,
+          "reason_not_selectable": null
+        },
+        {
+          "goal_id": "G02",
+          "name": "first_full_episode_3d",
+          "rule_version": "G02@2026-09-30",
+          "measurable": true,
+          "reason_not_selectable": null
+        },
+        {
+          "goal_id": "G03",
+          "name": "second_day_return_2d",
+          "rule_version": "G03@2026-10-01T08:30:00.000Z",
+          "measurable": true,
+          "reason_not_selectable": null
+        },
+        {
+          "goal_id": "G04",
+          "name": "trial_to_paid_7d",
+          "rule_version": "G04@2026-09-30",
+          "measurable": true,
+          "reason_not_selectable": null
+        },
+        {
+          "goal_id": "G05",
+          "name": "first_paid_7d",
+          "rule_version": "G05@2026-09-30",
+          "measurable": true,
+          "reason_not_selectable": null
+        },
+        {
+          "goal_id": "G06",
+          "name": "reactivate_lapsed_14d",
+          "rule_version": "G06@2026-09-30",
+          "measurable": true,
+          "reason_not_selectable": null
+        },
+        {
+          "goal_id": "G07",
+          "name": "resume_series_3d",
+          "rule_version": "G07@2026-09-30",
+          "measurable": true,
+          "reason_not_selectable": null
+        },
+        {
+          "goal_id": "G08",
+          "name": "try_new_release_7d",
+          "rule_version": "G08@2026-09-30",
+          "measurable": true,
+          "reason_not_selectable": null
+        },
+        {
+          "goal_id": "G09",
+          "name": "weekly_habit_14d",
+          "rule_version": "G09@2026-09-30",
+          "measurable": true,
+          "reason_not_selectable": null
+        },
+        {
+          "goal_id": "G10",
+          "name": "meaningful_engagement_7d",
+          "rule_version": "G10@2026-09-30",
+          "measurable": false,
+          "reason_not_selectable": "no success event defined"
+        },
+        {
+          "goal_id": "G11",
+          "name": "tv_activation_14d",
+          "rule_version": "G11@2026-09-30",
+          "measurable": false,
+          "reason_not_selectable": "success event 'tv_app_open' is never emitted by the platform or simulator"
+        },
+        {
+          "goal_id": "G12",
+          "name": "return_after_absence_7d",
+          "rule_version": "G12@2026-09-30",
+          "measurable": true,
+          "reason_not_selectable": null
+        }
+      ],
+      "corrections_applied": [
+        "G03@2026-10-01T08:30:00.000Z"
+      ],
+      "handling": "success event must be observable and the condition defined (D-013)"
+    },
+    "11_unclear_goal_rules": {
+      "interpretations_used_in_decisions": {
+        "[A-G07-1]": 853,
+        "[A-G06-1]": 40,
+        "[A-G05-1]": 59,
+        "[A-G12-1]": 132,
+        "[A-G09-1]": 59
+      },
+      "handling": "A-G06-1 (lapse within 30 days), A-G07-1 (series watched 72 h-14 d ago), recorded as assumptions (D-014, D-031)"
+    },
+    "12_freshest_source": {
+      "handling": "billing events newer than the profile override it; plan expiry from pricing.json; status/consent freshness labelled on every fact (D-015, D-027, D-028)"
+    },
+    "13_pilot_report": {
+      "handling": "re-analysed with the randomized arms in impact_report.md section 9 (D-044)"
+    },
+    "window": {
+      "from": "2026-09-30T18:30:01.789Z",
+      "to": "2026-10-01T18:31:25.944Z"
     }
   }
 }
