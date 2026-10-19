@@ -27,16 +27,16 @@
     "cancelled": 3
   },
   "latency_s_all_decided": {
-    "p50": 0.843,
-    "p95": 0.846,
-    "p99": 1.154,
+    "p50": 0.842,
+    "p95": 0.843,
+    "p99": 1.009,
     "max": 3.358
   },
   "latency_s_published_pages": {
-    "p50": 0.843,
-    "p95": 0.846,
-    "p99": 1.13,
-    "max": 2.218
+    "p50": 0.842,
+    "p95": 0.843,
+    "p99": 1.009,
+    "max": 2.217
   },
   "over_60s": 0,
   "over_5min": 0,
@@ -62,52 +62,67 @@
     "bursts": [
       {
         "window_start": "2026-10-01T04:40:00.000Z",
+        "why": [
+          "12.3x the average"
+        ],
         "triggers": 240,
         "times_average": 12.3,
         "stale_share": 0.92,
         "decided": 16,
         "max_queue_s": 0.0,
-        "max_latency_s": 0.845,
+        "max_latency_s": 0.844,
         "model_skipped_under_load": 0
       },
       {
         "window_start": "2026-10-01T14:20:00.000Z",
+        "why": [
+          "2.8x the average"
+        ],
         "triggers": 54,
         "times_average": 2.8,
         "stale_share": 0.11,
         "decided": 40,
         "max_queue_s": 0.0,
-        "max_latency_s": 0.844,
+        "max_latency_s": 0.843,
         "model_skipped_under_load": 0
       },
       {
         "window_start": "2026-10-01T15:00:00.000Z",
+        "why": [
+          "8.5x the average"
+        ],
         "triggers": 165,
         "times_average": 8.5,
         "stale_share": 0.02,
         "decided": 154,
         "max_queue_s": 0.0,
-        "max_latency_s": 1.026,
+        "max_latency_s": 1.008,
         "model_skipped_under_load": 0
       },
       {
         "window_start": "2026-10-01T15:10:00.000Z",
+        "why": [
+          "2.3x the average"
+        ],
         "triggers": 45,
         "times_average": 2.3,
         "stale_share": 0.04,
         "decided": 35,
         "max_queue_s": 0.0,
-        "max_latency_s": 0.846,
+        "max_latency_s": 0.844,
         "model_skipped_under_load": 0
       },
       {
         "window_start": "2026-10-01T15:20:00.000Z",
+        "why": [
+          "2.3x the average"
+        ],
         "triggers": 45,
         "times_average": 2.3,
         "stale_share": 0.09,
         "decided": 34,
         "max_queue_s": 0.0,
-        "max_latency_s": 0.844,
+        "max_latency_s": 0.843,
         "model_skipped_under_load": 0
       }
     ]
@@ -269,7 +284,7 @@
       "effect": null
     }
   ],
-  "wall_clock_s": 21.9,
+  "wall_clock_s": 13.0,
   "budgets": {
     "max_model_calls": 8,
     "max_tool_calls": 20,

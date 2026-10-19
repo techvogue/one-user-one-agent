@@ -1028,7 +1028,8 @@ class Replay:
         return latency
 
     def load_report(self) -> dict:
-        """Notice traffic bursts (D-048): 10-minute windows at >= 2x the average, with how the agent coped."""
+        """Notice traffic bursts (D-048, D-056): 10-minute windows at >= 2x the average or where decisions had to
+        queue for cfg.burst_queue_s or more, with how the agent coped."""
         win = defaultdict(list)
         for d in self.decisions:
             t = parse_ts(d["trigger"]["deliver_at"])
@@ -1038,11 +1039,16 @@ class Replay:
         avg = sum(len(v) for v in win.values()) / len(win)
         bursts = []
         for w, ds in sorted(win.items()):
-            if len(ds) >= 2 * avg:
-                timed = [d for d in ds if "latency_s" in d]
+            timed = [d for d in ds if "latency_s" in d]
+            queue = max((d["queue_s"] for d in timed), default=0.0) or 0.0
+            why = ([f"{len(ds) / avg:.1f}x the average"] if len(ds) >= 2 * avg else []) + (
+                [f"decisions queued up to {queue:.1f} s"] if queue >= self.cfg.burst_queue_s else []
+            )
+            if why:
                 bursts.append(
                     {
                         "window_start": iso(w),
+                        "why": why,
                         "triggers": len(ds),
                         "times_average": round(len(ds) / avg, 1),
                         "stale_share": round(sum(d["status"] == STALE_SKIPPED for d in ds) / len(ds), 2),

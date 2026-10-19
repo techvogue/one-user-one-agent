@@ -275,6 +275,14 @@ counted in the goal-independent one.
 - Measured on the replay (2,769 triggers): published pages p50 0.84 s, p95 0.84 s, max 2.2 s (model call 0.8 s
   simulated); data-store degradation pushes single decisions to 3.4 s; evening burst (×3) had no queueing with
   4 workers; 0 decisions over 60 s. Budgets: max 2 model calls and ≤ 6 tool calls used per decision (limits 8 / 20).
+- **Load test: 1,000 viewers opening the app in the same minute** (D-056; 1,000 real pack viewers, their triggers
+  moved into 15:00–15:01, run unchanged). All 1,000 decided, **0 over 60 s**, verifier 1,000/1,000 approved,
+  simulator 0 policy problems. With the default 4 workers the queue grows until the optional model is skipped
+  (701 of 1,000), so pages are ready after about **10.4 s** (p95 10.8 s): safe, but slower than the 3–40 s in which
+  viewers reach the home page. Configuration fixes it, no code: `model_skip_after_s: 1` → p50 1.4 s;
+  `workers: 16` → p50 0.84 s, p95 1.5 s. The burst is reported in `latency_report.json` because a window counts as
+  a burst at ≥ 2× the average **or** when decisions queue ≥ 1 s (the second rule was added after this test showed
+  that a run which is one big burst has no quieter average to compare with).
 
 ## 8. Failure recovery
 
@@ -345,4 +353,5 @@ in `latency_report.json` → `load`.
 | 2026-10-19 | Finalised: draft markers removed, sections in order, §10 scale-out and never-automate written. |
 | 2026-10-19 | Past results feed back into goal choice (D-051, §4 item 9, §6b item 7); final report component (D-052); sample-run numbers updated. |
 | 2026-10-19 | Fuller pages with real rows and a row-content check (D-053); WhatsApp-only G07 reminder (D-054); §4b and §6c updated. |
+| 2026-10-19 | §7: 1,000-viewers-in-a-minute load test and the queue-based burst signal (D-056). |
 | 2026-10-18 | Storage, time model and harness updated after D-017 (tech stack). |

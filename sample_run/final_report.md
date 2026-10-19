@@ -60,7 +60,7 @@ Decisions that published nothing without a recorded reason: **0**.
 
 | | |
 |---|---|
-| Published pages: latency p50 / p95 / max | 0.843 s / 0.846 s / 2.218 s |
+| Published pages: latency p50 / p95 / max | 0.842 s / 0.843 s / 2.217 s |
 | Decisions over 60 s | 0 |
 | Max model / tool calls per decision | 2 / 6 |
 | Model outcomes | agreed: 2062, not_called: 685, unavailable: 19, unsupported_claim: 1, error: 1, malformed: 1 |

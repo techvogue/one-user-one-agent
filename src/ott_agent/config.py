@@ -57,6 +57,9 @@ class Config:
     model_fail_fast_s: float = 0.05  # an HTTP 503 comes back quickly
     model_retries: int = 1  # one retry on a malformed answer
     model_skip_after_s: float = 10.0  # skip the optional model when the decision is already this far behind
+    # D-056: a 10-minute window is a burst at >= 2x the run's average OR when any decision in it queued this long,
+    # so a run that is one big burst (no quiet average to compare with) is still noticed.
+    burst_queue_s: float = 1.0
     max_model_calls: int = 8
     max_tool_calls: int = 20
     publish_deadline_s: float = 60.0  # later than this: not published (FAILED_LATE)

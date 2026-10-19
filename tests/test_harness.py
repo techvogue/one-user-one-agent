@@ -592,10 +592,30 @@ def test_burst_is_noticed_and_the_model_is_skipped_under_load(tmp_path):
     r, rep = run(tmp_path, pack, workers=1)
     [b] = rep["load"]["bursts"]
     assert b["window_start"] == "2026-10-01T09:30:00.000Z" and b["triggers"] == 30
+    assert any("average" in w for w in b["why"]) and any("queued" in w for w in b["why"])
     assert b["model_skipped_under_load"] > 0  # later decisions skip the optional model call
     late = [d for d in r.decisions if d["trigger"]["event_id"].startswith("b")][-1]
     assert late["model"]["outcome"] == "skipped" and late["status"] == "PUBLISHED"
     assert all(d["latency_s"] <= 60 for d in r.decisions if "latency_s" in d)
+
+
+def test_a_run_that_is_one_big_burst_is_still_noticed(tmp_path):
+    # D-056: every trigger in the same minute, so there is no quieter average to compare with
+    users = [f"U-{i}" for i in range(1, 31)]
+    pack = build_pack(tmp_path, [trig(f"b{u}", user=u, at="2026-10-01T09:30:00.000Z") for u in users],
+                      profiles=[profile_row(u) for u in users], arms={u: "agent" for u in users})  # fmt: skip
+    _, rep = run(tmp_path, pack, workers=1)
+    [b] = rep["load"]["bursts"]
+    assert b["triggers"] == 30 and b["max_queue_s"] >= 1.0
+    assert any("queued" in w for w in b["why"]) and not any("average" in w for w in b["why"])
+
+
+def test_quiet_traffic_is_not_a_burst(tmp_path):
+    users = [f"U-{i}" for i in range(1, 4)]
+    pack = build_pack(tmp_path, [trig(f"q{u}", user=u, at=f"2026-10-01T0{i}:00:00.000Z") for i, u in enumerate(users, 1)],
+                      profiles=[profile_row(u) for u in users], arms={u: "agent" for u in users})  # fmt: skip
+    _, rep = run(tmp_path, pack, workers=1)
+    assert rep["load"]["bursts"] == []
 
 
 def test_trap_map_names_real_tests():

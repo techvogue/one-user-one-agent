@@ -795,6 +795,19 @@ Rules:
   13 rows. No change to the agent's behaviour.
 - Why: A reviewer can check any claim in seconds by running the named test; the table cannot drift from the code.
 
+### D-056: Load test of 1,000 app opens in one minute; bursts also noticed by queueing
+- Date: 2026-10-19 · Status: Accepted · Decided by: candidate (approved the approach) · Extends D-037, D-048
+- Context: The discussion asks "what happens when 1,000 users open the app in the same minute?". The real replay never
+  exceeded ~240 triggers in 10 minutes. A test with 1,000 real pack viewers in one minute: all decided, 0 over 60 s,
+  0 policy problems, verifier 1,000/1,000; pages after ~10.4 s with 4 workers (701 model calls skipped under load);
+  `model_skip_after_s: 1` → 1.4 s, `workers: 16` → 0.84 s. The burst detector did **not** flag it: it compared each
+  10-minute window with the run's own average, and a run that is one big burst has no quieter average.
+- Decision: A window is a burst at ≥ 2× the average **or** when any decision in it queued ≥ `burst_queue_s` (1 s);
+  each burst records why. The load-test results are recorded in ARCHITECTURE §7; the default capacity stays as is
+  (L-38) and the fixed dialect list is recorded as L-39 rather than changed.
+- Why: Falling behind is the signal that matters, whatever the average. Changing defaults to fit a synthetic spike
+  would hide the trade-off instead of showing it.
+
 ---
 
 ## Pending (under discussion, not approved)
@@ -817,6 +830,7 @@ Rules:
 | 2026-10-18 | D-018 accepted (repository layout). |
 | 2026-10-18 | D-019 accepted (goal priority); D-020 accepted (folder renamed to `submission/`). |
 | 2026-10-19 | D-049 accepted (impact report: who is counted; trap on our data). |
+| 2026-10-19 | D-056 accepted (1,000-in-a-minute load test; queue-based burst signal). |
 | 2026-10-19 | D-055 accepted (data-issue table with handling and tests in the final report). |
 | 2026-10-19 | D-053, D-054 accepted (fuller pages with real rows; WhatsApp-only G07 reminder); D-033, D-034 annotated. |
 | 2026-10-19 | D-051, D-052 accepted (past failures not repeated; generated final report). |

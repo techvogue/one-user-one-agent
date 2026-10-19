@@ -55,7 +55,7 @@ point to [doc/decisions.md](doc/decisions.md), where the options considered are 
 |---|---|---|---|
 | L-22 | **Latency is simulated** on a virtual clock: real compute time is measured; dependency delays, timeouts and queueing are simulated | Real sleeps would make the replay slow and non-deterministic (D-017, D-037) | Load-test against real services |
 | L-23 | **Single-process SQLite** | Zero setup for evaluators | Sharded store + key-value idempotency + stream partitioned by viewer (ARCHITECTURE §10) |
-| L-24 | **The "skip the model under load" path ran only in its test**: with 4 workers the evening peak never queued | Capacity was sufficient (D-048) | — |
+| L-24 | **The "skip the model under load" path never triggered on the real replay day**: with 4 workers the evening peak never queued. It did in the 1,000-viewers-in-a-minute load test (701 skips, D-056) | Capacity was sufficient for the real day (D-048) | — |
 | L-25 | **With a 2 s store timeout, the degraded window fails most reads**: 12 of 13 decisions in it used the generic page | p95 8 s in the control event | Tune the timeout per dependency |
 
 ## Verification
@@ -78,6 +78,8 @@ point to [doc/decisions.md](doc/decisions.md), where the options considered are 
 | L-34 | **"Don't repeat a failed goal" is a fixed 30-day rule**, and it counts failures the viewer was never served (pilot holdout, unserved) | The viewer did not reach the goal on their own; pushing it again is not proportionate. A per-viewer failure is an observation, not proof the action does not work (D-051) | Learn per goal and segment from the holdout comparison which repeats help |
 | L-36 | **G07 stays hard to reach: 11 vs 11 successes.** In the pack's simulator a page changes how likely a viewer is to play, not which title; only a message click plays a chosen title | D-053/D-054 use the levers that exist (fuller pages, one WhatsApp reminder); moving G07 down the priority would raise the score by choosing easier goals, not better ones (rejected) | Real recommendations that steer the title choice |
 | L-37 | **What makes a page "better" was learnt partly from the simulator's code** (rows, top genre, next episode raise play; message clicks play the title) | It is the stated outcome model, and every change is also a normal product choice; none relies on a quirk (e.g. the order of titles it samples from) | Validate with real viewers and an A/B test |
+| L-38 | **Default capacity is sized for the replay, not for a spike**: 1,000 viewers in one minute are all decided safely, but pages are ready only after ~10 s with 4 workers (D-056) | The worker pool is modelled on a virtual clock; the defaults match the real day's traffic | Autoscale workers on queue length; `workers: 16` or `model_skip_after_s: 1` brings p50 to 0.8–1.4 s |
+| L-39 | **The valid dialects (d1–d6) are a fixed list in the code** (`catalogue.py`, `verifier.py`) | Matches the pack; an unseen replay day uses the same catalogue | Read the dialect list from the catalogue or config, so 40 dialects need no code change (ARCHITECTURE §10) |
 | L-35 | **The primary metric leaves out viewers with no goal at their first visit**, now including those whose only eligible goal had recently failed | Same rule in both arms (77 vs 74 viewers), so the comparison stays fair; the goal-independent metric counts them | — |
 
 ## Change log
@@ -90,3 +92,4 @@ point to [doc/decisions.md](doc/decisions.md), where the options considered are 
 | 2026-10-19 | Final version: grouped by area, every entry re-checked against the current run; three outdated or false entries corrected (the unimplemented before-signup check, the 1-row page count, the G01 count). |
 | 2026-10-19 | L-33 to L-35 added with D-051 (past results feed back); L-11, L-28 numbers updated to the new run. |
 | 2026-10-19 | L-36, L-37 added with D-053/D-054; L-11, L-16, L-28 updated. |
+| 2026-10-19 | L-38, L-39 added after the load test (D-056); L-24 updated. |
