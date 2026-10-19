@@ -243,39 +243,71 @@
     "1_duplicate_events": {
       "duplicate_triggers_ignored": 90,
       "second_trigger_same_visit": 158,
-      "handling": "first-received copy kept; see 'duplicates' above (D-004)"
+      "handling": "first-received copy kept, later copies counted and ignored (D-004)",
+      "proved_by": [
+        "test_duplicate_kept_once_with_earliest_received",
+        "test_duplicate_trigger_creates_no_second_decision_or_action",
+        "test_payload_conflict_is_flagged_and_first_copy_kept"
+      ]
     },
     "2_late_events_wrong_clocks": {
-      "handling": "event_time = received_at - (sent_at - occurred_at); ordering and freshness by received_at; see 'clocks' above (D-005)"
+      "handling": "event_time = received_at - (sent_at - occurred_at); ordering and freshness by received_at; implausible times fall back to received_at (D-005)",
+      "proved_by": [
+        "test_buffered_event_with_skewed_clock",
+        "test_phone_clock_22h_fast_lands_on_true_ist_day",
+        "test_buffered_signal_counts_by_when_it_happened"
+      ]
     },
     "3_offline_buffered_app_opens": {
       "stale_triggers_skipped": 424,
       "limit_s": 600,
-      "handling": "history only: no model call, no page, no message (D-006)"
+      "handling": "history only: no model call, no page, no message (D-006)",
+      "proved_by": [
+        "test_stale_trigger_is_skipped_without_model_or_action",
+        "test_stale_is_reported_before_other_reasons"
+      ]
     },
     "4_profile_snapshot": {
       "users_with_two_rows": 30,
       "never_after_paid_contradictions": 14,
       "users_with_billing_newer_than_snapshot": 62,
       "decisions_resolving_a_status_conflict": 25,
-      "handling": "newest updated_at wins; newer billing events override; contradictions -> uncertain, not usable (D-007, D-015, D-027, D-028)"
+      "handling": "newest updated_at wins; newer billing events override; contradictions -> uncertain, not usable (D-007, D-015, D-027, D-028)",
+      "proved_by": [
+        "test_duplicate_profile_newest_wins_and_conflict_visible",
+        "test_status_cannot_regress_from_paid_to_never",
+        "test_profile_facts_become_unusable_when_snapshot_too_old"
+      ]
     },
     "5_new_users_without_profile": {
       "trigger_viewers_without_profile": 103,
       "of_which_signup_event_seen": 96,
-      "handling": "facts from events; unknown consent = no messages (D-008)"
+      "handling": "facts from events; unknown consent = no messages (D-008)",
+      "proved_by": [
+        "test_new_user_without_profile",
+        "test_g01_not_eligible_after_a_play_or_without_provable_signup"
+      ]
     },
     "6_dialect_conflicts": {
       "triggers_with_invalid_app_dialect": 178,
       "app_differs_from_profile": 788,
       "deeplink_differs_from_app": 145,
       "three_different_dialects": 56,
-      "handling": "page in the app's current setting; invalid -> no page; conflicts listed on each decision (D-009)"
+      "handling": "page in the app's current setting; invalid -> no page; conflicts listed on each decision (D-009)",
+      "proved_by": [
+        "test_three_dialects_page_uses_app_setting_and_lists_conflicts",
+        "test_invalid_app_dialect_means_no_page",
+        "test_malformed_deeplink_is_flagged_not_used"
+      ]
     },
     "7_language_variants": {
       "slugs_with_several_title_ids": 514,
       "published_page_titles_from_variant_slugs": 12604,
-      "handling": "content identity = content_slug; one variant per page, by app language (D-010)"
+      "handling": "content identity = content_slug; one variant per page, by app language (D-010)",
+      "proved_by": [
+        "test_language_variant_follows_app_language",
+        "test_series_progress_counts_both_language_variants"
+      ]
     },
     "8_availability_windows": {
       "titles_ending_during_replay": 21,
@@ -287,7 +319,11 @@
           "messages_cancelled": 3
         }
       ],
-      "handling": "available at publish and for the whole 2 h page life; withdrawals republish live pages and cancel messages (D-011)"
+      "handling": "available at publish and for the whole 2 h page life; withdrawals republish live pages and cancel messages (D-011)",
+      "proved_by": [
+        "test_availability_must_cover_page_ttl_and_withdrawal",
+        "test_withdrawal_republishes_live_pages_and_cancels_pending_messages"
+      ]
     },
     "9_injected_instructions": {
       "flagged_titles": [
@@ -304,7 +340,12 @@
           "times_in_published_actions": 0
         }
       ],
-      "handling": "ignored as instruction and logged here and as a WARNING at load"
+      "handling": "quarantined: never promoted, text never used for decisions or sent to a model; logged as a WARNING at load (D-012)",
+      "proved_by": [
+        "test_injected_description_is_flagged_and_quarantined",
+        "test_verifier_scans_for_instructions_independently",
+        "test_g07_never_targets_a_quarantined_series"
+      ]
     },
     "10_unmeasurable_goals": {
       "goals": [
@@ -396,7 +437,11 @@
       "corrections_applied": [
         "G03@2026-10-01T08:30:00.000Z"
       ],
-      "handling": "success event must be observable and the condition defined (D-013)"
+      "handling": "success event must be observable and the condition defined (D-013)",
+      "proved_by": [
+        "test_unmeasurable_goals_are_disabled_generically",
+        "test_unmeasurable_goal_is_rejected"
+      ]
     },
     "11_unclear_goal_rules": {
       "interpretations_used_in_decisions": {
@@ -406,13 +451,27 @@
         "[A-G12-1]": 132,
         "[A-G09-1]": 59
       },
-      "handling": "A-G06-1 (lapse within 30 days), A-G07-1 (series watched 72 h-14 d ago), recorded as assumptions (D-014, D-031)"
+      "handling": "A-G06-1 (lapse within 30 days), A-G07-1 (series watched 72 h-14 d ago), recorded as assumptions (D-014, D-031)",
+      "proved_by": [
+        "test_g06_recent_lapse_must_be_provable",
+        "test_g07_unfinished_series_left_for_72h",
+        "test_g07_series_touched_too_long_ago_is_not_in_progress"
+      ]
     },
     "12_freshest_source": {
-      "handling": "billing events newer than the profile override it; plan expiry from pricing.json; status/consent freshness labelled on every fact (D-015, D-027, D-028)"
+      "handling": "billing events newer than the profile override it; plan expiry from pricing.json; status/consent freshness labelled on every fact (D-015, D-027, D-028)",
+      "proved_by": [
+        "test_newer_purchase_overrides_never_profile",
+        "test_event_derived_active_expires_after_plan_length",
+        "test_signup_from_earliest_event_time_not_first_received"
+      ]
     },
     "13_pilot_report": {
-      "handling": "re-analysed with the randomized arms in impact_report.md section 9 (D-044)"
+      "handling": "re-analysed with the randomized arms in impact_report.md section 9 (D-044)",
+      "proved_by": [
+        "test_pilot_reanalysis_separates_the_biased_headline_from_itt",
+        "test_misleading_groups_split_the_agent_arm_by_exposure"
+      ]
     },
     "window": {
       "from": "2026-09-30T18:30:01.789Z",

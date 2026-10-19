@@ -250,5 +250,7 @@ def test_run_command_does_everything_with_the_pack_simulator(tmp_path):
     for section in ("## 2. Decisions", "No-action reasons", "## 5. Verification and safety", "## 9. Impact"):
         assert section in final, section
     assert "without a recorded reason: **0**" in final and "Actions for holdout viewers | **0**" in final
+    trap_rows = [x for x in final.splitlines() if x.startswith("| ") and "`test_" in x]
+    assert len(trap_rows) == 13  # every data issue: found, handled, proved by
     decisions = [json.loads(x) for x in (out / "decisions.jsonl").read_text().splitlines()]
     assert f"Triggers: {len(decisions)} for 2 viewers" in final  # numbers come from the run's own files

@@ -784,6 +784,17 @@ Rules:
 - Consequences: 129 messages (17 % of agent viewers; 92 for G07); G07 11 vs 11; first-goal impact +2.1 pts
   [−1.9, +6.0], still no detectable effect.
 
+### D-055: Final report shows every data issue, how it was handled and the tests that prove it
+- Date: 2026-10-19 · Status: Accepted · Decided by: candidate (approved after asking how to defend a report-only
+  change) · Extends D-047, D-052
+- Context: The guide's tip asks for "a short table in your final report (issue → how you handled it)". The final report
+  listed 6 of the 13 traps, with counts only. The handling of every trap was already built and tested (Steps 1–5).
+- Decision: The final report's section 7 lists all 13 traps: what this run found, how it was handled, and the tests
+  that prove it. The trap → tests map lives in `traps.py` (`PROVED_BY`, also written into `data_quality_report.json`);
+  `test_trap_map_names_real_tests` fails if a listed test is renamed or missing, and the end-to-end test checks the
+  13 rows. No change to the agent's behaviour.
+- Why: A reviewer can check any claim in seconds by running the named test; the table cannot drift from the code.
+
 ---
 
 ## Pending (under discussion, not approved)
@@ -806,6 +817,7 @@ Rules:
 | 2026-10-18 | D-018 accepted (repository layout). |
 | 2026-10-18 | D-019 accepted (goal priority); D-020 accepted (folder renamed to `submission/`). |
 | 2026-10-19 | D-049 accepted (impact report: who is counted; trap on our data). |
+| 2026-10-19 | D-055 accepted (data-issue table with handling and tests in the final report). |
 | 2026-10-19 | D-053, D-054 accepted (fuller pages with real rows; WhatsApp-only G07 reminder); D-033, D-034 annotated. |
 | 2026-10-19 | D-051, D-052 accepted (past failures not repeated; generated final report). |
 | 2026-10-19 | D-050 accepted (one-command `run`; final documentation). |

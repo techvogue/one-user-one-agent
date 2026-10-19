@@ -60,7 +60,7 @@ Decisions that published nothing without a recorded reason: **0**.
 
 | | |
 |---|---|
-| Published pages: latency p50 / p95 / max | 0.843 s / 0.845 s / 2.218 s |
+| Published pages: latency p50 / p95 / max | 0.843 s / 0.846 s / 2.218 s |
 | Decisions over 60 s | 0 |
 | Max model / tool calls per decision | 2 / 6 |
 | Model outcomes | agreed: 2062, not_called: 685, unavailable: 19, unsupported_claim: 1, error: 1, malformed: 1 |
@@ -88,18 +88,25 @@ Decisions that published nothing without a recorded reason: **0**.
 | all day | 27 live events changed a viewer's situation (purchase, lapse, opt-out, ...) | 3 goals re-planned at once, the rest kept |
 | injected | model faults: unavailable: 19, unsupported_claim: 1, malformed: 1, error: 1 | claims never used as evidence; rules-only decision |
 
-## 7. Data traps
+## 7. Data issues found and how they were handled
 
-Full list with handling: `data_quality_report.json` → `traps`.
+Counts come from this run (`data_quality_report.json` → `traps`); every handling is proved by the named tests (`tests/`). Details per trap: [doc/data_traps.md](../doc/data_traps.md).
 
-| Trap | Found in this run |
-|---|---|
-| Duplicate events | 90 duplicate triggers ignored |
-| Offline-buffered app opens | 424 skipped |
-| Profile snapshot conflicts | 14 contradictions treated as uncertain |
-| Viewers without a profile row | 103 |
-| Three different dialects | 56 triggers; 178 invalid |
-| Injected instructions | 2 titles quarantined, 0 uses |
+| # | Issue | Found in this run | How it was handled | Proved by |
+|---|---|---|---|---|
+| 1 | Duplicate events (same `event_id`) | 2176 duplicate history events; 90 duplicate triggers, 158 second triggers of the same visit | first-received copy kept, later copies counted and ignored (D-004) | `test_duplicate_kept_once_with_earliest_received`, `test_duplicate_trigger_creates_no_second_decision_or_action`, `test_payload_conflict_is_flagged_and_first_copy_kept` |
+| 2 | Late events and wrong phone clocks | 123 viewers with skewed phone clocks (up to 29.55 h); 7400 events over a day late | event_time = received_at - (sent_at - occurred_at); ordering and freshness by received_at; implausible times fall back to received_at (D-005) | `test_buffered_event_with_skewed_clock`, `test_phone_clock_22h_fast_lands_on_true_ist_day`, `test_buffered_signal_counts_by_when_it_happened` |
+| 3 | Offline-buffered app opens | 424 app opens older than 600 s | history only: no model call, no page, no message (D-006) | `test_stale_trigger_is_skipped_without_model_or_action`, `test_stale_is_reported_before_other_reasons` |
+| 4 | Stale / duplicated profile snapshot | 30 viewers with two rows; 14 'never' after 'paid' contradictions | newest updated_at wins; newer billing events override; contradictions -> uncertain, not usable (D-007, D-015, D-027, D-028) | `test_duplicate_profile_newest_wins_and_conflict_visible`, `test_status_cannot_regress_from_paid_to_never`, `test_profile_facts_become_unusable_when_snapshot_too_old` |
+| 5 | New viewers without a profile row | 103 viewers (96 with a signup event) | facts from events; unknown consent = no messages (D-008) | `test_new_user_without_profile`, `test_g01_not_eligible_after_a_play_or_without_provable_signup` |
+| 6 | Dialect conflicts (app / profile / campaign link) | 56 triggers with three different dialects; 178 with an invalid app dialect | page in the app's current setting; invalid -> no page; conflicts listed on each decision (D-009) | `test_three_dialects_page_uses_app_setting_and_lists_conflicts`, `test_invalid_app_dialect_means_no_page`, `test_malformed_deeplink_is_flagged_not_used` |
+| 7 | Language variants of the same content | 514 content slugs with several title ids | content identity = content_slug; one variant per page, by app language (D-010) | `test_language_variant_follows_app_language`, `test_series_progress_counts_both_language_variants` |
+| 8 | Availability windows and withdrawals | 21 titles ending during the replay; T0001 withdrawn: 12 pages republished, 3 messages cancelled | available at publish and for the whole 2 h page life; withdrawals republish live pages and cancel messages (D-011) | `test_availability_must_cover_page_ttl_and_withdrawal`, `test_withdrawal_republishes_live_pages_and_cancels_pending_messages` |
+| 9 | Instructions injected in catalogue text | 2 titles (T0002, T0522); used in published actions: 0 | quarantined: never promoted, text never used for decisions or sent to a model; logged as a WARNING at load (D-012) | `test_injected_description_is_flagged_and_quarantined`, `test_verifier_scans_for_instructions_independently`, `test_g07_never_targets_a_quarantined_series` |
+| 10 | Goals with no measurable success | not selectable: G10, G11 | success event must be observable and the condition defined (D-013) | `test_unmeasurable_goals_are_disabled_generically`, `test_unmeasurable_goal_is_rejected` |
+| 11 | Goals with unclear rules | [A-G06-1] used in 40 decisions; [A-G07-1] used in 853 decisions | A-G06-1 (lapse within 30 days), A-G07-1 (series watched 72 h-14 d ago), recorded as assumptions (D-014, D-031) | `test_g06_recent_lapse_must_be_provable`, `test_g07_unfinished_series_left_for_72h`, `test_g07_series_touched_too_long_ago_is_not_in_progress` |
+| 12 | Which source is freshest | 62 viewers with billing newer than their profile | billing events newer than the profile override it; plan expiry from pricing.json; status/consent freshness labelled on every fact (D-015, D-027, D-028) | `test_newer_purchase_overrides_never_profile`, `test_event_derived_active_expires_after_plan_length`, `test_signup_from_earliest_event_time_not_first_received` |
+| 13 | Pilot report's biased comparison | report headline +22.4 pts [+16.0, +29.2]; randomized -1.3 pts [-3.8, +1.2] | re-analysed with the randomized arms in impact_report.md section 9 (D-044) | `test_pilot_reanalysis_separates_the_biased_headline_from_itt`, `test_misleading_groups_split_the_agent_arm_by_exposure` |
 
 ## 8. Goal outcomes
 
@@ -130,6 +137,6 @@ Full method and tables: `impact_report.md`.
 | `viewer_state/<user>.json` | what each viewer's agent knew, decided, observed and learned |
 | `control_log.jsonl` | withdrawals, rule corrections, outages, reactions to live events |
 | `latency_report.json` | latency, budgets, bursts, model outcomes, fallbacks |
-| `data_quality_report.json` | data issues found and how each was handled |
+| `data_quality_report.json` | data issues found, how each was handled and the tests that prove it |
 | `outcomes.jsonl` | goal verdicts and learning notes |
 | `impact_report.md` | agent arm vs holdout in full, misleading comparisons, pilot re-analysis |

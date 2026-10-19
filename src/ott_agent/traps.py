@@ -13,8 +13,49 @@ from .catalogue import VALID_DIALECTS
 from .facts import parse_deeplink
 from .timeutil import iso
 
+# The tests that prove each trap's handling (tests/). test_trap_map_names_real_tests keeps this list honest.
+PROVED_BY = {
+    "1_duplicate_events": ["test_duplicate_kept_once_with_earliest_received",
+                           "test_duplicate_trigger_creates_no_second_decision_or_action",
+                           "test_payload_conflict_is_flagged_and_first_copy_kept"],
+    "2_late_events_wrong_clocks": ["test_buffered_event_with_skewed_clock",
+                                   "test_phone_clock_22h_fast_lands_on_true_ist_day",
+                                   "test_buffered_signal_counts_by_when_it_happened"],
+    "3_offline_buffered_app_opens": ["test_stale_trigger_is_skipped_without_model_or_action",
+                                     "test_stale_is_reported_before_other_reasons"],
+    "4_profile_snapshot": ["test_duplicate_profile_newest_wins_and_conflict_visible",
+                           "test_status_cannot_regress_from_paid_to_never",
+                           "test_profile_facts_become_unusable_when_snapshot_too_old"],
+    "5_new_users_without_profile": ["test_new_user_without_profile",
+                                    "test_g01_not_eligible_after_a_play_or_without_provable_signup"],
+    "6_dialect_conflicts": ["test_three_dialects_page_uses_app_setting_and_lists_conflicts",
+                            "test_invalid_app_dialect_means_no_page", "test_malformed_deeplink_is_flagged_not_used"],
+    "7_language_variants": ["test_language_variant_follows_app_language",
+                            "test_series_progress_counts_both_language_variants"],
+    "8_availability_windows": ["test_availability_must_cover_page_ttl_and_withdrawal",
+                               "test_withdrawal_republishes_live_pages_and_cancels_pending_messages"],
+    "9_injected_instructions": ["test_injected_description_is_flagged_and_quarantined",
+                                "test_verifier_scans_for_instructions_independently",
+                                "test_g07_never_targets_a_quarantined_series"],
+    "10_unmeasurable_goals": ["test_unmeasurable_goals_are_disabled_generically", "test_unmeasurable_goal_is_rejected"],
+    "11_unclear_goal_rules": ["test_g06_recent_lapse_must_be_provable", "test_g07_unfinished_series_left_for_72h",
+                              "test_g07_series_touched_too_long_ago_is_not_in_progress"],
+    "12_freshest_source": ["test_newer_purchase_overrides_never_profile",
+                           "test_event_derived_active_expires_after_plan_length",
+                           "test_signup_from_earliest_event_time_not_first_received"],
+    "13_pilot_report": ["test_pilot_reanalysis_separates_the_biased_headline_from_itt",
+                        "test_misleading_groups_split_the_agent_arm_by_exposure"],
+}  # fmt: skip
+
 
 def build_traps(r) -> dict:
+    out = _build(r)
+    for key, tests in PROVED_BY.items():
+        out[key]["proved_by"] = tests
+    return out
+
+
+def _build(r) -> dict:
     """r: a finished Replay (decisions, actions, control log, catalogue, profiles, goals, store)."""
     D, A = r.decisions, r.actions
     status = Counter(d["status"] for d in D)
@@ -99,11 +140,11 @@ def build_traps(r) -> dict:
         "1_duplicate_events": {
             "duplicate_triggers_ignored": status["DUPLICATE_IGNORED"],
             "second_trigger_same_visit": status["SAME_SESSION"],
-            "handling": "first-received copy kept; see 'duplicates' above (D-004)",
+            "handling": "first-received copy kept, later copies counted and ignored (D-004)",
         },
         "2_late_events_wrong_clocks": {
             "handling": "event_time = received_at - (sent_at - occurred_at); ordering and "
-            "freshness by received_at; see 'clocks' above (D-005)"
+            "freshness by received_at; implausible times fall back to received_at (D-005)"
         },
         "3_offline_buffered_app_opens": {
             "stale_triggers_skipped": status["STALE_SKIPPED"],
@@ -144,7 +185,8 @@ def build_traps(r) -> dict:
         },
         "9_injected_instructions": {
             "flagged_titles": injected,
-            "handling": "ignored as instruction and logged here and as a WARNING at load",
+            "handling": "quarantined: never promoted, text never used for decisions or sent to a model; logged as a "
+            "WARNING at load (D-012)",
         },
         "10_unmeasurable_goals": {
             "goals": goals,

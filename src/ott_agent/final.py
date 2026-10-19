@@ -44,7 +44,7 @@ def build_final(out: Path) -> str:
     C = _jsonl(out / "control_log.jsonl")
     O = _jsonl(out / "outcomes.jsonl")
     lat, imp = _json(out / "latency_report.json"), _json(out / "impact.json")
-    traps = _json(out / "data_quality_report.json").get("traps", {})
+    quality = _json(out / "data_quality_report.json")
     sim = _json(out / "sim" / "simulator_report.json")
 
     status = Counter(d["status"] for d in D)
@@ -91,7 +91,7 @@ def build_final(out: Path) -> str:
     L += _realtime(lat)
     L += _safety(D, A, sim, holdout_actions)
     L += _surprises(C, D)
-    L += _traps(traps)
+    L += _traps(quality, imp)
     L += _outcomes(O)
     L += _impact(imp)
     L += [
@@ -107,7 +107,7 @@ def build_final(out: Path) -> str:
         "| `viewer_state/<user>.json` | what each viewer's agent knew, decided, observed and learned |",
         "| `control_log.jsonl` | withdrawals, rule corrections, outages, reactions to live events |",
         "| `latency_report.json` | latency, budgets, bursts, model outcomes, fallbacks |",
-        "| `data_quality_report.json` | data issues found and how each was handled |",
+        "| `data_quality_report.json` | data issues found, how each was handled and the tests that prove it |",
         "| `outcomes.jsonl` | goal verdicts and learning notes |",
         "| `impact_report.md` | agent arm vs holdout in full, misleading comparisons, pilot re-analysis |",
         "",
@@ -226,32 +226,108 @@ def _surprises(C, D) -> list[str]:
     return [*L, ""]
 
 
-def _traps(traps) -> list[str]:
-    def g(key, field):
-        return (traps.get(key) or {}).get(field, "n/a")
+TRAP_NAMES = {
+    "1_duplicate_events": "Duplicate events (same `event_id`)",
+    "2_late_events_wrong_clocks": "Late events and wrong phone clocks",
+    "3_offline_buffered_app_opens": "Offline-buffered app opens",
+    "4_profile_snapshot": "Stale / duplicated profile snapshot",
+    "5_new_users_without_profile": "New viewers without a profile row",
+    "6_dialect_conflicts": "Dialect conflicts (app / profile / campaign link)",
+    "7_language_variants": "Language variants of the same content",
+    "8_availability_windows": "Availability windows and withdrawals",
+    "9_injected_instructions": "Instructions injected in catalogue text",
+    "10_unmeasurable_goals": "Goals with no measurable success",
+    "11_unclear_goal_rules": "Goals with unclear rules",
+    "12_freshest_source": "Which source is freshest",
+    "13_pilot_report": "Pilot report's biased comparison",
+}
 
-    flagged = g("9_injected_instructions", "flagged_titles")
-    rows = [
-        ("Duplicate events", f"{g('1_duplicate_events', 'duplicate_triggers_ignored')} duplicate triggers ignored"),
-        ("Offline-buffered app opens", f"{g('3_offline_buffered_app_opens', 'stale_triggers_skipped')} skipped"),
-        ("Profile snapshot conflicts", (f"{g('4_profile_snapshot', 'never_after_paid_contradictions')} contradictions "
-                                       "treated as uncertain")),
-        ("Viewers without a profile row", f"{g('5_new_users_without_profile', 'trigger_viewers_without_profile')}"),
-        ("Three different dialects", (f"{g('6_dialect_conflicts', 'three_different_dialects')} triggers; "
-                                     f"{g('6_dialect_conflicts', 'triggers_with_invalid_app_dialect')} invalid")),
-        ("Injected instructions", (f"{len(flagged) if isinstance(flagged, list) else 'n/a'} titles quarantined, "
-                                  f"{sum(f['times_in_published_actions'] for f in flagged) if isinstance(flagged, list) else 'n/a'} uses")),
-    ]  # fmt: skip
-    return [
-        "## 7. Data traps",
+
+def _found(key: str, t: dict, q: dict, imp: dict) -> str:
+    """What this run's data showed for the trap, from the run's own reports."""
+    clk = (q.get("clocks") or {}).get("history") or {}
+    dup = (q.get("duplicates") or {}).get("history") or {}
+    if key == "1_duplicate_events":
+        return (
+            f"{dup.get('duplicate_event_ids', 'n/a')} duplicate history events; {t.get('duplicate_triggers_ignored')} "
+            f"duplicate triggers, {t.get('second_trigger_same_visit')} second triggers of the same visit"
+        )
+    if key == "2_late_events_wrong_clocks":
+        return (
+            f"{clk.get('skewed_clock_users', 'n/a')} viewers with skewed phone clocks (up to "
+            f"{clk.get('max_abs_clock_skew_h', 'n/a')} h); {clk.get('buffered_over_1day', 'n/a')} events over a day late"
+        )
+    if key == "3_offline_buffered_app_opens":
+        return f"{t.get('stale_triggers_skipped')} app opens older than {t.get('limit_s')} s"
+    if key == "4_profile_snapshot":
+        return (
+            f"{t.get('users_with_two_rows')} viewers with two rows; {t.get('never_after_paid_contradictions')} "
+            "'never' after 'paid' contradictions"
+        )
+    if key == "5_new_users_without_profile":
+        return (
+            f"{t.get('trigger_viewers_without_profile')} viewers ({t.get('of_which_signup_event_seen')} with a "
+            "signup event)"
+        )
+    if key == "6_dialect_conflicts":
+        return (
+            f"{t.get('three_different_dialects')} triggers with three different dialects; "
+            f"{t.get('triggers_with_invalid_app_dialect')} with an invalid app dialect"
+        )
+    if key == "7_language_variants":
+        return f"{t.get('slugs_with_several_title_ids')} content slugs with several title ids"
+    if key == "8_availability_windows":
+        w = t.get("withdrawals") or []
+        return f"{t.get('titles_ending_during_replay')} titles ending during the replay; " + "; ".join(
+            f"{x['title_id']} withdrawn: {x['pages_republished']} pages republished, "
+            f"{x['messages_cancelled']} messages cancelled"
+            for x in w
+        )
+    if key == "9_injected_instructions":
+        f = t.get("flagged_titles") or []
+        return (
+            f"{len(f)} titles ({', '.join(x['title_id'] for x in f)}); used in published actions: "
+            f"{sum(x['times_in_published_actions'] for x in f)}"
+        )
+    if key == "10_unmeasurable_goals":
+        off = [g["goal_id"] for g in t.get("goals", []) if not g.get("measurable")]
+        return f"not selectable: {', '.join(off) or 'none'}"
+    if key == "11_unclear_goal_rules":
+        used = t.get("interpretations_used_in_decisions") or {}
+        return "; ".join(f"{k} used in {used[k]} decisions" for k in ("[A-G06-1]", "[A-G07-1]") if k in used)
+    if key == "12_freshest_source":
+        four = (q.get("traps") or {}).get("4_profile_snapshot") or {}
+        return f"{four.get('users_with_billing_newer_than_snapshot', 'n/a')} viewers with billing newer than their profile"
+    if key == "13_pilot_report":
+        pil = imp.get("pilot") or {}
+        if pil.get("itt"):
+            return (
+                f"report headline {_pts(pil['report_headline_served_vs_everyone_else']['difference'])}; "
+                f"randomized {_pts(pil['itt']['difference'])}"
+            )
+    return ""
+
+
+def _traps(q: dict, imp: dict) -> list[str]:
+    traps = q.get("traps") or {}
+    L = [
+        "## 7. Data issues found and how they were handled",
         "",
-        "Full list with handling: `data_quality_report.json` → `traps`.",
+        (
+            "Counts come from this run (`data_quality_report.json` → `traps`); every handling is proved by the named tests "
+            "(`tests/`). Details per trap: [doc/data_traps.md](../doc/data_traps.md)."
+        ),
         "",
-        "| Trap | Found in this run |",
-        "|---|---|",
-        *[f"| {a} | {b} |" for a, b in rows],
-        "",
+        "| # | Issue | Found in this run | How it was handled | Proved by |",
+        "|---|---|---|---|---|",
     ]
+    for key, name in TRAP_NAMES.items():
+        t = traps.get(key) or {}
+        tests = ", ".join(f"`{x}`" for x in t.get("proved_by", []))
+        L.append(
+            f"| {key.split('_')[0]} | {name} | {_found(key, t, q, imp)} | {t.get('handling', '')} | {tests} |"
+        )
+    return [*L, ""]
 
 
 def _outcomes(O) -> list[str]:

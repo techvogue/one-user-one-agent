@@ -596,3 +596,20 @@ def test_burst_is_noticed_and_the_model_is_skipped_under_load(tmp_path):
     late = [d for d in r.decisions if d["trigger"]["event_id"].startswith("b")][-1]
     assert late["model"]["outcome"] == "skipped" and late["status"] == "PUBLISHED"
     assert all(d["latency_s"] <= 60 for d in r.decisions if "latency_s" in d)
+
+
+def test_trap_map_names_real_tests():
+    """Every trap names the tests that prove its handling, and every named test exists (no stale names)."""
+    import ast
+    from pathlib import Path
+
+    from ott_agent.final import TRAP_NAMES
+    from ott_agent.traps import PROVED_BY
+
+    here = Path(__file__).parent
+    names = {n.name for f in here.glob("test_*.py") for n in ast.walk(ast.parse(f.read_text()))
+             if isinstance(n, ast.FunctionDef) and n.name.startswith("test_")}  # fmt: skip
+    assert set(PROVED_BY) == set(TRAP_NAMES) and len(PROVED_BY) == 13
+    for trap, tests in PROVED_BY.items():
+        assert tests, trap
+        assert not set(tests) - names, (trap, set(tests) - names)
