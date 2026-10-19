@@ -431,6 +431,10 @@ def record_gaps(d: dict) -> list[str]:
         gaps.append("evidence without freshness")
     if not (d["checks"].get("passed") or d["checks"].get("failed")):
         gaps.append("no check results")
+    if not d.get("assumptions"):
+        gaps.append("no assumptions")
+    if not isinstance(d.get("rule_version"), str) or not d.get("config_versions"):
+        gaps.append("no rule_version / config_versions")
     return gaps
 
 

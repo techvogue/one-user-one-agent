@@ -640,6 +640,22 @@ Rules:
   4. A test (`record_gaps`) fails if any record of any status lacks a required item.
 - Effect: 688 → 0 gaps; actions, outcomes and impact unchanged (records only).
 
+### D-046: Top-level rule_version and specific assumptions on every record
+- Date: 2026-10-19 · Status: Accepted · Decided by: candidate (approved the proposal) · Extends D-045
+- Context: The brief lists `rule_version` as a good extra field and requires "assumptions about the user, their history
+  and their context". `rule_version` existed only inside `goal`; 1,279 of 2,769 records had no assumptions because
+  only defaults and goal interpretations were recorded.
+- Decision:
+  1. Top-level `rule_version` = the goal rule version used (e.g. `G03@2026-10-01T08:30:00.000Z`), or the goal
+     catalogue version when there is no goal (`goals@2026-09-30`); plus `config_versions` (goals, corrections applied
+     so far, interventions, agent version).
+  2. Assumptions built from the decision's own data, never boilerplate: history = events received by the delivery
+     time; the viewer stays on the page dialect for this visit; profile-sourced status unchanged since the snapshot;
+     message consent still valid at send time (re-checked then); fallback = no personal facts assumed; skipped triggers
+     state why (session ended with its true age / resend of an already-decided event / same visit with no change).
+  3. `record_gaps` requires both on every record.
+- Effect: 0 records without assumptions or rule_version; actions, outcomes and impact unchanged (records only).
+
 ---
 
 ## Pending (under discussion, not approved)
@@ -661,6 +677,7 @@ Rules:
 | 2026-10-18 | D-017 accepted (tech stack); P-001 closed. |
 | 2026-10-18 | D-018 accepted (repository layout). |
 | 2026-10-18 | D-019 accepted (goal priority); D-020 accepted (folder renamed to `submission/`). |
+| 2026-10-19 | D-046 accepted (rule_version + specific assumptions). |
 | 2026-10-19 | D-045 accepted (complete decision records). |
 | 2026-10-19 | D-044 accepted (impact methodology). |
 | 2026-10-19 | D-042, D-043 accepted (judging goals; learning notes). |

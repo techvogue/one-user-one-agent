@@ -76,6 +76,38 @@ RESOLUTION = {
 }
 
 
+def _context_assumptions(ctx: dict, vf, iv) -> list[str]:
+    """What the decision takes for granted about the viewer, their history and context, from its own data (D-046)."""
+    t = ctx["trigger"]
+    out = [
+        f"viewer history = events received by {t['deliver_at']}; events still held on the phone are unknown"
+    ]
+    if vf is None:
+        out.append(
+            "viewer state unreadable: no personal facts assumed; only the app open's dialect and language used"
+        )
+        return out
+    pd = vf["page_dialect"]
+    if pd.usable and pd.value:
+        out.append(
+            f"the viewer stays on app dialect {pd.value} for this visit (a page is shown only in the current "
+            "setting)"
+        )
+    sub = vf["subscription_status"]
+    if sub.source == "profile_snapshot" and sub.usable:
+        out.append(
+            f"subscription status {sub.value} unchanged since the profile snapshot of {sub.as_of} (no newer "
+            "billing event seen)"
+        )
+    msg = iv.message if iv is not None else None
+    if msg:
+        c = vf[f"{msg['channel']}_consent"]
+        out.append(
+            f"{msg['channel']} consent (from {c.source}) still valid at {msg['send_at']}: re-checked at send time"
+        )
+    return out
+
+
 def _resolved_conflicts(vf) -> list[dict]:
     """Every fact the agent resolved from conflicting sources, with how (brief: conflicts and their resolution)."""
     if vf is None:
@@ -125,6 +157,19 @@ class Replay:
         self.profiles = load_profiles(data / "profiles_snapshot.csv")
         self.catalogue = load_catalogue(data / "catalogue.csv", data / "episodes.csv")
         self.goals = GoalCatalogue.from_file(cfgdir / "goals.json")
+        from . import __version__
+
+        self.goals_version = json.loads((cfgdir / "goals.json").read_text(encoding="utf-8")).get(
+            "version", "v1"
+        )
+        self.config_versions = {
+            "goals": self.goals_version,
+            "goal_corrections": [],  # rule versions created by corrections during the replay
+            "interventions": json.loads((cfgdir / "interventions.json").read_text(encoding="utf-8")).get(
+                "version"
+            ),
+            "agent": __version__,
+        }
         self.rules = PlatformRules.from_file(cfgdir / "interventions.json")
         self.plan_days = load_plan_days(cfgdir / "pricing.json")
         self.popularity = Popularity(self.cfg.popularity_days)
@@ -184,6 +229,7 @@ class Replay:
                     self.conn, self.goals, c["goal_id"], c["new_success"], at
                 )
             self.verifier.correct(c["goal_id"], c["new_success"])
+            self.config_versions["goal_corrections"].append(rule.version)
             entry["effect"] = f"{c['goal_id']} now {rule.version}; open goals updated: {len(affected)}"
             entry["affected_goal_instances"] = affected
         elif kind == "title_withdrawn":
@@ -260,6 +306,12 @@ class Replay:
                 extra={"duplicate_of": self.by_trigger.get(eid)},
                 confidence=(0.99, "same event_id already decided"),
                 checks={"passed": [], "failed": ["duplicate"]},
+                assumptions=[
+                    (
+                        f"this delivery is a resend of event {eid}, already decided as "
+                        f"{self.by_trigger.get(eid)} (same event_id; ingestion compares the payload)"
+                    )
+                ],
             )
             return
         if age > self.cfg.stale_trigger_s:
@@ -270,6 +322,12 @@ class Replay:
                 code="STALE_TRIGGER",
                 confidence=(0.95, "true age from server receipt time and phone delay"),
                 checks={"passed": [], "failed": ["freshness"]},
+                assumptions=[
+                    (
+                        f"the session behind this app open has ended: it happened {age} s before delivery "
+                        f"(limit {self.cfg.stale_trigger_s} s), so no page can be seen in it"
+                    )
+                ],
             )
             return
         key = (user, t.get("session_id"))
@@ -289,6 +347,12 @@ class Replay:
                     extra={"covered_by": prev["decision_id"]},
                     confidence=(0.9, "same session_id"),
                     checks={"passed": ["freshness", "same_session_no_change"], "failed": []},
+                    assumptions=[
+                        (
+                            f"this trigger belongs to the same visit as {prev['decision_id']} (same session_id); "
+                            "no purchase, renewal, lapse, opt-out, dialect change or signup arrived since"
+                        )
+                    ],
                 )
                 return
             replan_reason = (
@@ -526,7 +590,19 @@ class Replay:
             "freshness": "live" if base["age"] <= self.cfg.stale_trigger_s else "stale",
         }
 
-    def _record(self, base, status, reason, code=None, extra=None, confidence=(0.9, ""), checks=None) -> dict:
+    def _versions(self, goal: dict | None) -> dict:
+        """Top-level rule_version (the goal rule used, or the goal catalogue) + all config versions (D-046)."""
+        return {
+            "rule_version": goal["rule_version"] if goal else f"goals@{self.goals_version}",
+            "config_versions": {
+                **self.config_versions,
+                "goal_corrections": list(self.config_versions["goal_corrections"]),
+            },
+        }
+
+    def _record(
+        self, base, status, reason, code=None, extra=None, confidence=(0.9, ""), checks=None, assumptions=None
+    ) -> dict:
         t = base["trigger"]
         rec = {
             "decision_id": self._next_id("D", self.decisions),
@@ -554,7 +630,7 @@ class Replay:
             "confidence_reason": confidence[1],
             "evidence": [f"event:{t['event_id']}"],
             "evidence_detail": [self._trigger_timing(base)],
-            "assumptions": [],
+            "assumptions": assumptions or [],
             "conflicts": [],
             "checks": checks or {"passed": [], "failed": []},
             "model": {"outcome": "not_called"},
@@ -565,6 +641,7 @@ class Replay:
             "published_at": None,
             "status": status,
         }
+        rec.update(self._versions(None))
         rec.update(extra or {})
         self.decisions.append(rec)
         self.by_trigger.setdefault(t["event_id"], rec["decision_id"])
@@ -615,6 +692,7 @@ class Replay:
             (goal["assumptions"] if goal else [])
             + (iv.assumptions if iv else [])
             + (vf.assumptions() if vf else [])
+            + _context_assumptions(ctx, vf, iv)
         )
         published = status == PUBLISHED and iv is not None and iv.action == HOME_PAGE
         rec = {
@@ -687,6 +765,7 @@ class Replay:
             "evidence_detail": evidence_detail,
             "conflicts": _resolved_conflicts(vf),
             "assumptions": list(dict.fromkeys(assumptions)),
+            **self._versions(goal),
             "checks": ctx["checks"],
             "verifier": ctx.get("verifier"),
             "model": ctx["model"],

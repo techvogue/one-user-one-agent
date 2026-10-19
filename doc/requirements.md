@@ -305,7 +305,8 @@ must stay present with the same name and meaning.
 **FR-13.5 Implemented (D-045):** every record of every status (published, no action, holdout shadow, stale,
 duplicate, same session, fallback, rejected, late) carries all baseline fields plus `confidence_reason`,
 `evidence_detail` (with the trigger's timing and the facts' freshness), `conflicts` (each resolved conflict and how),
-`checks`, and a goal or a stated reason; enforced by `record_gaps` in tests/test_harness.py.
+`checks`, a goal or a stated reason, non-empty specific `assumptions` and a top-level `rule_version` +
+`config_versions` (D-046); enforced by `record_gaps` in tests/test_harness.py.
 
 **FR-13.4 Full extended example [PROPOSED]:**
 
