@@ -44,7 +44,7 @@ as evidence ([D-003](doc/decisions.md)).
 | 0 | Data loader / ingestion (`ingest.py`, `store.py`, `quality.py`) | Raw delivery log + canonical events (one per `event_id`); corrected `event_time`; same function for history, live events and triggers | D-004, D-005 |
 | 1 | Fact resolver (`facts.py`, `profiles.py`, `catalogue.py`) | Builds facts with source, `as_of`, freshness; per-fact precedence; conflicts kept visible | D-007, D-008, D-009, D-015 |
 | 2 | Goal planner | Measurability check; eligibility from cited evidence; one goal with start, deadline, success signal; or `NO_GOAL` | D-013, D-014, D-015 |
-| 3 | Intervention planner | Home page builder (dialect, slug dedupe, variants, availability through TTL), message choice, or `NO_ACTION` | D-009, D-010, D-011 |
+| 3 | Intervention planner (`intervention.py`) | Home page builder (dialect, slug dedupe, variants, availability through TTL), message choice, or `NO_ACTION` | D-009, D-010, D-011 |
 | 4 | Verifier | Independent re-derivation of eligibility and every policy rule; can reject or downgrade | rules.md Rule 10, D-012 |
 | 5 | Publisher | Writes actions (simulator schema) and decisions; `published_at = deliver_at + measured time` | FR-9, FR-13 |
 | 6 | Outcome judge | Succeeded / failed / inconclusive from attributable events; versioned rules; provisional + final verdicts | D-005, D-014 |
@@ -82,6 +82,26 @@ Implemented in `src/ott_agent/goals.py` and `src/ott_agent/planner.py` (D-013, D
    each change); closed goals and other goal types are untouched. If the corrected rule is unmeasurable, those goals
    are closed.
 8. `plan_goal` decides, `commit_plan` persists, so the verifier (Step 5) can reject a plan before it is written.
+
+## 4b. Intervention (Step 3: decide the intervention)
+
+Implemented in `src/ott_agent/intervention.py` (D-033, D-034). Platform limits, row types, TTL, templates and copy
+rules are read from `config/interventions.json`.
+
+1. **No-action reasons, in order:** `STALE_TRIGGER` (true age > 600 s: not a live visit) → `NO_GOAL` →
+   `DIALECT_UNKNOWN` (app dialect missing/invalid) → `PAGE_STILL_LIVE` (same goal kept, same dialect, page < 2 h old)
+   → `INSUFFICIENT_CONTENT` (no hero and no row of ≥ 3 valid titles). Otherwise **HOME_PAGE**.
+2. **Page content from data, no model.** Candidate titles: in the page dialect, available for the whole 2-hour TTL,
+   one language variant per slug (by `app_language`), never flagged, never already finished by the viewer.
+   "Popular" = distinct viewers with playback in the last 30 days (only events received by decision time).
+3. **Per goal** a hero (G01 campaign title if valid, G02/G09 popular micro-drama, G04/05/06 popular premium, G07 the
+   viewer's series, G08 newest release, others most popular) and up to 4 rows from: popular in dialect (optionally
+   micro-drama or premium only), new releases (30 days), because you watched (genre overlap with the latest watched
+   title), the viewer's top genre, next episode. Rows with < 3 titles are not published.
+4. **Reminder messages only for G03 and G12** at 19:00 IST the next day, if the goal is still open an hour later:
+   WhatsApp (approved template, catalogue variables) if consented, else push (fixed copy checked for length, forbidden
+   phrases and prices); no consent → none; at most one per viewer per IST day. Re-checked at send time (Step 5).
+5. In-app messages are not used. Holdout viewers: decided as normal, nothing published.
 
 ## 5. Memory (durable per-viewer state)
 

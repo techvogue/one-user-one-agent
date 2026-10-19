@@ -36,6 +36,12 @@ class Config:
     goal_priority: tuple[str, ...] = (
         "G04", "G01", "G02:new_user", "G03", "G07", "G12", "G02", "G09", "G08", "G06", "G05",
     )  # fmt: skip
+    # Intervention (D-033, D-034). Platform limits themselves come from config/interventions.json.
+    page_max_rows: int = 4  # our own cap, below the platform's 6: a focused page
+    popularity_days: int = 30  # "popular" = distinct viewers with playback in this many days
+    new_release_days: int = 30  # "new release" = released in the last 30 days (same as G08's success rule)
+    message_goals: tuple[str, ...] = ("G03", "G12")  # only goals that need a later visit get a reminder
+    message_hour_ist: int = 19  # reminders at 19:00 IST the next day
     # Phone clock is reported as skewed when |sent_at - received_at| exceeds this (network delay is seconds).
     clock_skew_report_s: int = 60
 
@@ -49,8 +55,9 @@ class Config:
             raise ValueError(f"unknown config keys: {sorted(unknown)}")
         if "pack_path" in data:
             data["pack_path"] = Path(data["pack_path"])
-        if "goal_priority" in data:
-            data["goal_priority"] = tuple(data["goal_priority"])
+        for f in fields(cls):  # JSON has lists; tuple settings (goal_priority, message_goals) stay tuples
+            if f.name in data and isinstance(getattr(cls, f.name, None), tuple):
+                data[f.name] = tuple(data[f.name])
         return cls(**data)
 
     def to_dict(self) -> dict:

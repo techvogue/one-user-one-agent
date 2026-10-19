@@ -41,6 +41,15 @@ eligibility (12 goals) and goal choice matches the planner on all 2,679 unique r
 cross-check re-run (0 mismatches). Dry run on 1,504 replay users: 1,497 goals, 7 NO_GOAL (each checked); G07 672 ·
 G02 365 · G05 144 · G12 108 · G08 106 · G09 45 · G06 31 · G01 23 · G04 2 · G03 1; G10/G11 never chosen.
 
+## Guide loop step 3: Decide the intervention ✅
+
+Home page (main lever), one reminder message for G03/G12 only, or no action with a reason; only content that exists,
+is available for the page's lifetime and is in the dialect the viewer will see (D-033, D-034).
+**Verified:** 112 tests pass; real dry run on all 2,679 unique replay triggers: 2,086 pages, 593 no-actions
+(424 stale, 159 dialect unknown, 10 no goal), 124 reminders (G12; 63 WhatsApp, 61 push); every page and message
+checked independently against the raw catalogue, profiles, opt-outs and interventions.json: **0 violations**;
+3.6 ms per trigger (goal + intervention). Steps 1–2 cross-checks re-run: 0 mismatches.
+
 ## Step 2: Build the core
 
 | Task | Status |
@@ -49,7 +58,7 @@ G02 365 · G05 144 · G12 108 · G08 106 · G09 45 · G06 31 · G01 23 · G04 2 
 | Viewer state store with provenance | 🟡 facts with source, freshness, conflicts stored (`facts_snapshots`) + `inspect`; goal/decision/action tables come with the planner and harness |
 | Fact resolver with precedence rules (D-007–D-009, D-015) | ✅ profiles.py, catalogue.py, facts.py |
 | Goal eligibility + selection (D-013, D-014) | ✅ goals.py, planner.py (D-029, D-030, D-031) |
-| Intervention planner (home page, message, no action) (D-009–D-011) | ⏳ |
+| Intervention planner (home page, message, no action) (D-009–D-011) | ✅ intervention.py (D-033, D-034) |
 | Independent verifier (rules.md Rule 10, D-012) | ⏳ |
 | Mock model provider (D-003) | ⏳ |
 

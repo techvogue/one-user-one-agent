@@ -20,7 +20,8 @@ from .config import Config
 from .profiles import Profile
 from .timeutil import compute_event_time, iso, ist_day, parse_ts
 
-DEEPLINK = re.compile(r"^ott://c/([A-Za-z0-9_-]+)/([A-Za-z0-9]+)/title/(T\d+)$")
+# Strict shape, generic id: the title must still exist in the catalogue, in the page dialect, to be used (D-033).
+DEEPLINK = re.compile(r"^ott://c/([A-Za-z0-9_-]+)/([A-Za-z0-9]+)/title/([A-Za-z0-9_-]+)$")
 SERIES_TYPES = frozenset({"show", "micro_drama"})
 BILLING_EVENTS = ("purchase_completed", "subscription_renewed", "subscription_lapsed")
 PLAY_DAYS_WINDOW_DAYS = 14  # window of the play_ist_days_14d fact (G09 rule text: "in the last 14 days")
@@ -48,6 +49,8 @@ FACT_CLASS = {
     "top_genre": "history",
     "last_lapsed_at": "history",
     "last_activity_at": "history",
+    "watched_slugs": "history",
+    "finished_slugs": "history",
 }
 
 
@@ -105,6 +108,9 @@ class ViewerFacts:
     at: str
     facts: dict[str, Fact] = field(default_factory=dict)
     flags: list[str] = field(default_factory=list)  # e.g. malformed deeplink
+    trigger_age_s: float | None = (
+        None  # true age of the trigger at decision time (deliver/decision - event_time)
+    )
 
     def __getitem__(self, name: str) -> Fact:
         return self.facts[name]
@@ -185,6 +191,7 @@ def resolve(
             cfg.max_event_age_days,
         )
         trigger_age = (at - et.event_time).total_seconds()
+        vf.trigger_age_s = round(trigger_age, 1)
 
     def age(as_of: str | None) -> float | None:
         return round((at - parse_ts(as_of)).total_seconds(), 1) if as_of else None
@@ -581,3 +588,26 @@ def _history(add, catalogue: Catalogue, events, props, at: datetime, trigger_id:
     )
     top = max(sorted(genres), key=lambda g: genres[g]) if genres else None
     add(Fact("top_genre", top, "derived:events+catalogue", last_seen, evidence=refs(plays)))
+
+    # Content the viewer has touched (any playback) and finished, by slug (both language variants count, D-010).
+    # Used by the page builder: "because you watched" and "never recommend what they already finished" (D-033).
+    last_by_slug: dict[str, str] = {}
+    done_eps: dict[str, set] = {}
+    film_done: set[str] = set()
+    for r in playback:
+        title = catalogue.titles.get(props[r["event_id"]].get("title_id"))
+        if title is None:
+            continue
+        if r["event_time"] > last_by_slug.get(title.slug, ""):
+            last_by_slug[title.slug] = r["event_time"]
+        if r["event"] == "episode_completed":
+            if title.content_type in SERIES_TYPES:
+                done_eps.setdefault(title.slug, set()).add(props[r["event_id"]].get("episode_id"))
+            else:
+                film_done.add(title.slug)
+    watched = sorted(last_by_slug, key=lambda k: (last_by_slug[k], k), reverse=True)
+    finished = sorted(
+        film_done | {k for k, eps in done_eps.items() if len(eps) >= catalogue.episode_count(k) > 0}
+    )
+    add(Fact("watched_slugs", watched, "derived:events+catalogue", last_seen, evidence=refs(playback)))
+    add(Fact("finished_slugs", finished, "derived:events+episodes", last_seen, evidence=refs(completes)))

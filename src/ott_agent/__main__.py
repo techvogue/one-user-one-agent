@@ -21,6 +21,7 @@ from .config import Config
 from .facts import resolve, save_snapshot
 from .goals import GoalCatalogue
 from .ingest import ingest_file
+from .intervention import PlatformRules, Popularity, decide_intervention
 from .planner import plan_goal
 from .pricing import load_plan_days
 from .profiles import load_profiles
@@ -69,7 +70,19 @@ def _short(v, width=46) -> str:
 def cmd_inspect(args: argparse.Namespace) -> int:
     cfg = _config(args)
     conn = connect(args.db or Path(args.out) / "state.sqlite")
-    if args.at:
+    trigger = None
+    if args.trigger:  # decide as of a replay app open: its delivery time, dialect and deeplink
+        path = cfg.pack_path / "replay" / "triggers.jsonl"
+        with open(path, encoding="utf-8") as f:
+            trigger = next((t for t in map(json.loads, f) if t.get("event_id") == args.trigger), None)
+        if trigger is None or trigger.get("user_id") != args.viewer:
+            print(
+                f"error: trigger {args.trigger} not found for viewer {args.viewer} in {path}", file=sys.stderr
+            )
+            return 2
+    if trigger is not None and not args.at:
+        at = parse_ts(trigger["deliver_at"])
+    elif args.at:
         at = parse_ts(args.at)
     else:
         latest = conn.execute("SELECT MAX(first_received_at) FROM events").fetchone()[0]
@@ -83,14 +96,21 @@ def cmd_inspect(args: argparse.Namespace) -> int:
     )
     pricing = cfg.pack_path / "config" / "pricing.json"
     plan_days = load_plan_days(pricing) if pricing.exists() else None  # None: expiry not checked (stated)
-    vf = resolve(conn, profiles, catalogue, args.viewer, at, None, cfg, plan_days)
+    vf = resolve(conn, profiles, catalogue, args.viewer, at, trigger, cfg, plan_days)
     if args.save:
         with conn:
             save_snapshot(conn, vf)
     goals = GoalCatalogue.from_file(cfg.pack_path / "config" / "goals.json")
     plan = plan_goal(conn, vf, at, goals, catalogue, cfg)  # dry run: nothing is committed
+    iv_rules = cfg.pack_path / "config" / "interventions.json"
+    iv = None
+    if iv_rules.exists():
+        rules = PlatformRules.from_file(iv_rules)
+        popularity = Popularity(cfg.popularity_days).counts(conn, catalogue, at)
+        iv = decide_intervention(vf, plan.goal, plan.outcome, catalogue, popularity, at, rules, cfg)
     if args.json:
-        print(json.dumps({**vf.to_dict(), "goal_plan": plan.to_dict()}, indent=2, ensure_ascii=False))
+        out = {**vf.to_dict(), "goal_plan": plan.to_dict(), "intervention": iv.to_dict() if iv else None}
+        print(json.dumps(out, indent=2, ensure_ascii=False))
         return 0
     print(f"viewer {vf.user_id} as known at {vf.at}  (only events received by then)")
     print(f"{'fact':22} {'value':46} {'source':28} {'freshness':9} use  conflicts / assumption")
@@ -118,6 +138,22 @@ def cmd_inspect(args: argparse.Namespace) -> int:
             print(f"   assumption: {a}")
     else:
         print(f"\n=> {plan.outcome}: {_short(plan.reason, 160)}")
+    if iv is not None:
+        print(
+            "\nintervention (dry run)"
+            + ("" if trigger else ": no --trigger, so there is no app open to show a page to")
+        )
+        print(f"=> {iv.action}: {iv.reason}" + (f"  [{iv.no_action_code}]" if iv.no_action_code else ""))
+        if iv.page:
+            print(f"   hero: {iv.page['hero_title_id']}")
+            for r in iv.page["rows"]:
+                print(f"   row {r['row_type']}: {', '.join(r['title_ids'])}")
+        if iv.message:
+            print(
+                f"   message: {iv.message['channel']} at {iv.message['send_at']} -> {iv.message['title_id']}"
+            )
+        elif iv.message_note:
+            print(f"   no message: {iv.message_note}")
     return 0
 
 
@@ -142,6 +178,9 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--at", help="ISO time (UTC); default: latest event received in the store")
     p.add_argument("--json", action="store_true", help="print the full facts as JSON")
     p.add_argument("--save", action="store_true", help="also store this snapshot in facts_snapshots")
+    p.add_argument(
+        "--trigger", help="replay trigger event_id: decide as of that app open (dialect, deeplink, time)"
+    )
     p.set_defaults(func=cmd_inspect)
 
     args = parser.parse_args(argv)

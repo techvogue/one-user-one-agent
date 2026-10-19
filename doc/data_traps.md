@@ -323,7 +323,8 @@ True trigger age = `deliver_at − event_time` (event_time from Trap 2):
 | 1–24 h | 154 |
 | > 1 day (max 8.8 days) | 238 |
 
-- **432 triggers are older than 10 minutes**, from 405 users. 163 of these users **also** have a fresh trigger that day.
+- **424 unique triggers are older than 10 minutes** (432 deliveries including duplicate copies; corrected
+  2026-10-19), from 405 users. 163 of these users **also** have a fresh trigger that day.
 - **236 of the stale triggers arrive in one burst at 04:00–05:00 UTC** (the "burst of buffered app opens" surprise).
 - 324 stale triggers actually happened **before** the replay day.
 - A naive `deliver_at − occurred_at` check misclassifies 25 triggers (wrong phone clocks).
@@ -784,6 +785,7 @@ actions; (3) the served-vs-unserved number is only ever shown as the wrong compa
 |---|---|
 | 2026-10-18 | Created; Trap 1 (duplicate events) agreed and documented. |
 | 2026-10-18 | Trap 2 (late events and wrong phone clocks) agreed and documented. |
+| 2026-10-19 | Trap 3: stale count corrected to 424 unique triggers (432 counted duplicate deliveries). |
 | 2026-10-18 | Trap 11: G07 14-day recency limit (D-031). |
 | 2026-10-18 | Trap 4: status-regression contradiction added (14 users, D-027). |
 | 2026-10-18 | Traps 3–13 agreed and documented. Corrected the 3-way dialect conflict count from 133 to 56 (deeplink parsing error in the first analysis). |

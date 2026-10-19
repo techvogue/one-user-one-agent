@@ -104,8 +104,8 @@ If a pack config file and this summary ever disagree, the pack file wins and thi
 ### 10.1 Messaging policy
 - **Consent:** push only if `notifications_opt_in` is true; WhatsApp only if `whatsapp_opt_in` is true. A later
   `notification_opt_out` event overrides the profile. Unknown consent (e.g. no profile row) means **no consent**.
-- **Quiet hours:** no push or WhatsApp between **22:00 and 08:00 IST** (= 16:30–02:30 UTC). Do not send; schedule `send_at`
-  for 08:00–09:00 IST and re-verify at send time, or skip the message ([D-021](decisions.md)).
+- **Quiet hours:** no push or WhatsApp between **22:00 and 08:00 IST** (= 16:30–02:30 UTC). Do not send; reminders are
+  scheduled for 19:00 IST the next day and re-verified at send time ([D-021](decisions.md), [D-034](decisions.md)).
 - **Frequency:** at most **1 push or WhatsApp per user per IST calendar day**, both channels combined.
   In-app messages: at most 1 per day.
 - **Honest copy:** never invent prices, offers, episodes or deadlines. Name only real, available titles in the right

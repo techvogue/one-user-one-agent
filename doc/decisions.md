@@ -131,6 +131,7 @@ Rules:
 ### D-006: Offline-buffered app opens (Trap 3)
 - Date: 2026-10-18 · Status: Accepted · Decided by: candidate
 - Context: 432 triggers are > 10 min old by true age (238 > 1 day), 236 of them in one 04:00 UTC burst.
+  *(Correction 2026-10-19: 424 unique triggers; 432 counted duplicate deliveries. The decision is unchanged.)*
   [data_traps.md, Trap 3](data_traps.md#trap-3-offline-buffered-app-opens-days-old-)
 - Decision: A trigger with true age (`deliver_at − event_time`) > **600 s** (configurable) is ingested as history only:
   no action, `STALE_SKIPPED` / `STALE_TRIGGER` recorded. Fresh triggers get a priority lane during bursts.
@@ -280,7 +281,7 @@ Rules:
   (`python -m ott_agent ...`). Supersedes the folder name in D-018.
 
 ### D-021: Quiet hours: schedule for the morning and re-check at send time (Q10)
-- Date: 2026-10-18 · Status: Accepted · Decided by: candidate
+- Date: 2026-10-18 · Status: Accepted (send slot superseded by D-034; re-check at send time still applies) · Decided by: candidate
 - Context: 456 replay triggers fall in IST quiet hours (22:00–08:00). The policy forbids push/WhatsApp in that window;
   the assignment guide says "schedule for later instead".
 - Options: (a) schedule `send_at` for the next 08:00–09:00 IST and re-verify at send time; (b) skip the message.
@@ -409,6 +410,41 @@ Rules:
 - Why: No goal may stay open when it can no longer be achieved or judged; no setting may silently do nothing.
 - Effect (dry run, 1,504 users): G09 46 → 45, G08 105 → 106 (one viewer has playback on 2 days).
 
+### D-033: Intervention design (Step 3)
+- Date: 2026-10-19 · Status: Accepted · Decided by: candidate
+- Context: The trigger is an app open, so the home page (seen within seconds) is the main lever; a message only helps a
+  later visit.
+- Decision:
+  1. Order of checks: stale trigger → `STALE_TRIGGER` (checked first: not a live visit); no goal → `NO_GOAL`;
+     invalid app dialect → `DIALECT_UNKNOWN`;
+     a page for the same goal still live (< 2 h, same dialect) → `PAGE_STILL_LIVE` (D-024); no valid hero and no row
+     of ≥ 3 valid titles → `INSUFFICIENT_CONTENT`; otherwise **HOME_PAGE**. Every no-action has a reason.
+  2. Page content is built from data (no model): titles in the page dialect, available for the whole 2-hour TTL, one
+     language variant per slug (by `app_language`), never a flagged title, never a title the viewer already finished.
+     "Popular" = distinct viewers with playback of the title in the 30 days before the decision.
+  3. Hero and rows per goal: G01 campaign-link title (if valid) else popular; G02 popular **micro-drama** (≈ 3-minute
+     episodes, easiest to finish); G07 the viewer's unfinished series; G04/G05/G06 popular **premium** title; G08
+     newest popular release; G09 popular micro-drama; G03/G12 popular. Rows: popular in dialect, new releases (last
+     30 days), because you watched, the viewer's top genre (exact mix per goal in ARCHITECTURE.md). At most 4 rows of
+     3–10 titles; limits, row types, TTL and templates are read from `config/interventions.json`.
+  4. In-app messages are not used (D-023). Holdout viewers: decided as normal, nothing published (D-016).
+- Why: Proportionate, evidence-based, and only content the viewer can actually see.
+
+### D-034: Reminder messages (Step 3; updates the timing in D-021)
+- Date: 2026-10-19 · Status: Accepted · Decided by: candidate
+- Context: Up to ~330 messages if every "future visit" goal got one; the brief warns against messaging everyone.
+- Decision:
+  1. Only goals **G03** (come back on a later day) and **G12** (return after absence) get a reminder (~45 messages at
+     most in this replay). G07 relies on its page (the series is the hero).
+  2. Sent at **19:00 IST the next day** (evening viewing peak, never in quiet hours), only if the goal is still open at
+     least an hour after that. This replaces the 08:00–09:00 slot of D-021; the re-check at send time from D-021
+     stays (cancel if consent, cap, status, title or goal changed, or the goal already succeeded).
+  3. Channel: **WhatsApp** (approved template `wa_recommend_title_v1`, variables from the catalogue) if consented,
+     else **push** (fixed rule-based copy, checked for length, forbidden phrases and prices); no consent → no message.
+     At most one push/WhatsApp per viewer per IST day. The title must be available and in the viewer's message
+     dialect.
+- Why: Messages only where a later visit is the goal, at a time people watch, with copy that cannot go wrong.
+
 ---
 
 ## Pending (under discussion, not approved)
@@ -430,6 +466,7 @@ Rules:
 | 2026-10-18 | D-017 accepted (tech stack); P-001 closed. |
 | 2026-10-18 | D-018 accepted (repository layout). |
 | 2026-10-18 | D-019 accepted (goal priority); D-020 accepted (folder renamed to `submission/`). |
+| 2026-10-19 | D-033, D-034 accepted (Step 3 intervention design; message timing replaces D-021's slot). |
 | 2026-10-19 | D-032 accepted (Step 2 review fixes). |
 | 2026-10-18 | D-030, D-031 accepted; P-004, P-005 closed. |
 | 2026-10-18 | D-029 accepted (goal planner); P-004, P-005 opened. |
