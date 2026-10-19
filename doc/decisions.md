@@ -595,6 +595,34 @@ Rules:
 - Why: The brief asks to "save what was learned in the user's state"; per-viewer notes cannot prove causation, so they
   only record what happened.
 
+### D-044: How impact is measured (Step 7)
+- Date: 2026-10-19 · Status: Accepted · Decided by: candidate (accepted the recommendation) · Details D-016
+- Context: The brief: compare the agent arm with the randomized holdout using simulator outcomes, and explain why
+  "served vs not served" misleads. The pilot report made exactly that mistake (D-016, Trap 13).
+- Decision:
+  1. **Unit and cohort:** a viewer. The cohort is every viewer with at least one fresh (live) trigger on the replay
+     day, in either arm, fixed **before** any action: the same rule decides who is in the cohort in both arms, so the
+     arm cannot change who is counted.
+  2. **Primary metric (intention-to-treat):** share of cohort viewers whose **first goal** (agent goal or holdout
+     shadow goal, decided by the same planner) SUCCEEDED, agent arm vs holdout arm, including viewers the agent then
+     chose not to act on or whose page was never seen. Later goals are excluded (a re-plan can depend on the
+     treatment). Viewers with no goal at their first visit are reported per arm, not dropped silently.
+  3. **Inconclusive goals:** primary = succeeded / judged (succeeded + failed); sensitivity = succeeded / all (an
+     inconclusive goal counted as not succeeded). Both are shown.
+  4. **Uncertainty:** difference in proportions with a **95 % Newcombe–Wilson interval**; per-goal breakdown with the
+     same intervals and an explicit small-sample warning; no per-goal claim without its interval.
+  5. **Secondary, goal-independent outcomes** (same cohort, ITT): any play in the 7 days after the first visit, play
+     days in 14 days, any paid purchase in 14 days.
+  6. **Robustness:** the simulator is re-run with additional seeds on the same actions; the effect is reported for
+     each seed (evaluators use their own seed).
+  7. **What is shown as misleading, labelled as such:** served vs not served within the agent arm, and served vs
+     everyone else (the pilot's comparison), with the reason (selection: who gets served/sees a page depends on their
+     own behaviour). An "effect on the served" estimate (ITT ÷ exposure rate) is secondary, labelled with its
+     assumption (an unexposed viewer is unaffected).
+  8. **Pilot re-analysis** reproduced in the same report.
+  9. Results are reported as they come out, including zero or negative effects (rules.md Rule 6).
+- Why: The only comparison that answers "did the agent cause it" is between randomized arms, counted the same way.
+
 ---
 
 ## Pending (under discussion, not approved)
@@ -616,6 +644,7 @@ Rules:
 | 2026-10-18 | D-017 accepted (tech stack); P-001 closed. |
 | 2026-10-18 | D-018 accepted (repository layout). |
 | 2026-10-18 | D-019 accepted (goal priority); D-020 accepted (folder renamed to `submission/`). |
+| 2026-10-19 | D-044 accepted (impact methodology). |
 | 2026-10-19 | D-042, D-043 accepted (judging goals; learning notes). |
 | 2026-10-19 | D-041 accepted (G07 needs a promotable series; found by the verifier). |
 | 2026-10-19 | D-040 accepted (independent verifier). |

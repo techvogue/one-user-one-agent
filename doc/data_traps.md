@@ -773,7 +773,12 @@ goal closed, pending message cancelled, re-plan; (3) active plan that ended this
 3. The cohort is fixed at the first trigger of the day, before any action, so the arm cannot affect who is counted.
 4. Results are reported as they are, including zero or negative effects.
 
-### 13.4 Tests
+### 13.4 Implemented (Step 7)
+
+`python -m ott_agent report` reproduces this re-analysis in `sample_run/impact_report.md` §9 and measures our own replay the
+same way (D-044).
+
+### 13.5 Tests
 (1) The impact calculator reproduces the pilot ITT (18.3 % vs 19.6 %); (2) holdout users have shadow goals and zero
 actions; (3) the served-vs-unserved number is only ever shown as the wrong comparison, never as the result.
 

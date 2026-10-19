@@ -4,6 +4,7 @@ Commands so far:
   load     ingest the pack's 30-day history into the state store and write data_quality_report.json
   replay   run the whole replay day (one command): decisions, actions, latency and quality reports
   judge    after the simulator: ingest its outcome events, judge every goal, store outcomes and learnings
+  report   impact: agent arm vs holdout (+ seeds, pilot re-analysis) -> impact_report.md, impact.json
   inspect  show what the agent knows about one viewer at a moment (facts with source, freshness, conflicts)
            and which goal it would choose (dry run)
 """
@@ -217,6 +218,23 @@ def cmd_judge(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_report(args: argparse.Namespace) -> int:
+    from .impact import _pts, _verdict, run_report
+
+    cfg = _config(args)
+    seeds = [x for x in (args.seeds or "").split(",") if x]
+    data = run_report(cfg.pack_path, Path(args.out), cfg, seeds)
+    j = data["primary"]["judged"]
+    print(
+        f"first goal succeeded: agent {j['agent']['k']}/{j['agent']['n']}, holdout {j['holdout']['k']}/{j['holdout']['n']};"
+        f" difference {_pts(j['difference'])} -> {_verdict(j['difference'])}"
+    )
+    for seed, r in data["seeds"].items():
+        print(f"  seed {seed}: {_pts(r['difference'])}")
+    print(f"outputs: {args.out}/impact_report.md, impact.json")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="ott_agent", description="One User, One Agent")
     parser.add_argument("-v", "--verbose", action="store_true")
@@ -245,6 +263,13 @@ def main(argv: list[str] | None = None) -> int:
     common(p)
     p.add_argument("--sim", help="outcome_events.jsonl (default <out>/sim/outcome_events.jsonl)")
     p.set_defaults(func=cmd_judge)
+
+    p = sub.add_parser("report", help="impact: agent arm vs holdout, seeds, pilot re-analysis")
+    common(p)
+    p.add_argument(
+        "--seeds", default="seed-a,seed-b,seed-c", help="extra simulator seeds, comma-separated ('' = none)"
+    )
+    p.set_defaults(func=cmd_report)
 
     p = sub.add_parser("inspect", help="show what the agent knows about a viewer at a moment")
     common(p)

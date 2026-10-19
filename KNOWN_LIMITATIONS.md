@@ -22,6 +22,10 @@
 
 ## Pending (to be filled in as decisions are made)
 
+- **Impact: no detectable effect** on one replay day (+1.2 pts, 95 % interval −2.5 to +4.9). With about 720 judged
+  viewers per arm the study can only detect effects larger than about ±3.7 points; more replay days would be needed.
+- Outcomes come from the pack's simulator; the effect size reflects its behaviour model, not real viewers.
+
 - Goals with 14-day windows (G06, G09) end on the last observed day, so most are INCONCLUSIVE: the deadline + 24 h grace
   is never observed. A longer observation period would turn them into results.
 - A per-viewer SUCCEEDED does not mean the agent caused it (e.g. scripted organic purchases); the agent's effect is only

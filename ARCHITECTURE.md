@@ -48,7 +48,7 @@ as evidence ([D-003](doc/decisions.md)).
 | 4 | Verifier (`verifier.py`) | Independent re-derivation of eligibility and every policy rule; can reject or downgrade | rules.md Rule 10, D-012, D-040 |
 | 5 | Publisher | Writes actions (simulator schema) and decisions; `published_at = deliver_at + measured time` | FR-9, FR-13 |
 | 6 | Outcome judge (`judge.py`) | Succeeded / failed / inconclusive from attributable events; versioned rules; provisional + final verdicts; learning notes | D-005, D-014, D-042, D-043 |
-| 7 | Impact reporter | ITT agent vs holdout with CI, per goal; pilot re-analysis; latency report | D-016 |
+| 7 | Impact reporter (`impact.py`) | ITT agent vs holdout with CI, per goal, secondary outcomes, seeds; pilot re-analysis | D-016, D-044 |
 | — | Model provider | `ModelProvider` interface: mock/replay (default) + optional local Ollama | D-003 |
 | — | Replay harness (`harness.py`, `tools.py`, `model.py`) | Feeds triggers in `deliver_at` order with live and control events; injects failures; enforces budgets; measures latency; writes outputs | D-017, D-035–D-039 |
 
@@ -124,6 +124,27 @@ Implemented in `src/ott_agent/judge.py`; run with `python -m ott_agent judge` af
    `goal_outcomes`, `goal_log` (`judged`), `viewer_state/<user>.json` and `sample_run/outcomes.jsonl`.
 6. A success is not proof that the agent caused it (e.g. the scripted purchases arrive minutes after a goal starts in
    both arms); causation is only measured agent arm vs holdout in Step 7.
+
+## 6c. Proving impact (Step 7)
+
+Implemented in `src/ott_agent/impact.py`; run with `python -m ott_agent report` after `judge` (D-016, D-044).
+Output: `sample_run/impact_report.md` and `impact.json`.
+
+1. **Cohort fixed before any action:** every viewer with a fresh app open on the replay day, in either arm; same rule
+   for both arms, so the agent cannot change who is counted.
+2. **Primary (intention-to-treat):** share of cohort viewers whose **first** goal (agent goal or holdout shadow goal from
+   the same planner) succeeded; includes viewers the agent did not act on or who never saw a page. Inconclusive goals:
+   excluded in the primary metric, counted as not succeeded in a sensitivity check.
+3. **Intervals:** Wilson per arm, Newcombe hybrid score for the difference (checked against Newcombe's published
+   example); per-goal table with intervals and a small-sample warning.
+4. **Secondary, goal-independent:** any play within 7 days, play days within 14 days, any paid purchase within 14 days.
+5. **Robustness:** the same actions re-simulated with three more seeds and re-judged.
+6. **Misleading comparisons shown and labelled:** served/saw-a-page vs not, with prior activity proving selection bias;
+   "effect on those who saw a page" only as a labelled secondary estimate.
+7. **Pilot re-analysis** in the same report.
+
+Result on the sample run: agent 111/719 vs holdout 101/711, +1.2 pts [-2.5, +4.9], **no detectable effect**; goal-independent play within 7 days +2.5 pts [-2.2, +7.2]; all 8 seed
+estimates positive, 1 of 8 intervals excludes zero (within chance). Detectable effect size with one day ≈ ±3.7 pts.
 
 ## 5. Memory (durable per-viewer state)
 

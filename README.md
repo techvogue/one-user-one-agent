@@ -1,7 +1,7 @@
 # One User, One Agent
 
 > **Status: in progress.** Implemented so far: ingestion (deduplication + corrected event time), the data quality
-> report, profile and catalogue loading, the per-viewer fact resolver, the goal planner, the intervention planner, the replay harness (budgets, faults, fallbacks), the independent verifier and the outcome judge. The one-command replay will be added once the agent loop exists. This README is updated as work progresses.
+> report, profile and catalogue loading, the per-viewer fact resolver, the goal planner, the intervention planner, the replay harness (budgets, faults, fallbacks), the independent verifier, the outcome judge and the impact report. The one-command replay will be added once the agent loop exists. This README is updated as work progresses.
 
 An agentic system that gives every viewer of a regional-dialect OTT platform one dedicated agent. On each app open the
 agent chooses one measurable goal, decides what to change (home page, one message, or nothing) from evidence it can
@@ -77,6 +77,13 @@ learning notes to `viewer_state/`):
 
 ```bash
 .venv/bin/python -m ott_agent judge --pack ../one_user_one_agent_pack --out sample_run
+```
+
+Measure the impact (agent arm vs randomized holdout, plus three more simulator seeds and the pilot re-analysis; writes
+`sample_run/impact_report.md` and `impact.json`, about 30 s):
+
+```bash
+.venv/bin/python -m ott_agent report --pack ../one_user_one_agent_pack --out sample_run
 ```
 
 Show what the agent knows about one viewer at a moment (facts with source, freshness, usability and conflicts) and

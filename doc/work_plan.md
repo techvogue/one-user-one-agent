@@ -76,6 +76,15 @@ caching disabled: 7/7 broken judge rules caught (and the verifier's 6/6 re-confi
 1,487 goals from the raw files: 0 mismatches. Replay outcomes: agent 111 succeeded / 608 failed / 30 inconclusive;
 holdout 101 / 610 / 27 (comparison is Step 7).
 
+## Guide loop step 7: Prove impact ✅
+
+Agent arm vs randomized holdout, intention-to-treat on a cohort fixed before any action; Newcombe intervals; per goal;
+goal-independent outcomes; three extra simulator seeds; served-vs-not shown as misleading with evidence of selection;
+pilot re-analysed (D-044).
+**Verified:** 184 tests pass (6 impact tests incl. Newcombe's published example and an end-to-end replay → judge →
+report run); mutation test 4/4; headline recomputed independently from the output files: identical.
+**Result:** agent 111/719 vs holdout 101/711, +1.2 pts [-2.5, +4.9]: no detectable effect; consistent small positive estimates across 4 seeds.
+
 ## Step 2: Build the core
 
 | Task | Status |
@@ -95,7 +104,7 @@ holdout 101 / 610 / 27 (comparison is Step 7).
 | Replay harness (deliver_at order, live + control events, model faults, latency) | ⏳ |
 | Write decisions.jsonl and actions.jsonl | ✅ (+ control_log, latency_report, viewer_state) |
 | Run the simulator and judge outcomes | ✅ judge.py (D-042, D-043) |
-| Impact report (agent vs holdout) and latency report | ⏳ |
+| Impact report (agent vs holdout) and latency report | ✅ impact.py, harness latency report (D-044) |
 
 ## Step 4: Test, document, submit
 
@@ -114,7 +123,7 @@ holdout 101 / 610 / 27 (comparison is Step 7).
 - [ ] All titles in the right dialect and available; no withdrawn titles after withdrawal
 - [ ] Every decision has evidence, confidence reason, assumptions, checks and timing
 - [ ] All decisions published within 60 seconds (latency report included)
-- [ ] Impact measured agent arm vs holdout arm, with the pilot report's mistake explained
+- [x] Impact measured agent arm vs holdout arm, with the pilot report's mistake explained
 - [ ] Required tests pass
 - [ ] All 4 docs written
 - [ ] sample_run folder complete
