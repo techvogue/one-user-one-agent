@@ -164,6 +164,10 @@ Output: `sample_run/impact_report.md` and `impact.json`.
 6. **Misleading comparisons shown and labelled:** served/saw-a-page vs not, with prior activity proving selection bias;
    "effect on those who saw a page" only as a labelled secondary estimate.
 7. **Pilot re-analysis** in the same report.
+8. **Who is counted and why** (D-049): `arms.csv` → any trigger → fresh-trigger cohort per arm (30.2 % vs 30.0 %); the
+   simulator only produces outcomes for viewers who opened the app; a sensitivity check covers **all** viewers who
+   opened the app; and the biased "served vs everyone else" comparison is computed on our own replay
+   (+3.8 pts, interval excludes zero) next to the randomized result (+1.2 pts, includes zero).
 
 Result on the sample run: agent 111/719 vs holdout 101/711, +1.2 pts [-2.5, +4.9], **no detectable effect**; goal-independent play within 7 days +2.5 pts [-2.2, +7.2]; all 8 seed
 estimates positive, 1 of 8 intervals excludes zero (within chance). Detectable effect size with one day ≈ ±3.7 pts.

@@ -345,6 +345,43 @@ def run_report(pack: Path, out: Path, cfg, seeds: list[str]) -> dict:
             [sec[u]["play_days_14d"] for u in agent], [sec[u]["play_days_14d"] for u in hold]
         ),
     }
+    with open(pack / "replay" / "arms.csv", encoding="utf-8", newline="") as f:
+        arms = {r["user_id"]: r["arm"] for r in csv.DictReader(f)}
+    # D-049 (1): who is counted and why
+    with open(out / "decisions.jsonl", encoding="utf-8") as f:
+        first_any: dict[str, dict] = {}
+        for x in f:
+            if x.strip():
+                d = json.loads(x)
+                first_any.setdefault(d["viewer_id"], d)
+    counted = {
+        a: {
+            "in_arms_csv": sum(v == a for v in arms.values()),
+            "any_trigger": sum(arms.get(u) == a for u in first_any),
+            "fresh_trigger_cohort": sum(c["arm"] == a for c in cohort.values()),
+        }
+        for a in ("agent", "holdout")
+    }
+    # D-049 (2): goal-independent outcome over ALL triggered viewers (incl. those with only stale app opens)
+    everyone = {u: {"t0": parse_ts(d["trigger"]["deliver_at"])} for u, d in first_any.items()}
+    sec_all = secondary(conn, everyone)
+    ta = [u for u in everyone if arms.get(u) == "agent"]
+    th = [u for u in everyone if arms.get(u) == "holdout"]
+    all_triggered_play_7d = compare(
+        sum(sec_all[u]["play_7d"] for u in ta), len(ta), sum(sec_all[u]["play_7d"] for u in th), len(th)
+    )
+    # D-049 (3): the biased comparison on our own data: served (page published at the first visit) vs everyone else
+    served = {u for u in agent if cohort[u]["first_decision"]["status"] == "PUBLISHED"}
+
+    def judged(users):
+        rows = [
+            cohort[u]["outcome"]
+            for u in users
+            if cohort[u]["outcome"] and cohort[u]["outcome"]["verdict"] != "INCONCLUSIVE"
+        ]
+        return sum(o["verdict"] == "SUCCEEDED" for o in rows), len(rows)
+
+    served_vs_else = compare(*judged(served), *judged([u for u in cohort if u not in served]))
     agent_goal = [u for u in agent if cohort[u]["outcome"]]
     published = sum(cohort[u]["first_decision"]["status"] == "PUBLISHED" for u in agent)
     seen = sum(bool(cohort[u]["outcome"]["exposure"]["pages_shown"]) for u in agent_goal)
@@ -372,8 +409,6 @@ def run_report(pack: Path, out: Path, cfg, seeds: list[str]) -> dict:
     prior_means = {g: (sum(v) / len(v) if v else None) for g, v in groups.items()}
 
     catalogue = load_catalogue(pack / "data" / "catalogue.csv", pack / "data" / "episodes.csv")
-    with open(pack / "replay" / "arms.csv", encoding="utf-8", newline="") as f:
-        arms = {r["user_id"]: r["arm"] for r in csv.DictReader(f)}
     seed_results = {}
     for s in seeds:
         seed_results[s] = seed_run(pack, out, s, cfg, catalogue, arms)
@@ -384,6 +419,9 @@ def run_report(pack: Path, out: Path, cfg, seeds: list[str]) -> dict:
         "exposure": exposure,
         "effect_on_seen": on_served,
         "misleading_comparisons": mis,
+        "counted": counted,
+        "all_triggered_play_7d": all_triggered_play_7d,
+        "served_vs_everyone_else": served_vs_else,
         "prior_play_days_14d_mean": prior_means,
         "seeds": seed_results,
         "pilot": pil,
@@ -442,7 +480,35 @@ def _markdown(d: dict, cfg) -> str:
         "",
         "| | Agent | Holdout |",
         "|---|---|---|",
-        f"| Viewers in the cohort | {p['cohort_size']['agent']} | {p['cohort_size']['holdout']} |",
+        *(
+            [
+                (
+                    f"| In `arms.csv` (randomized) | {d['counted']['agent']['in_arms_csv']} | "
+                    f"{d['counted']['holdout']['in_arms_csv']} |"
+                ),
+                (
+                    f"| Opened the app on the replay day (any trigger) | {d['counted']['agent']['any_trigger']} | "
+                    f"{d['counted']['holdout']['any_trigger']} |"
+                ),
+            ]
+            if d.get("counted")
+            else []
+        ),
+        f"| Viewers in the cohort (a live, fresh app open) | {p['cohort_size']['agent']} | {p['cohort_size']['holdout']} |",
+        *(
+            [
+                "| Cohort as a share of the arm (balance check) | "
+                + " | ".join(
+                    _pct(p["cohort_size"][a] / d["counted"][a]["in_arms_csv"])
+                    if d["counted"][a]["in_arms_csv"]
+                    else "n/a"
+                    for a in ("agent", "holdout")
+                )
+                + " |"
+            ]
+            if d.get("counted")
+            else []
+        ),
         f"| With a goal at the first visit | {p['with_goal']['agent']} | {p['with_goal']['holdout']} |",
         (
             f"| No goal at the first visit | {p['no_goal_at_first_visit'].get('agent', 0)} | "
@@ -452,6 +518,18 @@ def _markdown(d: dict, cfg) -> str:
             f"| Goal outcome inconclusive (data ends before deadline + 24 h) | {p['inconclusive']['agent']} | "
             f"{p['inconclusive']['holdout']} |"
         ),
+        "",
+        (
+            "**Why not every viewer in `arms.csv`:** the simulator only produces outcomes for viewers who opened the app "
+            "on the replay day; for the others there is nothing to measure and nothing the agent could have done. The "
+            "cohort filter (a live app open) is decided before any action and is the same rule in both arms, so it "
+            "keeps the comparison randomized; the shares above show the arms stay balanced. Viewers the agent decided "
+            "not to act on, or whose page was never seen, are counted (intention-to-treat). Section 5 repeats the "
+            "goal-independent outcome over **all** viewers who opened the app, including those whose app opens were "
+            "all stale."
+        )
+        if d.get("counted")
+        else "",
         "",
     ]
     L += [
@@ -481,6 +559,16 @@ def _markdown(d: dict, cfg) -> str:
         "|---|---|---|---|",
         _row("Any play within 7 days of the first visit", s["play_7d"]),
         _row("Any paid purchase within 14 days", s["paid_14d"]),
+        *(
+            [
+                _row(
+                    "Any play within 7 days, **all** viewers who opened the app (sensitivity)",
+                    d["all_triggered_play_7d"],
+                )
+            ]
+            if d.get("all_triggered_play_7d")
+            else []
+        ),
     ]
     md = s["play_days_14d"]
     if md.get("diff") is not None:
@@ -541,6 +629,29 @@ def _markdown(d: dict, cfg) -> str:
         ),
         "",
     ]
+    if d.get("served_vs_everyone_else"):
+        sv = d["served_vs_everyone_else"]
+        L += [
+            (
+                "**The same trap on our own replay.** The pilot report's comparison (served vs everyone else) computed on "
+                "our data, next to the randomized result:"
+            ),
+            "",
+            "| Comparison | Group A | Group B | Difference (95 % interval) |",
+            "|---|---|---|---|",
+            (
+                f"| Served (page published at the first visit) vs everyone else (**biased**) | "
+                f"{sv['agent']['k']}/{sv['agent']['n']} = {_pct(sv['agent']['rate'])} | "
+                f"{sv['holdout']['k']}/{sv['holdout']['n']} = {_pct(sv['holdout']['rate'])} | {_pts(sv['difference'])} |"
+            ),
+            _row("Agent arm vs holdout arm, randomized (**correct**)", j),
+            "",
+            (
+                f"The biased comparison shows {_verdict(sv['difference'])}; the randomized one shows "
+                f"{_verdict(j['difference'])}. The gap is who gets served, not what serving does."
+            ),
+            "",
+        ]
     L += [
         "## 8. Robustness across simulator seeds",
         "",

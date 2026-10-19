@@ -687,6 +687,18 @@ Rules:
   both arms the same keeps the comparison fair; the primary impact metric uses each viewer's first goal, so it is
   unaffected.
 
+### D-049: Impact report explains who is counted and shows the trap on our own data
+- Date: 2026-10-19 · Status: Accepted · Decided by: candidate (approved the proposal) · Extends D-044
+- Context: The guide asks for "all agent-arm users vs all holdout users". `arms.csv` has 2,513 vs 2,487 viewers but the
+  simulator only produces outcomes for viewers who triggered that day (1,746), so the cohort is smaller; the report did
+  not explain this. The "served vs everyone else" trap was only shown on the pilot.
+- Decision: The impact report adds (1) a "who is counted and why" table: arms.csv → any trigger → fresh-trigger cohort
+  per arm, with the reason and the balance check; (2) a sensitivity check of the goal-independent outcome over **all**
+  triggered viewers (including those with only stale app opens); (3) "served vs everyone else" computed on our own
+  replay, next to the randomized result.
+- Why: Makes the intention-to-treat population explicit and shows, with our own numbers, how the biased comparison
+  manufactures a "significant" effect that the randomized comparison does not support.
+
 ---
 
 ## Pending (under discussion, not approved)
@@ -708,6 +720,7 @@ Rules:
 | 2026-10-18 | D-017 accepted (tech stack); P-001 closed. |
 | 2026-10-18 | D-018 accepted (repository layout). |
 | 2026-10-18 | D-019 accepted (goal priority); D-020 accepted (folder renamed to `submission/`). |
+| 2026-10-19 | D-049 accepted (impact report: who is counted; trap on our data). |
 | 2026-10-19 | D-048 accepted (react to live state changes; notice bursts). |
 | 2026-10-19 | D-047 accepted (traps in the run output). |
 | 2026-10-19 | D-046 accepted (rule_version + specific assumptions). |

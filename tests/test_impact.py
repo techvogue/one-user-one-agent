@@ -145,5 +145,9 @@ def test_end_to_end_replay_judge_report_on_a_tiny_pack(tmp_path):
     report = (out / "impact_report.md").read_text()
     assert "agent arm vs randomized holdout" in report and "served vs not served" in report
     data = json.loads((out / "impact.json").read_text())
+    assert data["counted"]["agent"] == {"in_arms_csv": 2, "any_trigger": 2, "fresh_trigger_cohort": 2}
+    assert data["all_triggered_play_7d"]["agent"]["n"] == 2 and data["served_vs_everyone_else"]["difference"]
+    assert "Why not every viewer in `arms.csv`" in report and "The same trap on our own replay" in report
+    assert "**all** viewers who opened the app" in report
     j = data["primary"]["judged"]
     assert j["agent"]["n"] == 2 and j["holdout"]["n"] == 2 and j["agent"]["k"] == 1 and j["holdout"]["k"] == 1
