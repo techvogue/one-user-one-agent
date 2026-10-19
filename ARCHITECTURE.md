@@ -41,7 +41,7 @@ as evidence ([D-003](doc/decisions.md)).
 
 | # | Component | Job | Key decisions |
 |---|---|---|---|
-| 0 | Data loader / ingestion (`ingest.py`, `store.py`, `quality.py`) | Raw delivery log + canonical events (one per `event_id`); corrected `event_time`; same function for history, live events and triggers | D-004, D-005 |
+| 0 | Data loader / ingestion (`ingest.py`, `store.py`, `quality.py`, `traps.py`: trap summary in the run output, D-047) | Raw delivery log + canonical events (one per `event_id`); corrected `event_time`; same function for history, live events and triggers | D-004, D-005 |
 | 1 | Fact resolver (`facts.py`, `profiles.py`, `catalogue.py`) | Builds facts with source, `as_of`, freshness; per-fact precedence; conflicts kept visible | D-007, D-008, D-009, D-015 |
 | 2 | Goal planner | Measurability check; eligibility from cited evidence; one goal with start, deadline, success signal; or `NO_GOAL` | D-013, D-014, D-015 |
 | 3 | Intervention planner (`intervention.py`) | Home page builder (dialect, slug dedupe, variants, availability through TTL), message choice, or `NO_ACTION` | D-009, D-010, D-011 |

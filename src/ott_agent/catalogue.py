@@ -9,12 +9,15 @@
 from __future__ import annotations
 
 import csv
+import logging
 import re
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
 from .timeutil import parse_ts
+
+log = logging.getLogger(__name__)
 
 VALID_DIALECTS = frozenset({"d1", "d2", "d3", "d4", "d5", "d6"})
 
@@ -99,6 +102,9 @@ def load_catalogue(catalogue_csv: Path, episodes_csv: Path) -> Catalogue:
                 m = INJECTION_PATTERN.search(r.get(fld) or "")
                 if m:
                     flagged[r["title_id"]] = f"instruction-like text in {fld}: {m.group(0)!r}"
+                    log.warning(
+                        "quarantined %s: %s (data is not instruction)", r["title_id"], flagged[r["title_id"]]
+                    )
     episodes: dict[str, list[tuple[int, int, str]]] = {}
     with open(episodes_csv, encoding="utf-8", newline="") as f:
         for r in csv.DictReader(f):

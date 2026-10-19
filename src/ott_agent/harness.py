@@ -39,6 +39,7 @@ from .quality import build_report, write_report
 from .store import connect
 from .timeutil import IST, compute_event_time, iso, parse_ts
 from .tools import BudgetExceeded, Dependencies, DependencyFailed, ToolBox
+from .traps import build_traps
 from .verifier import Verifier
 
 PUBLISHED, NO_ACTION_STATUS = "PUBLISHED", "NO_ACTION"
@@ -196,7 +197,9 @@ class Replay:
         t0 = time.perf_counter()
         items = self.timeline()
         self.worker_free = [items[0][0] if items else datetime.now()] * self.cfg.workers
+        self.replay_start = items[0][0] if items else None
         self.replay_end = items[-1][0] if items else None
+        self.trigger_rows = [obj for _, _, _, kind, obj in items if kind == "trigger"]
         for at, _, line_no, kind, obj in items:
             if kind == "control":
                 self.on_control(obj, at)
@@ -944,6 +947,7 @@ class Replay:
         dump("actions.jsonl", self.actions)
         dump("control_log.jsonl", self.control_log)
         report = build_report(self.conn, self.cfg, [self.history_stats, *self.ingest_stats.values()])
+        report["traps"] = build_traps(self)  # D-047: what was found in this run's data and how it was handled
         write_report(report, self.out)
         latency = self.latency_report()
         (self.out / "latency_report.json").write_text(json.dumps(latency, indent=2), encoding="utf-8")

@@ -656,6 +656,17 @@ Rules:
   3. `record_gaps` requires both on every record.
 - Effect: 0 records without assumptions or rule_version; actions, outcomes and impact unchanged (records only).
 
+### D-047: Every data trap reported in the run output
+- Date: 2026-10-19 · Status: Accepted · Decided by: candidate (approved the proposal) · Fulfils D-013's promise
+- Context: A trap-by-trap check found every trap handled, tested and documented, but two not visible in the run output:
+  injected instructions were ignored but **not logged** (the brief: "ignore them and log them"), and the
+  **goal catalogue check promised in D-013 was never built**. Traps 4–8 were only visible decision by decision.
+- Decision: `data_quality_report.json` gets a `traps` section with one entry per trap (1–13), computed from the run's
+  own data: counts of what was found and how it was handled (decision references), the flagged titles with the matched
+  text and how often they appeared in published actions (0), and every goal's measurability with the reason. Flagged
+  titles are also logged as a WARNING when the catalogue loads.
+- Effect: reporting only; actions unchanged.
+
 ---
 
 ## Pending (under discussion, not approved)
@@ -677,6 +688,7 @@ Rules:
 | 2026-10-18 | D-017 accepted (tech stack); P-001 closed. |
 | 2026-10-18 | D-018 accepted (repository layout). |
 | 2026-10-18 | D-019 accepted (goal priority); D-020 accepted (folder renamed to `submission/`). |
+| 2026-10-19 | D-047 accepted (traps in the run output). |
 | 2026-10-19 | D-046 accepted (rule_version + specific assumptions). |
 | 2026-10-19 | D-045 accepted (complete decision records). |
 | 2026-10-19 | D-044 accepted (impact methodology). |

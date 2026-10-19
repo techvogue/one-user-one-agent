@@ -9,6 +9,9 @@ replay day, so nothing may be hard-coded to these specific users, titles or time
 
 ## Status overview
 
+Every trap is also reported by each run in `sample_run/data_quality_report.json` → `traps` (D-047), with the counts
+found in that run's data and how each was handled.
+
 | # | Trap | Area | Status | Decision |
 |---|---|---|---|---|
 | 1 | Duplicate events with the same `event_id` | Data | ✅ Agreed | [D-004](decisions.md) |
@@ -790,6 +793,7 @@ actions; (3) the served-vs-unserved number is only ever shown as the wrong compa
 |---|---|
 | 2026-10-18 | Created; Trap 1 (duplicate events) agreed and documented. |
 | 2026-10-18 | Trap 2 (late events and wrong phone clocks) agreed and documented. |
+| 2026-10-19 | Run output now reports every trap (D-047). |
 | 2026-10-19 | Trap 3: stale count corrected to 424 unique triggers (432 counted duplicate deliveries). |
 | 2026-10-18 | Trap 11: G07 14-day recency limit (D-031). |
 | 2026-10-18 | Trap 4: status-regression contradiction added (14 users, D-027). |

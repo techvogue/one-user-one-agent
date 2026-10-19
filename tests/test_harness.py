@@ -486,3 +486,39 @@ def test_resolved_conflicts_are_listed_on_the_decision(tmp_path):
     assert "profile_row@2026-09-22T00:00:00.000Z:lapsed" in by_fact["subscription_status"]["conflicting"]
     assert by_fact["page_dialect"]["used"] == "d3" and "profile:d1" in by_fact["page_dialect"]["conflicting"]
     assert "D-009" in by_fact["page_dialect"]["resolution"]
+
+
+# --- D-047: every data trap is reported in the run's output -------------------------------------------------------
+
+
+def test_data_quality_report_lists_every_trap(tmp_path, caplog):
+    rows = [profile_row("U-1", status="lapsed", dialect="d2", updated="2026-09-22T00:00:00.000Z"),
+            profile_row("U-1", status="never", dialect="d2"), profile_row("U-2", dialect="d1")]  # fmt: skip
+    t1 = trig("t1", dialect="d3")
+    t1["properties"] = {
+        "deeplink": "ott://c/cmp1/d5/title/S2"
+    }  # three different dialects: app d3, profile d2, link d5
+    triggers = [
+        t1,
+        trig("t2", user="U-2", dialect="d7"),
+        trig("t9", user="U-9"),
+    ]  # invalid dialect; no profile row
+    pack = build_pack(
+        tmp_path, triggers, profiles=rows, arms={"U-1": "agent", "U-2": "agent", "U-9": "agent"}
+    )
+    with caplog.at_level("WARNING"):
+        _r, _ = run(tmp_path, pack)
+    assert any("quarantined BAD" in m for m in caplog.messages)  # logged at load
+    traps = json.loads((tmp_path / "out" / "data_quality_report.json").read_text())["traps"]
+    assert len([k for k in traps if k[0].isdigit()]) == 13
+    [inj] = traps["9_injected_instructions"]["flagged_titles"]
+    assert inj["title_id"] == "BAD" and inj["times_in_published_actions"] == 0
+    goals = {g["goal_id"]: g for g in traps["10_unmeasurable_goals"]["goals"]}
+    assert not goals["G10"]["measurable"] and "tv_app_open" in goals["G11"]["reason_not_selectable"]
+    assert goals["G01"]["measurable"]
+    p = traps["4_profile_snapshot"]
+    assert p["users_with_two_rows"] == 1 and p["never_after_paid_contradictions"] == 1
+    assert traps["5_new_users_without_profile"]["trigger_viewers_without_profile"] == 1
+    d = traps["6_dialect_conflicts"]
+    assert d["triggers_with_invalid_app_dialect"] == 1 and d["three_different_dialects"] == 1
+    assert traps["7_language_variants"]["slugs_with_several_title_ids"] == 1  # show-1 has hin + en
