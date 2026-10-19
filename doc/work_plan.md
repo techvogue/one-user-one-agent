@@ -122,7 +122,7 @@ report run); mutation test 4/4; headline recomputed independently from the outpu
 
 ## Final check before submitting (from the guide)
 
-- [x] The replay runs with one command on a fresh clone, without an API key (2026-10-19, commit 90b8890: clone → uv setup → `run` in 57 s, 219 tests pass; outputs identical to sample_run except measured compute time)
+- [x] The replay runs with one command on a fresh clone, without an API key (2026-10-19, commit afe2c25: clone → uv setup → `run` in 55 s, 221 tests pass; outputs identical to sample_run except measured compute time)
 - [x] Holdout users received zero actions (simulator: 0 holdout actions)
 - [x] No push or WhatsApp in quiet hours, without consent, or more than once per IST day (simulator: 0 policy problems)
 - [x] All titles in the right dialect and available; no withdrawn titles after withdrawal (validator + verifier)
