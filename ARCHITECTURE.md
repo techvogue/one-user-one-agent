@@ -291,7 +291,7 @@ Implemented in `src/ott_agent/tools.py` and `src/ott_agent/harness.py` (D-035 to
 | Publishing would be > 60 s late | Not published, recorded `FAILED_LATE` | 0 in the replay; tested |
 | Duplicate / late (stale) trigger | `DUPLICATE_IGNORED` / `STALE_SKIPPED`, no model call | 90 / 424 |
 | Crash mid-replay | Each replay starts from a fresh store; ingestion is idempotent | — |
-| Title withdrawn | Live pages containing it republished, pending messages cancelled | T0001: 11 pages, 3 messages |
+| Title withdrawn | Live pages containing it republished, pending messages cancelled | T0001: 12 pages, 3 messages |
 | Goal rule corrected | New rule version on open goals of that type only | G03: 0 open at 08:30 |
 
 ## 9. Trust boundaries
