@@ -114,7 +114,7 @@ Implemented in `src/ott_agent/goals.py` and `src/ott_agent/planner.py` (D-013, D
 
 ## 4b. Intervention (Step 3: decide the intervention)
 
-Implemented in `src/ott_agent/intervention.py` (D-033, D-034). Platform limits, row types, TTL, templates and copy
+Implemented in `src/ott_agent/intervention.py` (D-033, D-034, D-053, D-054). Platform limits, row types, TTL, templates and copy
 rules are read from `config/interventions.json`.
 
 1. **No-action reasons, in order:** `STALE_TRIGGER` (true age > 600 s: not a live visit) → `NO_GOAL` →
@@ -124,12 +124,18 @@ rules are read from `config/interventions.json`.
    one language variant per slug (by `app_language`), never flagged, never already finished by the viewer.
    "Popular" = distinct viewers with playback in the last 30 days (only events received by decision time).
 3. **Per goal** a hero (G01 campaign title if valid, G02/G09 popular micro-drama, G04/05/06 popular premium, G07 the
-   viewer's series, G08 newest release, others most popular) and up to 4 rows from: popular in dialect (optionally
-   micro-drama or premium only), new releases (30 days), because you watched (genre overlap with the latest watched
-   title), the viewer's top genre, next episode. Rows with < 3 titles are not published.
-4. **Reminder messages only for G03 and G12** at 19:00 IST the next day, if the goal is still open an hour later:
-   WhatsApp (approved template, catalogue variables) if consented, else push (fixed copy checked for length, forbidden
-   phrases and prices); no consent → none; at most one per viewer per IST day. Re-checked at send time (Step 5).
+   viewer's series, G08 newest release, others most popular) and up to **5 rows** (D-053): first the goal's own rows,
+   then further real rows until the page is full: the viewer's top genres (up to 3, each a different genre), because
+   you watched (genre overlap with the latest watched title, never already watched), next episode (series in
+   progress only), new releases (30 days), popular in dialect, and for viewers without history the dialect's most
+   popular genre. A thin dialect's titles are shared across rows. Rows with < 3 titles are not published. The
+   verifier checks independently that every row holds what its type says (`row_content`).
+4. **Reminder messages only for G03, G12 and G07** at 19:00 IST the next day, if the goal is still open an hour
+   later: WhatsApp (approved template, catalogue variables) if consented, else push (fixed copy checked for length,
+   forbidden phrases and prices); no consent → none; at most one per viewer per IST day. **G07 (D-054):** WhatsApp
+   only, and the title is always the viewer's own series (never a popular fallback); the verifier checks both
+   (`message_channel`, `message_series`). Re-checked at send time (Step 5); a G07 reminder is cancelled only if the
+   viewer already played that series, not for any other play.
 5. In-app messages are not used. Holdout viewers: decided as normal, nothing published.
 
 ## 5. Memory (durable per-viewer state)
@@ -249,11 +255,11 @@ Output: `sample_run/impact_report.md` and `impact.json`.
 8. **Who is counted and why** (D-049): `arms.csv` → any trigger → fresh-trigger cohort per arm (30.2 % vs 30.0 %); the
    simulator only produces outcomes for viewers who opened the app; a sensitivity check covers **all** viewers who
    opened the app; and the biased "served vs everyone else" comparison is computed on our own replay
-   (+3.9 pts) next to the randomized result (+1.1 pts); the biased estimate is over three times larger.
+   (+4.9 pts, interval excludes zero) next to the randomized result (+2.1 pts, interval includes zero).
 
-Result on the sample run: agent 105/657 vs holdout 96/647, +1.1 pts [-2.8, +5.1], **no detectable effect**;
-goal-independent play within 7 days +1.8 pts [-2.9, +6.5]; 7 of 8 seed estimates positive, none of the 8 intervals
-excludes zero. Detectable effect size with one day ≈ ±3.9 pts. Viewers with no goal at their first visit (including
+Result on the sample run: agent 111/657 vs holdout 96/647, +2.1 pts [-1.9, +6.0], **no detectable effect**;
+goal-independent play within 7 days +3.7 pts [-1.0, +8.3]; all 4 seed estimates on the primary metric are positive,
+none of their intervals excludes zero. Detectable effect size with one day ≈ ±4 pts. Viewers with no goal at their first visit (including
 those whose only eligible goal had recently failed, D-051) are left out of the primary metric in both arms and
 counted in the goal-independent one.
 
@@ -338,4 +344,5 @@ in `latency_report.json` → `load`.
 | 2026-10-18 | Draft created from requirements.md, rules.md and decisions D-001–D-016. |
 | 2026-10-19 | Finalised: draft markers removed, sections in order, §10 scale-out and never-automate written. |
 | 2026-10-19 | Past results feed back into goal choice (D-051, §4 item 9, §6b item 7); final report component (D-052); sample-run numbers updated. |
+| 2026-10-19 | Fuller pages with real rows and a row-content check (D-053); WhatsApp-only G07 reminder (D-054); §4b and §6c updated. |
 | 2026-10-18 | Storage, time model and harness updated after D-017 (tech stack). |

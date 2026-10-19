@@ -16,7 +16,7 @@ from ott_agent.config import Config
 from ott_agent.ingest import ingest_file
 from ott_agent.store import connect
 from ott_agent.timeutil import parse_ts
-from ott_agent.verifier import Verifier
+from ott_agent.verifier import MESSAGE_CHECKS, Verifier
 
 AT = parse_ts("2026-10-01T09:00:00.000Z")
 PUB = parse_ts("2026-10-01T09:00:01.000Z")
@@ -271,3 +271,85 @@ def test_goal_that_recently_failed_for_the_viewer_is_rejected(tmp_path, ver):
     assert r.verdict == "reject" and "eligibility" in failed(r)
     assert "already failed" in next(f["detail"] for f in r.failed if f["check"] == "eligibility")
     assert ver.verify(proposal()).verdict == "approve"  # without the pilot row the same goal is fine
+
+
+# --- rows must hold what their type says (D-053) ----------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "user,row,ok",
+    [
+        ("U-1", {"row_type": "new_releases", "title_ids": ["F1", "F2", "F3"]}, True),  # released 11-13 Sep
+        ("U-1", {"row_type": "new_releases", "title_ids": ["F1", "F2", "S2"]}, False),  # S2 is from 2025
+        ("U-1", {"row_type": "genre", "title_ids": ["M2", "M4", "M6"]}, True),  # all Drama|Comedy
+        ("U-1", {"row_type": "genre", "title_ids": ["M2", "S2", "F2"]}, False),  # no shared genre
+        (
+            "U-7",
+            {"row_type": "next_episode", "title_ids": ["S3", "S4", "S5"]},
+            False,
+        ),  # only S3 is in progress
+        ("U-1", {"row_type": "next_episode", "title_ids": ["F1", "F2", "F3"]}, False),  # films, never played
+        (
+            "U-7",
+            {"row_type": "because_you_watched", "title_ids": ["S2", "S4", "S5"]},
+            True,
+        ),  # Thriller, like S3
+        (
+            "U-7",
+            {"row_type": "because_you_watched", "title_ids": ["S3", "S4", "S5"]},
+            False,
+        ),  # S3 already watched
+        (
+            "U-1",
+            {"row_type": "because_you_watched", "title_ids": ["S2", "S4", "S5"]},
+            False,
+        ),  # no watch history
+    ],
+)
+def test_row_content_must_match_its_type(ver, user, row, ok):
+    v = ver.verify(
+        proposal(user=user, trigger=trig(f"t-{user}", user=user), page=page(hero="M8", rows=[row]))
+    )
+    assert ("row_content" not in failed(v)) is ok, v.failed
+    if not ok:
+        assert v.verdict == "reject"
+
+
+# --- G07 reminders (D-054) --------------------------------------------------------------------------------------
+
+
+def push(title, **kw):
+    return {"channel": "push", "send_at": "2026-10-02T13:30:00.000Z", "title_id": title,
+            "deeplink": f"ott://title/{title}", "dialect": "d1",
+            "text": {"title": "Picked for you", "body": f"Watch Show-{title[-1]} now."}, **kw}  # fmt: skip
+
+
+def g07(slug="show-3"):
+    return goal("G07", deadline="2026-10-04T09:00:00.000Z", detail={"series": {"slug": slug}})
+
+
+def test_g07_reminder_must_name_the_goals_series_on_whatsapp(ver):
+    u1 = {"user": "U-1", "trigger": trig("t1")}  # U-1 has WhatsApp consent; only message checks are asserted
+    ok = ver.verify(
+        proposal(
+            goal=g07(), message=whatsapp("S3", variables={"title_name": "Show-3", "dialect_name": "d1"}), **u1
+        )
+    )
+    assert {"message_series", "message_channel"} <= set(ok.passed), ok.failed
+    assert not failed(ok) & MESSAGE_CHECKS, ok.failed  # the whole message passes
+    wrong = ver.verify(proposal(goal=g07(), message=whatsapp("S2"), **u1))
+    assert "message_series" in failed(wrong) and wrong.verdict in ("downgrade", "reject")
+    by_push = ver.verify(proposal(goal=g07(), message=push("S3"), user="U-7", trigger=trig("t7", user="U-7")))
+    assert "message_channel" in failed(by_push)
+
+
+def test_g07_reminder_is_cancelled_only_if_the_series_itself_was_played(ver):
+    # U-7 played S3 (show-3) on 27 Sep; both goals "started" on 26 Sep
+    def pending(slug, title):
+        return {"user_id": "U-7", "decision_id": f"d-{slug}", "message": push(title),
+                "goal": {**g07(slug), "start": "2026-09-26T00:00:00.000Z"}}  # fmt: skip
+
+    resumed = ver.verify_send(pending("show-3", "S3"), parse_ts("2026-10-02T13:30:00.000Z"), goal_open=True)
+    assert "not_already_reached" in failed(resumed)
+    other = ver.verify_send(pending("show-2", "S2"), parse_ts("2026-10-02T13:30:00.000Z"), goal_open=True)
+    assert "not_already_reached" not in failed(other)  # played a different title: the reminder still applies

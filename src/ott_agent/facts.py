@@ -48,6 +48,7 @@ FACT_CLASS = {
     "play_ist_days_14d": "history",
     "series_in_progress": "history",
     "top_genre": "history",
+    "top_genres": "history",
     "last_lapsed_at": "history",
     "last_activity_at": "history",
     "watched_slugs": "history",
@@ -606,6 +607,8 @@ def _history(add, catalogue: Catalogue, events, props, at: datetime, trigger_id:
     )
     top = max(sorted(genres), key=lambda g: genres[g]) if genres else None
     add(Fact("top_genre", top, "derived:events+catalogue", last_seen, evidence=refs(plays)))
+    ranked = sorted(genres, key=lambda g: (-genres[g], g))[:3]  # for extra genre rows on the page (D-053)
+    add(Fact("top_genres", ranked, "derived:events+catalogue", last_seen, evidence=refs(plays)))
 
     # Content the viewer has touched (any playback) and finished, by slug (both language variants count, D-010).
     # Used by the page builder: "because you watched" and "never recommend what they already finished" (D-033).

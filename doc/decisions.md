@@ -426,7 +426,7 @@ Rules:
      episodes, easiest to finish); G07 the viewer's unfinished series; G04/G05/G06 popular **premium** title; G08
      newest popular release; G09 popular micro-drama; G03/G12 popular. Rows: popular in dialect, new releases (last
      30 days), because you watched, the viewer's top genre (exact mix per goal in ARCHITECTURE.md). At most 4 rows of
-     3–10 titles; limits, row types, TTL and templates are read from `config/interventions.json`.
+     3–10 titles (_updated by D-053: up to 5 rows_); limits, row types, TTL and templates are read from `config/interventions.json`.
   4. In-app messages are not used (D-023). Holdout viewers: decided as normal, nothing published (D-016).
 - Why: Proportionate, evidence-based, and only content the viewer can actually see.
 
@@ -435,7 +435,8 @@ Rules:
 - Context: Up to ~330 messages if every "future visit" goal got one; the brief warns against messaging everyone.
 - Decision:
   1. Only goals **G03** (come back on a later day) and **G12** (return after absence) get a reminder (~45 messages at
-     most in this replay). G07 relies on its page (the series is the hero).
+     most in this replay). G07 relies on its page (the series is the hero). _Updated by D-054: G07 gets one WhatsApp
+     reminder._
   2. Sent at **19:00 IST the next day** (evening viewing peak, never in quiet hours), only if the goal is still open at
      least an hour after that. This replaces the 08:00–09:00 slot of D-021; the re-check at send time from D-021
      stays (cancel if consent, cap, status, title or goal changed, or the goal already succeeded).
@@ -744,6 +745,45 @@ Rules:
   safety, surprises, data traps, outcomes, impact, and where to find details.
 - Why: Numbers cannot drift from the run, and an unseen replay day reports its own.
 
+### D-053: Fuller home pages, every row a real row of its type
+- Date: 2026-10-19 · Status: Accepted · Decided by: candidate (agreed with the recommendation) · Updates D-033
+- Context: G07 (the most common goal) succeeded for 9/295 agent vs 11/294 holdout viewers. Reading the pack's
+  simulator showed why: when a viewer plays, the title is drawn at random from the dialect's available titles; a page
+  changes only **how likely** a play is (+0.10 per row up to 5 rows, +0.05 hero, +0.08 if a title is in the viewer's
+  top genre, +0.15 for a next-episode row with a series in progress) and raises app opens over the next 3 days. Our
+  pages averaged 2.3 rows (platform maximum 6); most dialects have hundreds of titles.
+- Options: (A) a G07 reminder (D-054); (B) fuller pages; (C) move G07 down the priority order.
+- Decision: (B) and (A); (C) **rejected**: it would raise the score by choosing goals that are easier to reach, not
+  ones that fit the viewer. Pages now have up to 5 rows (`page_max_rows`): the goal's own rows first, then further
+  real rows (top genres 1–3, each a different genre; because you watched; next episode; new releases; popular in
+  dialect; the dialect's most popular genre for viewers without history). A thin dialect's titles are shared across
+  rows (row size = remaining titles / rows still to fill, 3–10). Never padded: a row is only added with ≥ 3 titles of
+  its kind. New fact `top_genres`. The verifier checks independently that each row holds what its type says
+  (`row_content`: new releases released in the last 30 days, a genre row shares a genre, next episode = series in
+  progress, because you watched = related to and not already in the viewer's history). Also rejected: limiting G07
+  to series the simulator happens to sample from (a quirk, not a better agent).
+- Why: More relevant choice on the page is a normal product improvement and the main lever the agent has.
+- Consequences: 539 of 822 pages have 5 rows (avg 4.3); first-goal impact +1.1 → +1.9 pts, any play within 7 days
+  +1.8 → +3.7 pts (both still no detectable effect); verifier 0 rejections; simulator 0 policy problems.
+
+### D-054: One "continue your series" reminder for G07, by WhatsApp only
+- Date: 2026-10-19 · Status: Accepted · Decided by: candidate (chose WhatsApp only after seeing both versions) ·
+  Updates D-034
+- Context: In the simulator only a message click plays a specific title, so a reminder is the only lever that makes
+  a viewer resume the series itself. With WhatsApp else push, 282 of 758 agent viewers (37 %) got a message and
+  G07 rose from 9 to 12 successes; 1 of 149 delivered G07 pushes was clicked.
+- Options: (a) WhatsApp, else push; (b) WhatsApp only; (c) no G07 reminder.
+- Decision: (b). G07 joins `message_goals`; `whatsapp_only_goals = ("G07",)`. The message names the viewer's own
+  series (never a popular fallback), in the message dialect at send time, with the approved `wa_recommend_title_v1`
+  template (never `wa_new_episode_v2`: no new episode is claimed). Same slot, consent, quiet-hours and once-a-day
+  rules as D-034. The send-time re-check cancels a G07 reminder only if the viewer already played that series.
+  The verifier checks the channel (`message_channel`) and the title (`message_series`).
+- Why: Proportionate: about one success less than (a) for less than half the messages; WhatsApp is the channel the
+  viewer explicitly opted into. Caveat: the one-day click counts are tiny, and the click rates (3 % vs 1.2 %) are
+  also the simulator's own constants.
+- Consequences: 129 messages (17 % of agent viewers; 92 for G07); G07 11 vs 11; first-goal impact +2.1 pts
+  [−1.9, +6.0], still no detectable effect.
+
 ---
 
 ## Pending (under discussion, not approved)
@@ -766,6 +806,7 @@ Rules:
 | 2026-10-18 | D-018 accepted (repository layout). |
 | 2026-10-18 | D-019 accepted (goal priority); D-020 accepted (folder renamed to `submission/`). |
 | 2026-10-19 | D-049 accepted (impact report: who is counted; trap on our data). |
+| 2026-10-19 | D-053, D-054 accepted (fuller pages with real rows; WhatsApp-only G07 reminder); D-033, D-034 annotated. |
 | 2026-10-19 | D-051, D-052 accepted (past failures not repeated; generated final report). |
 | 2026-10-19 | D-050 accepted (one-command `run`; final documentation). |
 | 2026-10-19 | D-049 accepted (impact: who is counted; served-vs-else on our data). |

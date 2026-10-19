@@ -317,7 +317,6 @@ def test_no_reminder_without_consent_for_other_goals_over_cap_or_near_deadline(w
     iv = decide(world, no_consent, goal("G12"))
     assert iv.message is None and "consent" in iv.message_note
     consent = viewer(world, row=profile_row("U-2", whatsapp_opt_in="true"), user="U-2")
-    assert decide(world, consent, goal("G07", series={"slug": "show-3"})).message is None  # page only (D-034)
     assert decide(world, consent, goal("G05")).message is None
     capped = decide(world, consent, goal("G12"), messages_on_day=lambda day: 1)
     assert capped.message is None and "frequency cap" in capped.message_note
@@ -328,3 +327,64 @@ def test_no_reminder_without_consent_for_other_goals_over_cap_or_near_deadline(w
 def test_send_time_is_next_ist_day_even_late_at_night(world):
     late = parse_ts("2026-10-01T20:00:00.000Z")  # 01:30 IST on 2 Oct -> next IST day is 3 Oct
     assert next_send_time(late, world[2]).astimezone(IST).isoformat().startswith("2026-10-03T19:00")
+
+
+# --- fuller pages, every row a real row of its type (D-053) -----------------------------------------------------
+
+
+def test_page_is_filled_with_real_rows_up_to_the_cap(world):
+    _, _, cfg, cat, _ = world
+    events = [make_event("p1", event="play_started", occurred="2026-09-28T10:00:00.000Z",
+                         received="2026-09-28T10:00:01.000Z", properties={"title_id": "S2"}),
+              make_event("p2", event="play_started", occurred="2026-09-29T10:00:00.000Z",
+                         received="2026-09-29T10:00:01.000Z", properties={"title_id": "M3"})]  # fmt: skip
+    vf = viewer(world, events)
+    assert vf.value("top_genres")[:1] in (["Comedy"], ["Drama"], ["Thriller"])
+    iv = decide(world, vf, goal("G12"))
+    rows = iv.page["rows"]
+    assert len(rows) > 3 and len(rows) <= cfg.page_max_rows and not validate_page(iv.page, cat, AT)
+    genre_rows = [r for r in rows if r["row_type"] == "genre"]
+    labels = [e.split("genre:")[1] for e in iv.evidence if "genre:" in e]
+    assert len(labels) == len(genre_rows) == len(set(labels))  # each genre row names a different genre
+    for r, g in zip(genre_rows, labels):
+        assert all(g in cat.titles[t].genres for t in r["title_ids"])
+    for r in rows:
+        if r["row_type"] == "new_releases":
+            assert all(cat.titles[t].release_date.isoformat() >= "2026-09-01" for t in r["title_ids"])
+
+
+def test_rows_never_exceed_the_platform_maximum(world):
+    from dataclasses import replace
+
+    _, _, cfg, cat, rules = world
+    vf = viewer(world)
+    iv = decide_intervention(vf, goal("G12"), "NEW", cat, {}, AT, rules, replace(cfg, page_max_rows=50))
+    assert len(iv.page["rows"]) <= rules.max_rows and not validate_page(iv.page, cat, AT)
+
+
+def test_a_thin_dialect_shares_its_titles_across_rows(world):
+    # 8 micro-dramas + a few others in d1: rows of 3+ titles each instead of one row taking 10
+    vf = viewer(world)
+    iv = decide(world, vf, goal("G02"))
+    sizes = [len(r["title_ids"]) for r in iv.page["rows"]]
+    assert len(sizes) >= 3 and all(s >= 3 for s in sizes)
+
+
+# --- G07: one "continue your series" reminder (D-054) ----------------------------------------------------------
+
+
+def test_g07_reminder_names_the_viewers_own_series(world):
+    wa = viewer(world, row=profile_row("U-2", whatsapp_opt_in="true"), user="U-2")
+    m = decide(world, wa, goal("G07", series={"slug": "show-3"}), popularity={"micro-1": 99}).message
+    assert m["channel"] == "whatsapp" and m["title_id"] == "S3" and m["deeplink"] == "ott://title/S3"
+    assert m["template_id"] == "wa_recommend_title_v1"  # never wa_new_episode_v2: no new episode is claimed
+    push_only = viewer(world, row=profile_row("U-3", notifications_opt_in="true"), user="U-3", language="en")
+    iv = decide(world, push_only, goal("G07", series={"slug": "show-3"}))
+    assert iv.message is None and "WhatsApp only" in iv.message_note  # no push for G07
+    assert decide(world, push_only, goal("G12")).message["channel"] == "push"  # other goals unchanged
+
+
+def test_g07_reminder_only_if_the_series_is_available_in_the_message_dialect(world):
+    vf = viewer(world, row=profile_row("U-2", whatsapp_opt_in="true"), user="U-2")
+    iv = decide(world, vf, goal("G07", series={"slug": "rare-1"}))  # a d3 title; the viewer's dialect is d1
+    assert iv.message is None and "not available in the message dialect" in iv.message_note

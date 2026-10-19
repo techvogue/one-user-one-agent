@@ -40,10 +40,13 @@ class Config:
         "G04", "G01", "G02:new_user", "G03", "G07", "G12", "G02", "G09", "G08", "G06", "G05",
     )  # fmt: skip
     # Intervention (D-033, D-034). Platform limits themselves come from config/interventions.json.
-    page_max_rows: int = 4  # our own cap, below the platform's 6: a focused page
+    page_max_rows: int = 5  # D-053: up to 5 rows (platform max 6); each a real row of its type
     popularity_days: int = 30  # "popular" = distinct viewers with playback in this many days
     new_release_days: int = 30  # "new release" = released in the last 30 days (same as G08's success rule)
-    message_goals: tuple[str, ...] = ("G03", "G12")  # only goals that need a later visit get a reminder
+    # Goals that get one reminder (D-034, D-054): a later visit (G03, G12) or resuming the viewer's own series (G07).
+    message_goals: tuple[str, ...] = ("G03", "G07", "G12")
+    # Goals reminded only on WhatsApp, the channel the viewer explicitly opted into (D-054): no push for G07.
+    whatsapp_only_goals: tuple[str, ...] = ("G07",)
     message_hour_ist: int = 19  # reminders at 19:00 IST the next day
     # Acting within budget (D-037). Simulated clock: published_at = deliver_at + compute + dependency delays + queue.
     workers: int = 4

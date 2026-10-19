@@ -37,7 +37,8 @@ INSTRUCTION = re.compile(
     re.IGNORECASE,
 )
 MESSAGE_CHECKS = {"consent", "quiet_hours", "frequency_cap", "template", "push_copy", "deeplink", "message_dialect",
-                  "message_title_available", "message_goal", "message_before_deadline"}  # fmt: skip
+                  "message_title_available", "message_goal", "message_before_deadline", "message_series",
+                  "message_channel"}  # fmt: skip
 
 
 @dataclass
@@ -405,7 +406,53 @@ class Verifier:
             all(r["row_type"] in self.rows_cfg["row_types"] for r in rows),
             "row type not allowed",
         )
+        bad = self._row_content(page, t.get("user_id"), pub)
+        check("row_content", not bad, "; ".join(bad))
         check("not_empty", bool(ids), "page has no titles")
+
+    def _row_content(self, page: dict, user: str | None, at: datetime) -> list[str]:
+        """Own check that each row holds what its type says (D-053). Returns the problems found."""
+        genres = lambda x: set(((self.titles.get(x) or {}).get("genres") or "").split("|")) - {""}
+        slug = lambda x: (self.titles.get(x) or {}).get("content_slug")
+        ev = self._events(user, at) if user else []
+        played = [e for e in ev if e["event"] in PLAYBACK and e["props"].get("title_id") in self.titles]
+        played_slugs = {slug(e["props"]["title_id"]) for e in played}
+        done: dict[str, set] = {}
+        for e in played:
+            if e["event"] == "episode_completed":
+                done.setdefault(slug(e["props"]["title_id"]), set()).add(e["props"].get("episode_id"))
+        played_genres = set().union(*(genres(e["props"]["title_id"]) for e in played)) if played else set()
+        cut = (at - timedelta(days=self.cfg.new_release_days)).date().isoformat()
+        out = []
+        for i, r in enumerate(page.get("rows", []), start=1):
+            ids, kind = r["title_ids"], r["row_type"]
+            if kind == "new_releases":
+                old = [
+                    x
+                    for x in ids
+                    if not (
+                        cut <= (self.titles.get(x) or {}).get("release_date", "") <= at.date().isoformat()
+                    )
+                ]
+                if old:
+                    out.append(
+                        f"row {i} new_releases has titles not released in the last {self.cfg.new_release_days} days: {old}"
+                    )
+            elif kind == "genre" and ids and not set.intersection(*(genres(x) for x in ids)):
+                out.append(f"row {i} genre: its titles share no genre")
+            elif kind == "next_episode":
+                wrong = [x for x in ids if (self.titles.get(x) or {}).get("content_type") not in ("show", "micro_drama")
+                         or slug(x) not in played_slugs
+                         or len(done.get(slug(x), ())) >= self.episodes.get(slug(x), 0)]  # fmt: skip
+                if wrong:
+                    out.append(f"row {i} next_episode has titles that are not a series in progress: {wrong}")
+            elif kind == "because_you_watched":
+                wrong = [x for x in ids if slug(x) in played_slugs or not genres(x) & played_genres]
+                if wrong:
+                    out.append(
+                        f"row {i} because_you_watched has titles unrelated to or already in the viewer's history: {wrong}"
+                    )
+        return out
 
     def _check_message(
         self, m: dict, user: str, t: dict, at: datetime, goal: dict | None, check, key: str | None = None
@@ -465,6 +512,12 @@ class Verifier:
             )
             check("message_before_deadline", send + timedelta(hours=1) <= parse_ts(goal["deadline"]),
                   "the goal ends before the reminder")  # fmt: skip
+            check("message_channel", goal["goal_id"] not in self.cfg.whatsapp_only_goals or m["channel"] == "whatsapp",
+                  f"{goal['goal_id']} reminders go by WhatsApp only")  # fmt: skip
+            if goal["goal_id"] == "G07":  # a "continue your series" reminder must name that series (D-054)
+                want = ((goal.get("detail") or {}).get("series") or {}).get("slug")
+                check("message_series", want is not None and (title or {}).get("content_slug") == want,
+                      f"message title is not the goal's series {want}")  # fmt: skip
 
     def verify_send(self, pending: dict, known_at: datetime, goal_open: bool) -> Verdict:
         """Send-time re-check of a reminder (D-021, D-034)."""
@@ -478,6 +531,12 @@ class Verifier:
         ev = self._events(user, known_at)
         start = parse_ts(goal["start"])
         reached = [e for e in ev if e["event"] == "play_started" and e["t"] >= start]
+        series = (
+            ((goal.get("detail") or {}).get("series") or {}).get("slug") if goal["goal_id"] == "G07" else None
+        )
+        if series:  # G07 is reached only by playing that series (any language variant), D-054
+            reached = [e for e in reached
+                       if (self.titles.get(e["props"].get("title_id")) or {}).get("content_slug") == series]  # fmt: skip
         check("not_already_reached", not reached,
               f"viewer already played after the goal started ({reached[0]['id'] if reached else ''})")  # fmt: skip
         self._check_message(m, user, {"app_dialect": None}, known_at, goal, check, key=pending["decision_id"])

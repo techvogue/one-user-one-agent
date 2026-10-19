@@ -143,6 +143,11 @@ ROW_PLAN = {
     "G12": ["popular_in_dialect", "new_releases", "genre"],
 }
 DEFAULT_ROWS = ["popular_in_dialect", "new_releases", "genre"]
+# After the goal's own rows, the page is filled up to cfg.page_max_rows with further real rows, in this order (D-053).
+# genre = the viewer's top genre, genre:2 / genre:3 their next genres, genre:dialect the most popular genre in the dialect
+# (for viewers without a watch history). A row is only added if it has enough titles of its kind.
+FILL_ROWS = ["genre", "because_you_watched", "next_episode", "new_releases", "genre:2", "popular_in_dialect",
+             "genre:3", "genre:dialect"]  # fmt: skip
 
 
 def _pool(vf, catalogue, dialect, at, ttl) -> dict[str, Title]:
@@ -209,9 +214,21 @@ def build_page(
     # Rows
     watched = vf.value("watched_slugs")
     seed = next((catalogue.pick_variant(s, None) for s in watched if catalogue.by_slug(s)), None)
-    top_genre = vf.value("top_genre")
+    viewer_genres = list(vf.value("top_genres") or ([vf.value("top_genre")] if vf.value("top_genre") else []))
+    used_genres: set[str] = set()
+    row_notes: list[str] = []
 
-    def candidates(kind: str) -> list[str]:
+    def dialect_genre() -> str | None:
+        """Most popular genre among the page's available titles, other than genres already on the page."""
+        score: dict[str, int] = {}
+        for s_ in pool:
+            for g in pool[s_].genres:
+                score[g] = score.get(g, 0) + pop(s_)
+        options = sorted((g for g in score if g not in used_genres), key=lambda g: (-score[g], g))
+        return options[0] if options else None
+
+    def candidates(kind: str) -> tuple[list[str], str | None]:
+        """Slugs for a row of this kind, best first, and the genre for genre rows."""
         base, _, flt = kind.partition(":")
         if base == "popular_in_dialect":
             out = by_pop
@@ -219,30 +236,50 @@ def build_page(
                 out = [s for s in out if pool[s].content_type == "micro_drama"]
             elif flt == "premium":
                 out = [s for s in out if pool[s].is_premium]
-            return out
+            return out, None
         if base == "new_releases":
-            return new_releases()
+            return new_releases(), None
         if base == "genre":
-            return [s for s in by_pop if top_genre in pool[s].genres] if top_genre else []
+            if flt == "dialect":
+                genre = dialect_genre()
+            else:
+                i = int(flt) - 1 if flt else 0
+                genre = viewer_genres[i] if i < len(viewer_genres) else None
+            if genre is None or genre in used_genres:
+                return [], None
+            return [s for s in by_pop if genre in pool[s].genres], genre
         if base == "because_you_watched":
             if seed is None:
-                return []
+                return [], None
             g = set(seed.genres)
             rel = [s for s in by_pop if s not in watched and g & set(pool[s].genres)]
-            return sorted(rel, key=lambda s: (-len(g & set(pool[s].genres)), -pop(s), pool[s].title_id))
+            return sorted(rel, key=lambda s: (-len(g & set(pool[s].genres)), -pop(s), pool[s].title_id)), None
         if base == "next_episode":
-            return [x["slug"] for x in vf.value("series_in_progress") if x["slug"] in pool]
-        return []
+            return [x["slug"] for x in vf.value("series_in_progress") if x["slug"] in pool], None
+        return [], None
 
+    plan = list(ROW_PLAN.get(gid, DEFAULT_ROWS))
+    plan += [k for k in FILL_ROWS if k not in plan]
+    max_rows = min(rules.max_rows, cfg.page_max_rows)
     rows = []
-    for kind in ROW_PLAN.get(gid, DEFAULT_ROWS):
+    for kind in plan:
         row_type = kind.partition(":")[0]
-        if row_type not in rules.row_types or len(rows) >= min(rules.max_rows, cfg.page_max_rows):
+        if row_type not in rules.row_types or len(rows) >= max_rows:
             continue
-        picked = [s for s in candidates(kind) if s not in used][: rules.max_titles_per_row]
+        found, genre = candidates(kind)
+        found = [s for s in found if s not in used]
+        # Share a thin dialect's titles across the rows still to come instead of filling the first row (D-053).
+        left = sum(1 for s_ in pool if s_ not in used)
+        size = min(
+            rules.max_titles_per_row, max(rules.min_titles_per_row, left // max(1, max_rows - len(rows)))
+        )
+        picked = found[:size]
         if len(picked) < rules.min_titles_per_row:
             continue  # the platform drops rows with fewer than 3 titles; don't publish them
         used.update(picked)
+        if genre:
+            used_genres.add(genre)
+            row_notes.append(f"row {len(rows) + 1} genre:{genre}")
         rows.append({"row_type": row_type, "title_ids": [pool[s].title_id for s in picked]})
 
     if hero_slug is None and not rows:
@@ -260,6 +297,7 @@ def build_page(
     evidence += [f"catalogue:{pool[s].title_id}" for s in sorted(shown)]
     if seed is not None and any(r["row_type"] == "because_you_watched" for r in rows):
         evidence.append(f"because_you_watched:seed={seed.slug}")
+    evidence += row_notes
     return page, evidence, assumptions
 
 
@@ -285,7 +323,8 @@ PUSH_COPY = {  # fixed, rule-based copy (D-034): no prices, offers, deadlines or
 
 def plan_message(vf, goal, catalogue, popularity, at, rules: PlatformRules, cfg: Config,
                  page_hero: str | None, messages_on_day) -> tuple[dict | None, str | None, list]:  # fmt: skip
-    """A reminder for G03/G12 only, or (None, reason). messages_on_day(day) -> count already planned/sent that IST day."""
+    """A reminder for the goals in cfg.message_goals, or (None, reason). messages_on_day(day) -> count already
+    planned/sent that IST day. G07 reminds of the viewer's own series only (D-054)."""
     if goal["goal_id"] not in cfg.message_goals:
         return (
             None,
@@ -301,6 +340,12 @@ def plan_message(vf, goal, catalogue, popularity, at, rules: PlatformRules, cfg:
         return None, "frequency cap: a push/WhatsApp is already planned for that IST day", []
     if vf.usable("whatsapp_consent") is True:
         channel = "whatsapp"
+    elif goal["goal_id"] in cfg.whatsapp_only_goals:
+        return (
+            None,
+            f"{goal['goal_id']} reminders go by WhatsApp only and there is no usable WhatsApp consent (D-054)",
+            [],
+        )
     elif vf.usable("push_consent") is True:
         channel = "push"
     else:
@@ -311,7 +356,14 @@ def plan_message(vf, goal, catalogue, popularity, at, rules: PlatformRules, cfg:
     # the page hero if it suits the message dialect and is still available at send time, else the most popular title
     hero = catalogue.titles.get(page_hero) if page_hero else None
     pool = _pool(vf, catalogue, dialect, send_at, timedelta(0))
-    if hero is not None and hero.slug in pool:
+    series = (
+        ((goal.get("detail") or {}).get("series") or {}).get("slug") if goal["goal_id"] == "G07" else None
+    )
+    if goal["goal_id"] == "G07":
+        if series not in pool:
+            return None, f"series {series} is not available in the message dialect {dialect} at send time", []
+        title = pool[series]
+    elif hero is not None and hero.slug in pool:
         title = pool[hero.slug]
     else:
         ranked = sorted(pool, key=lambda s: (-popularity.get(s, 0), pool[s].title_id))
