@@ -2,7 +2,8 @@
 
 Commands so far:
   load     ingest the pack's 30-day history into the state store and write data_quality_report.json
-  replay   run the whole replay day (one command): decisions, actions, latency and quality reports
+  run      everything in one command: replay -> pack simulator -> judge -> impact report
+  replay   run the whole replay day: decisions, actions, latency and quality reports
   judge    after the simulator: ingest its outcome events, judge every goal, store outcomes and learnings
   report   impact: agent arm vs holdout (+ seeds, pilot re-analysis) -> impact_report.md, impact.json
   inspect  show what the agent knows about one viewer at a moment (facts with source, freshness, conflicts)
@@ -235,6 +236,44 @@ def cmd_report(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_run(args: argparse.Namespace) -> int:
+    """replay -> the pack's simulator -> judge -> report, stopping at the first failure."""
+    import subprocess
+
+    cfg = _config(args)
+    common = ["--pack", str(cfg.pack_path), "--out", args.out] + (
+        ["--config", args.config] if args.config else []
+    )
+    print("1/4 replay")
+    if main(["replay", *common, "--provider", args.provider]) != 0:
+        return 1
+    print("2/4 simulator (the pack's simulate_outcomes.py)")
+    sim = cfg.pack_path / "simulator" / "simulate_outcomes.py"
+    done = subprocess.run(
+        [
+            sys.executable,
+            str(sim),
+            "--pack",
+            str(cfg.pack_path),
+            "--actions",
+            str(Path(args.out) / "actions.jsonl"),
+            "--out",
+            str(Path(args.out) / "sim"),
+            "--seed",
+            args.seed,
+        ],
+        check=False,  # the return code is checked just below
+    )
+    if done.returncode != 0:
+        print("error: the simulator failed", file=sys.stderr)
+        return 1
+    print("3/4 judge")
+    if main(["judge", *common]) != 0:
+        return 1
+    print("4/4 report")
+    return main(["report", *common, "--seeds", args.seeds])
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="ott_agent", description="One User, One Agent")
     parser.add_argument("-v", "--verbose", action="store_true")
@@ -249,6 +288,13 @@ def main(argv: list[str] | None = None) -> int:
     p = sub.add_parser("load", help="ingest history and write the data quality report")
     common(p)
     p.set_defaults(func=cmd_load)
+
+    p = sub.add_parser("run", help="everything: replay -> simulator -> judge -> report")
+    common(p)
+    p.add_argument("--provider", choices=["mock", "ollama"], default="mock")
+    p.add_argument("--seed", default="oua-practice", help="simulator seed for the sample run")
+    p.add_argument("--seeds", default="seed-a,seed-b,seed-c", help="extra seeds for the robustness check")
+    p.set_defaults(func=cmd_run)
 
     p = sub.add_parser("replay", help="run the whole replay day: decisions, actions, reports")
     common(p)

@@ -3,6 +3,7 @@ end-to-end report on a tiny pack (D-044)."""
 
 import csv
 import json
+from pathlib import Path
 
 import pytest
 from conftest import make_event, write_jsonl
@@ -36,9 +37,11 @@ def _store(tmp_path, goals, outcomes):
 
     conn.executescript(SCHEMA)
     for gi, user, start in goals:
-        conn.execute("INSERT INTO goal_instances (goal_instance_id, user_id, goal_id, goal_name, rule_version, status,"
-                     " start_at, deadline, goal_json) VALUES (?, ?, 'G01', 'g', 'v', 'closed', ?, ?, '{}')",
-                     (gi, user, start, start))  # fmt: skip
+        conn.execute(
+            "INSERT INTO goal_instances (goal_instance_id, user_id, goal_id, goal_name, rule_version, status,"
+            " start_at, deadline, goal_json) VALUES (?, ?, 'G01', 'g', 'v', 'closed', ?, ?, '{}')",
+            (gi, user, start, start),
+        )
     for gi, user, verdict, seen in outcomes:
         o = {"goal_instance_id": gi, "goal_id": "G01", "verdict": verdict, "exposure": {"pages_shown": seen}}
         conn.execute(
@@ -51,21 +54,52 @@ def _store(tmp_path, goals, outcomes):
 
 def _decisions(tmp_path, rows):
     with open(tmp_path / "decisions.jsonl", "w") as f:
-        f.writelines(json.dumps({"decision_id": f"D-{i}", "viewer_id": user, "arm": arm, "status": status,
-                                "trigger": {"deliver_at": f"2026-10-01T0{i % 9}:00:00.000Z"}}) + "\n" for i, (user, arm, status) in enumerate(rows))  # fmt: skip
+        f.writelines(
+            json.dumps(
+                {
+                    "decision_id": f"D-{i}",
+                    "viewer_id": user,
+                    "arm": arm,
+                    "status": status,
+                    "trigger": {"deliver_at": f"2026-10-01T0{i % 9}:00:00.000Z"},
+                }
+            )
+            + "\n"
+            for i, (user, arm, status) in enumerate(rows)
+        )
 
 
 def test_cohort_is_fixed_before_action_and_counts_everyone(tmp_path):
-    _decisions(tmp_path, [("A1", "agent", "STALE_SKIPPED"), ("A1", "agent", "PUBLISHED"), ("A2", "agent", "NO_ACTION"),
-                          ("A3", "agent", "PUBLISHED"), ("H1", "holdout", "HOLDOUT_SHADOW"),
-                          ("H2", "holdout", "HOLDOUT_SHADOW"), ("S1", "agent", "STALE_SKIPPED"),
-                          ("X1", None, "HOLDOUT_SHADOW")])  # fmt: skip
-    conn = _store(tmp_path,
-                  [("g1", "A1", "2026-10-01T01:00:00.000Z"), ("g1b", "A1", "2026-10-02T01:00:00.000Z"),
-                   ("g2", "A2", "2026-10-01T02:00:00.000Z"), ("g4", "H1", "2026-10-01T04:00:00.000Z"),
-                   ("g5", "H2", "2026-10-01T05:00:00.000Z")],
-                  [("g1", "A1", "SUCCEEDED", 1), ("g1b", "A1", "FAILED", 1), ("g2", "A2", "FAILED", 0),
-                   ("g4", "H1", "INCONCLUSIVE", 0), ("g5", "H2", "SUCCEEDED", 0)])  # fmt: skip
+    _decisions(
+        tmp_path,
+        [
+            ("A1", "agent", "STALE_SKIPPED"),
+            ("A1", "agent", "PUBLISHED"),
+            ("A2", "agent", "NO_ACTION"),
+            ("A3", "agent", "PUBLISHED"),
+            ("H1", "holdout", "HOLDOUT_SHADOW"),
+            ("H2", "holdout", "HOLDOUT_SHADOW"),
+            ("S1", "agent", "STALE_SKIPPED"),
+            ("X1", None, "HOLDOUT_SHADOW"),
+        ],
+    )
+    conn = _store(
+        tmp_path,
+        [
+            ("g1", "A1", "2026-10-01T01:00:00.000Z"),
+            ("g1b", "A1", "2026-10-02T01:00:00.000Z"),
+            ("g2", "A2", "2026-10-01T02:00:00.000Z"),
+            ("g4", "H1", "2026-10-01T04:00:00.000Z"),
+            ("g5", "H2", "2026-10-01T05:00:00.000Z"),
+        ],
+        [
+            ("g1", "A1", "SUCCEEDED", 1),
+            ("g1b", "A1", "FAILED", 1),
+            ("g2", "A2", "FAILED", 0),
+            ("g4", "H1", "INCONCLUSIVE", 0),
+            ("g5", "H2", "SUCCEEDED", 0),
+        ],
+    )
     cohort = build_cohort(tmp_path, conn)
     assert set(cohort) == {"A1", "A2", "A3", "H1", "H2", "X1"}  # S1 only had a stale app open
     assert cohort["A1"]["goal_instance_id"] == "g1"  # the first goal, not the later re-plan
@@ -83,9 +117,15 @@ def test_misleading_groups_split_the_agent_arm_by_exposure(tmp_path):
         tmp_path,
         [("A1", "agent", "PUBLISHED"), ("A2", "agent", "PUBLISHED"), ("H1", "holdout", "HOLDOUT_SHADOW")],
     )
-    conn = _store(tmp_path, [("g1", "A1", "2026-10-01T00:00:00.000Z"), ("g2", "A2", "2026-10-01T01:00:00.000Z"),
-                             ("g3", "H1", "2026-10-01T02:00:00.000Z")],
-                  [("g1", "A1", "SUCCEEDED", 2), ("g2", "A2", "FAILED", 0), ("g3", "H1", "FAILED", 0)])  # fmt: skip
+    conn = _store(
+        tmp_path,
+        [
+            ("g1", "A1", "2026-10-01T00:00:00.000Z"),
+            ("g2", "A2", "2026-10-01T01:00:00.000Z"),
+            ("g3", "H1", "2026-10-01T02:00:00.000Z"),
+        ],
+        [("g1", "A1", "SUCCEEDED", 2), ("g2", "A2", "FAILED", 0), ("g3", "H1", "FAILED", 0)],
+    )
     cohort = build_cohort(tmp_path, conn)
     sec = {u: {"play_7d": u == "A1", "play_days_14d": 0, "paid_14d": False} for u in cohort}
     m = misleading(cohort, sec)
@@ -94,9 +134,13 @@ def test_misleading_groups_split_the_agent_arm_by_exposure(tmp_path):
 
 
 def test_pilot_reanalysis_separates_the_biased_headline_from_itt(tmp_path):
-    rows = ([("treatment", "true", "G09", "true")] * 8 + [("treatment", "true", "G09", "false")] * 2
-            + [("treatment", "false", "G05", "false")] * 40 + [("holdout", "false", "G09", "true")] * 9
-            + [("holdout", "false", "G05", "false")] * 41)  # fmt: skip
+    rows = (
+        [("treatment", "true", "G09", "true")] * 8
+        + [("treatment", "true", "G09", "false")] * 2
+        + [("treatment", "false", "G05", "false")] * 40
+        + [("holdout", "false", "G09", "true")] * 9
+        + [("holdout", "false", "G05", "false")] * 41
+    )
     (tmp_path / "pilot").mkdir()
     with open(tmp_path / "pilot" / "pilot_outcomes.csv", "w", newline="") as f:
         w = csv.writer(f)
@@ -113,13 +157,21 @@ def test_pilot_reanalysis_separates_the_biased_headline_from_itt(tmp_path):
 
 def test_end_to_end_replay_judge_report_on_a_tiny_pack(tmp_path):
     users = ["U-1", "U-2", "U-3", "U-4"]
-    pack = build_pack(tmp_path, [trig(f"t{u}", user=u) for u in users], profiles=[profile_row(u) for u in users],
-                      arms={"U-1": "agent", "U-2": "agent", "U-3": "holdout", "U-4": "holdout"})  # fmt: skip
+    pack = build_pack(
+        tmp_path,
+        [trig(f"t{u}", user=u) for u in users],
+        profiles=[profile_row(u) for u in users],
+        arms={"U-1": "agent", "U-2": "agent", "U-3": "holdout", "U-4": "holdout"},
+    )
     (pack / "pilot").mkdir()
     with open(pack / "pilot" / "pilot_outcomes.csv", "w", newline="") as f:
-        csv.writer(f).writerows([["user_id", "arm", "served", "goal_id", "goal_started_at", "succeeded"],
-                                 ["P1", "treatment", "true", "G09", "x", "true"],
-                                 ["P2", "holdout", "false", "G09", "x", "false"]])  # fmt: skip
+        csv.writer(f).writerows(
+            [
+                ["user_id", "arm", "served", "goal_id", "goal_started_at", "succeeded"],
+                ["P1", "treatment", "true", "G09", "x", "true"],
+                ["P2", "holdout", "false", "G09", "x", "false"],
+            ]
+        )
     out = tmp_path / "run"
     assert main(["replay", "--pack", str(pack), "--out", str(out)]) == 0
     (out / "sim").mkdir()
@@ -151,3 +203,45 @@ def test_end_to_end_replay_judge_report_on_a_tiny_pack(tmp_path):
     assert "**all** viewers who opened the app" in report
     j = data["primary"]["judged"]
     assert j["agent"]["n"] == 2 and j["holdout"]["n"] == 2 and j["agent"]["k"] == 1 and j["holdout"]["k"] == 1
+
+
+REAL_SIMULATOR = (
+    Path(__file__).resolve().parents[2] / "one_user_one_agent_pack" / "simulator" / "simulate_outcomes.py"
+)
+
+
+@pytest.mark.skipif(
+    not REAL_SIMULATOR.exists(), reason="needs the data pack next to the repo (its simulator)"
+)
+def test_run_command_does_everything_with_the_pack_simulator(tmp_path):
+    import shutil
+
+    users = ["U-1", "U-2"]
+    pack = build_pack(
+        tmp_path,
+        [trig(f"t{u}", user=u) for u in users],
+        profiles=[profile_row(u) for u in users],
+        arms={"U-1": "agent", "U-2": "holdout"},
+    )
+    (pack / "simulator").mkdir()
+    shutil.copy(REAL_SIMULATOR, pack / "simulator" / "simulate_outcomes.py")  # used, never committed
+    (pack / "pilot").mkdir()
+    with open(pack / "pilot" / "pilot_outcomes.csv", "w", newline="") as f:
+        csv.writer(f).writerows(
+            [
+                ["user_id", "arm", "served", "goal_id", "goal_started_at", "succeeded"],
+                ["P1", "treatment", "true", "G09", "x", "true"],
+            ]
+        )
+    out = tmp_path / "run"
+    assert main(["run", "--pack", str(pack), "--out", str(out), "--seeds", ""]) == 0
+    for name in (
+        "decisions.jsonl",
+        "actions.jsonl",
+        "sim/outcome_events.jsonl",
+        "outcomes.jsonl",
+        "impact_report.md",
+        "latency_report.json",
+        "data_quality_report.json",
+    ):
+        assert (out / name).exists(), name

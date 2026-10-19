@@ -1,8 +1,43 @@
 # AI Collaboration Log: One User, One Agent
 
-> **Status: living document.** Records how AI tools were used, how their output was checked, and where it was
-> corrected or rejected. Required by the brief and scored ("the candidate directs, checks and sometimes rejects
-> AI-generated work").
+How AI tools were used to build this submission, how their output was checked, and where it was corrected or rejected.
+
+## Summary
+
+**How the work was directed.** The assistant (Claude Code) wrote most of the code and drafts; the candidate set the
+order of work and approved every design choice before code was written (Rule 0). Each choice was presented as options
+with trade-offs and a recommendation, and all 50 are recorded with their reasons in [decisions.md](doc/decisions.md).
+Work went one guide step at a time; no step started until the previous one had been reviewed and tested at the
+candidate's request.
+
+**How it was checked.** Not by trusting the model's account of its own work:
+
+- **Independent re-implementations** written from the raw files without importing the package: facts (2,679 triggers
+  × 12 facts), goal eligibility and priority, every published page and message against the rules, and goal
+  verdicts (1,487 goals). Every comparison ended with 0 mismatches, after the bugs below were fixed.
+- **The pack's own simulator** as an outside check: 0 policy problems, every page accepted.
+- **Mutation testing** of the verifier, judge, impact and live-event reactions: a deliberately broken check must make
+  a test fail.
+- **Running the tool on real viewers** (`inspect`) and comparing with what the rules should give, which found rule
+  gaps that unit tests had missed (entries 10, 12).
+- Every number in the docs comes from a script run on the pack, and was re-checked at the end (entry 26).
+
+**What was corrected.** About 30 defects in AI-written code, tests, checking scripts or documents were found and fixed.
+The most important:
+
+1. A planner bug (G07 goals on quarantined, tampered titles) **found by the independent verifier** on its first run:
+   157 decisions (entry 18).
+2. An unavailable data store whose reads still succeeded, because a latency equal to the timeout passed a `>` check
+   (entry 17).
+3. Holdout records labelled `HOME_PAGE` although nothing was published (entry 17).
+4. A deeplink parser reading the campaign id instead of the dialect: 133 three-way conflicts were really 56 (entry 6).
+5. A single 24 h grace period that would have counted ~5 % of real successes as failures (entry 5).
+6. A promise in the assistant's own decision (D-013, check of the goal catalogue) that had never been built
+   (entry 23), and a false limitation claiming a check existed when it did not (entry 26).
+7. Buyers with an open goal never re-planned, because the agent only reacted to app opens (entry 24).
+8. The assistant's own checking scripts were wrong twice (entries 17, 18). They were fixed instead of trusted.
+
+**What was rejected**: see the list at the end of this document.
 
 ## Tools used
 
@@ -24,7 +59,7 @@
 |---|---|---|---|---|---|
 | 1 | 2026-10-18 | Understand the brief and pack | Summary of the brief; data profiling (duplicates, clock skew, profile conflicts, catalogue, replay surprises) | Numbers produced by scripts run on the pack | Accepted |
 | 2 | 2026-10-18 | Pilot re-analysis | Showed the report's served-vs-everyone 2.3× uplift is biased; randomized arms give −1.3 pts | Recomputed from `pilot_outcomes.csv` | Accepted; becomes the impact-report method (D-016) |
-| 3 | 2026-10-18 | Tech stack | Suggested an agent framework would be unnecessary; proposed plain Python with explicit stages | Discussed trade-offs (auditability, determinism, latency) | Framework **rejected**; stack still pending (P-001) |
+| 3 | 2026-10-18 | Tech stack | Suggested an agent framework would be unnecessary; proposed plain Python with explicit stages | Discussed trade-offs (auditability, determinism, latency) | Framework **rejected**; plain Python + SQLite chosen later (D-017) |
 | 4 | 2026-10-18 | LLM provider | Initially proposed Anthropic's API as the optional real model | Candidate: it is paid | **Rejected** → free options compared; free hosted tiers rejected on privacy grounds; local Ollama chosen (D-003) |
 | 5 | 2026-10-18 | Trap 2: outcome grace period | First proposal: a single 24 h grace period | Checked against the measured buffering-delay distribution: 24 h covers only ~95 % of events, so ~5 % of real successes would be counted as failures | **Corrected** → two-stage verdict, +24 h provisional and +7 days final (D-005) |
 | 6 | 2026-10-18 | Trap 6: dialect conflicts | First analysis reported 133 triggers with three different dialects | Re-check found the deeplink parser read the campaign ID instead of the dialect segment | **Corrected** to 56; requirements.md fixed |
@@ -47,6 +82,7 @@
 | 23 | 2026-10-19 | Trap-by-trap check (candidate pasted the trap list) | Mapped each of the 13 traps to code, tests, docs and run output instead of assuming. Found that "log them" for injected instructions was not met and that the goal catalogue check promised in **my own decision D-013 had never been built**; reported both rather than glossing over them. Built a `traps` section in the run output (D-047) | 187 tests; real run reproduces every documented trap count; actions identical | Gap **corrected** (incl. an unkept promise in my own decision) |
 | 24 | 2026-10-19 | Replay surprises checked one by one (candidate pasted the list); suggested architecture compared | Measured instead of assuming: **31 buyers with an open goal had 0 re-plans** because the agent only reacted at app opens; bursts were handled but not reported; the load-skip path had never run. Built event-time reactions for both arms, burst reporting and a load test (D-048). Mapped every suggested component and design tip to our code (ARCHITECTURE §1b), stating honestly that "one agent per viewer" is enforced by data + a single planner rather than a long-lived object | 191 tests; mutation (reaction disabled → 3 tests fail); real run: 31 reactions, 7 goals re-planned at purchase time, 5 bursts noticed; validators 0 violations; simulator 0 policy problems; first-goal impact unchanged | Gap **corrected** |
 | 25 | 2026-10-19 | Impact checked against "Measuring impact the right way" (candidate pasted it) | Took "all agent-arm vs all holdout users" literally and checked it: our cohort is 758/746 of 2,513/2,487 because the simulator only plays triggered viewers; the report did not say so. Computed independently: balance 30.2 % vs 30.0 %, all-triggered sensitivity +1.7 pts [−2.7, +6.2], and the pilot's biased comparison on our own data +3.8 pts [+0.1, +7.5] ("significant") vs randomized +1.2 [−2.5, +4.9]. Added all three to the report (D-049); fixed my own wording ("shares above" with no shares shown) | 191 tests; report numbers identical to the independent computation | Gap **corrected** |
+| 26 | 2026-10-19 | Work plan §12: one-command `run`, final documentation | Added `run` (replay → pack simulator → judge → report) with an end-to-end test (D-050); rewrote README, finalized ARCHITECTURE, KNOWN_LIMITATIONS and this log. Re-checked every claim in KNOWN_LIMITATIONS against the current run instead of carrying the draft over: the "before signup" plausibility check listed in D-005 **was described as running but does not exist** (grep: no code) → recorded as limitation L-8; "118 of 2,086 one-row pages" was outdated (now 55 of 905); the G01 count and ingestion time were outdated | 192 tests; ruff clean; `run` reproduces the sample run in ~1 minute; each corrected number recomputed from `sample_run/` | Docs **corrected** (1 false claim, 3 outdated numbers) |
 
 ## Suggestions rejected (summary for the technical discussion)
 
@@ -55,6 +91,10 @@
 3. **Single 24 h grace period**: contradicted by the measured delay distribution.
 4. **Retry on duplicate trigger**: the duplicate arrives after the viewer has already seen the home page.
 5. **Time-window deduplication**: the data already has duplicates 15 min apart.
+6. **Re-using the planner's functions inside the verifier**: it could then never disagree; written separately (D-040).
+7. **Treating the model's eligibility claim as evidence**: the model is an untrusted second opinion (D-035).
+8. **Loosening failing tests to make them pass**: every failure was diagnosed first; tests were changed only when the
+   test itself was wrong, and each such case is listed above.
 
 ---
 
@@ -81,3 +121,4 @@
 | 2026-10-19 | Entry 23 (traps in the run output). |
 | 2026-10-19 | Entry 24 (replay surprises; architecture mapping). |
 | 2026-10-19 | Entry 25 (impact: who is counted; trap on our data). |
+| 2026-10-19 | Final version: summary added, entry 26, rejected list extended. |

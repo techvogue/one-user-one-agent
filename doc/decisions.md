@@ -699,6 +699,17 @@ Rules:
 - Why: Makes the intention-to-treat population explicit and shows, with our own numbers, how the biased comparison
   manufactures a "significant" effect that the randomized comparison does not support.
 
+### D-050: One-command `run` and final documentation
+- Date: 2026-10-19 · Status: Accepted · Decided by: candidate (approved the proposal) · Work plan §12
+- Context: Producing `sample_run/` took four commands (replay, the pack's simulator, judge, report); an evaluator could
+  run them in the wrong order or forget the simulator. README, ARCHITECTURE, AI_COLLABORATION and KNOWN_LIMITATIONS
+  were still drafts.
+- Decision: `python -m ott_agent run` runs all four steps in order (the simulator as a subprocess from the pack, so the
+  pack stays the only source of outcomes); each step stays available on its own. The four documents are finalized,
+  and every number in them is re-checked against the current run.
+- Why: One command makes the result reproducible end to end; re-checking found three outdated or false statements
+  in KNOWN_LIMITATIONS (corrected, see its change log).
+
 ---
 
 ## Pending (under discussion, not approved)
@@ -721,6 +732,8 @@ Rules:
 | 2026-10-18 | D-018 accepted (repository layout). |
 | 2026-10-18 | D-019 accepted (goal priority); D-020 accepted (folder renamed to `submission/`). |
 | 2026-10-19 | D-049 accepted (impact report: who is counted; trap on our data). |
+| 2026-10-19 | D-050 accepted (one-command `run`; final documentation). |
+| 2026-10-19 | D-049 accepted (impact: who is counted; served-vs-else on our data). |
 | 2026-10-19 | D-048 accepted (react to live state changes; notice bursts). |
 | 2026-10-19 | D-047 accepted (traps in the run output). |
 | 2026-10-19 | D-046 accepted (rule_version + specific assumptions). |

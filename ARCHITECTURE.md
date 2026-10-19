@@ -1,7 +1,7 @@
 start # Architecture: One User, One Agent
 
-> **Status: DRAFT (living document).** Sections marked **[PENDING]** depend on decisions not yet taken (see
-> [doc/decisions.md](doc/decisions.md), "Pending"). This file is updated as decisions are made and code is written.
+> Design of the submitted system. Every design choice links to its entry in [doc/decisions.md](doc/decisions.md)
+> (D-xxx), where the options considered and the reasons are recorded.
 
 The brief asks this note to cover: **ownership, planning, memory, verification, latency, failure recovery and trust
 boundaries**. Each has its own section below.
@@ -125,53 +125,6 @@ rules are read from `config/interventions.json`.
    phrases and prices); no consent → none; at most one per viewer per IST day. Re-checked at send time (Step 5).
 5. In-app messages are not used. Holdout viewers: decided as normal, nothing published.
 
-## 6b. Closing the loop (Step 6: judge the outcomes)
-
-Implemented in `src/ott_agent/judge.py`; run with `python -m ott_agent judge` after the simulator (D-042, D-043).
-
-1. The simulator's outcome events are ingested with the same path as every other event (dedupe, corrected time); its
-   392 copies of the replay's live events are recognised as duplicates.
-2. **Every goal instance is judged**, agent and holdout shadow alike, by the success-rule version it carries (a G03 goal
-   corrected at 08:30 is judged by the corrected rule).
-3. **Attributable signal** = an event of the rule's success type whose corrected event time is inside
-   [goal start, deadline] (or the closing time of a goal closed early), known by the judging time, matching the
-   condition (later IST day for G03, paid not trial for G04–G06, same series slug for G07, a 30-day release for G08,
-   3 distinct IST days for G09).
-4. **SUCCEEDED** as soon as a signal exists; **FAILED** once deadline + 24 h is observed without one; **INCONCLUSIVE**
-   when the data ends earlier, the goal was closed early without success, or the rule is not measurable. Stage:
-   provisional from deadline + 24 h, final from deadline + 7 days. Judging is a pure function of (goal, events known
-   by T): re-running it as new events arrive can only turn "inconclusive" into a result.
-5. Each outcome records its success events, window, rule version, reason, the viewer's **exposure** to our actions
-   (pages shown with our `page_action_id`, messages delivered/clicked) and a factual **learning note**, stored in
-   `goal_outcomes`, `goal_log` (`judged`), `viewer_state/<user>.json` and `sample_run/outcomes.jsonl`.
-6. A success is not proof that the agent caused it (e.g. the scripted purchases arrive minutes after a goal starts in
-   both arms); causation is only measured agent arm vs holdout in Step 7.
-
-## 6c. Proving impact (Step 7)
-
-Implemented in `src/ott_agent/impact.py`; run with `python -m ott_agent report` after `judge` (D-016, D-044).
-Output: `sample_run/impact_report.md` and `impact.json`.
-
-1. **Cohort fixed before any action:** every viewer with a fresh app open on the replay day, in either arm; same rule
-   for both arms, so the agent cannot change who is counted.
-2. **Primary (intention-to-treat):** share of cohort viewers whose **first** goal (agent goal or holdout shadow goal from
-   the same planner) succeeded; includes viewers the agent did not act on or who never saw a page. Inconclusive goals:
-   excluded in the primary metric, counted as not succeeded in a sensitivity check.
-3. **Intervals:** Wilson per arm, Newcombe hybrid score for the difference (checked against Newcombe's published
-   example); per-goal table with intervals and a small-sample warning.
-4. **Secondary, goal-independent:** any play within 7 days, play days within 14 days, any paid purchase within 14 days.
-5. **Robustness:** the same actions re-simulated with three more seeds and re-judged.
-6. **Misleading comparisons shown and labelled:** served/saw-a-page vs not, with prior activity proving selection bias;
-   "effect on those who saw a page" only as a labelled secondary estimate.
-7. **Pilot re-analysis** in the same report.
-8. **Who is counted and why** (D-049): `arms.csv` → any trigger → fresh-trigger cohort per arm (30.2 % vs 30.0 %); the
-   simulator only produces outcomes for viewers who opened the app; a sensitivity check covers **all** viewers who
-   opened the app; and the biased "served vs everyone else" comparison is computed on our own replay
-   (+3.8 pts, interval excludes zero) next to the randomized result (+1.2 pts, includes zero).
-
-Result on the sample run: agent 111/719 vs holdout 101/711, +1.2 pts [-2.5, +4.9], **no detectable effect**; goal-independent play within 7 days +2.5 pts [-2.2, +7.2]; all 8 seed
-estimates positive, 1 of 8 intervals excludes zero (within chance). Detectable effect size with one day ≈ ±3.7 pts.
-
 ## 5. Memory (durable per-viewer state)
 
 SQLite is the source of truth, with a JSON export per viewer to `sample_run/viewer_state/` ([D-017](doc/decisions.md), [techstack.md](doc/techstack.md)).
@@ -243,6 +196,53 @@ the decision (`checks.passed` / `checks.failed`, details under `verifier`).
 two quarantined titles (fixed in the planner, D-041; rejections now 0). 33 unit tests feed it proposals broken in one
 way each; mutation testing (disabling 6 different checks) made the tests fail every time.
 
+## 6b. Closing the loop (Step 6: judge the outcomes)
+
+Implemented in `src/ott_agent/judge.py`; run with `python -m ott_agent judge` after the simulator (D-042, D-043).
+
+1. The simulator's outcome events are ingested with the same path as every other event (dedupe, corrected time); its
+   392 copies of the replay's live events are recognised as duplicates.
+2. **Every goal instance is judged**, agent and holdout shadow alike, by the success-rule version it carries (a G03 goal
+   corrected at 08:30 is judged by the corrected rule).
+3. **Attributable signal** = an event of the rule's success type whose corrected event time is inside
+   [goal start, deadline] (or the closing time of a goal closed early), known by the judging time, matching the
+   condition (later IST day for G03, paid not trial for G04–G06, same series slug for G07, a 30-day release for G08,
+   3 distinct IST days for G09).
+4. **SUCCEEDED** as soon as a signal exists; **FAILED** once deadline + 24 h is observed without one; **INCONCLUSIVE**
+   when the data ends earlier, the goal was closed early without success, or the rule is not measurable. Stage:
+   provisional from deadline + 24 h, final from deadline + 7 days. Judging is a pure function of (goal, events known
+   by T): re-running it as new events arrive can only turn "inconclusive" into a result.
+5. Each outcome records its success events, window, rule version, reason, the viewer's **exposure** to our actions
+   (pages shown with our `page_action_id`, messages delivered/clicked) and a factual **learning note**, stored in
+   `goal_outcomes`, `goal_log` (`judged`), `viewer_state/<user>.json` and `sample_run/outcomes.jsonl`.
+6. A success is not proof that the agent caused it (e.g. the scripted purchases arrive minutes after a goal starts in
+   both arms); causation is only measured agent arm vs holdout in Step 7.
+
+## 6c. Proving impact (Step 7)
+
+Implemented in `src/ott_agent/impact.py`; run with `python -m ott_agent report` after `judge` (D-016, D-044).
+Output: `sample_run/impact_report.md` and `impact.json`.
+
+1. **Cohort fixed before any action:** every viewer with a fresh app open on the replay day, in either arm; same rule
+   for both arms, so the agent cannot change who is counted.
+2. **Primary (intention-to-treat):** share of cohort viewers whose **first** goal (agent goal or holdout shadow goal from
+   the same planner) succeeded; includes viewers the agent did not act on or who never saw a page. Inconclusive goals:
+   excluded in the primary metric, counted as not succeeded in a sensitivity check.
+3. **Intervals:** Wilson per arm, Newcombe hybrid score for the difference (checked against Newcombe's published
+   example); per-goal table with intervals and a small-sample warning.
+4. **Secondary, goal-independent:** any play within 7 days, play days within 14 days, any paid purchase within 14 days.
+5. **Robustness:** the same actions re-simulated with three more seeds and re-judged.
+6. **Misleading comparisons shown and labelled:** served/saw-a-page vs not, with prior activity proving selection bias;
+   "effect on those who saw a page" only as a labelled secondary estimate.
+7. **Pilot re-analysis** in the same report.
+8. **Who is counted and why** (D-049): `arms.csv` → any trigger → fresh-trigger cohort per arm (30.2 % vs 30.0 %); the
+   simulator only produces outcomes for viewers who opened the app; a sensitivity check covers **all** viewers who
+   opened the app; and the biased "served vs everyone else" comparison is computed on our own replay
+   (+3.8 pts, interval excludes zero) next to the randomized result (+1.2 pts, includes zero).
+
+Result on the sample run: agent 111/719 vs holdout 101/711, +1.2 pts [-2.5, +4.9], **no detectable effect**; goal-independent play within 7 days +2.5 pts [-2.2, +7.2]; all 8 seed
+estimates positive, 1 of 8 intervals excludes zero (within chance). Detectable effect size with one day ≈ ±3.7 pts.
+
 ## 7. Latency
 
 - Target: publish **within seconds** (the viewer reaches the home page 3–40 s after opening); the hard budget is 60 s,
@@ -286,14 +286,41 @@ Implemented in `src/ott_agent/tools.py` and `src/ott_agent/harness.py` (D-035 to
 | Language model output | Suggestions to be verified | Evidence, eligibility, approval |
 | Config files in the pack | Rules (versioned; corrections applied) | — |
 
-## 10. Scale-out notes (for the technical discussion) [PENDING]
-To be written: 1,000 opens per minute, 10 M viewers / 40 dialects, which decisions should never be automated.
+## 10. Scale-out, and what should never be automated
 
----
+**1,000 viewers open the app in the same minute (~17 per second).** The page path is rules-only: about 3–4 ms of
+compute per decision plus two store reads, so one worker handles well over 100 decisions per second; the replay's
+evening burst (165 triggers in 10 minutes) never queued with 4 workers. The model's second opinion is the slow part
+(0.8 s simulated) and is optional: it is skipped when a decision falls behind (> 10 s), and in production it would run
+after publishing, never before. Stale and duplicate triggers take a cheap path (no model, no page). Bursts are reported
+in `latency_report.json` → `load`.
+
+**10 M viewers and 40 dialects.**
+- *State:* the per-viewer tables (events, facts, goals, decisions) move from SQLite to a sharded store keyed by viewer;
+  idempotency keys go to a key-value store with a TTL (e.g. 7 days).
+- *Ownership:* events are partitioned by viewer on a stream, so each viewer is handled by exactly one worker at a time,
+  the same single-writer rule the replay enforces with the one-open-goal index.
+- *Content:* popularity and new-release lists are precomputed per dialect (hourly), so building a page is a lookup per
+  dialect, not a scan; rules and templates are per dialect config, not code.
+- *Thin dialects:* `INSUFFICIENT_CONTENT` and one-row pages (d3 has 13 titles today) become a per-dialect content-gap
+  metric for the content team, not something the agent can fix.
+- *Measurement:* a standing holdout per dialect, outcome judging as a streaming job, and the impact report per dialect
+  and per goal, because one global number hides where the agent helps or hurts.
+- *Verification:* the independent verifier becomes a separate service on the publish path, so a change to the decision
+  code cannot quietly change the checks.
+
+**Decisions that should never be automated:**
+- prices, discounts or offers (only `pricing.json` exists; the agent never names a price);
+- anything for holdout viewers, and changes to who is in the holdout;
+- consent: the agent can only read it and withdraw it on an opt-out, never assume or grant it;
+- releasing quarantined content (instruction-like text) or deciding that data text is an instruction;
+- changing goal definitions or success rules (owned by analytics; the agent only applies corrections it is given);
+- mass or campaign-wide messaging, and any action whose evidence is a model statement.
 
 ## Change log
 
 | Date | Change |
 |---|---|
 | 2026-10-18 | Draft created from requirements.md, rules.md and decisions D-001–D-016. |
+| 2026-10-19 | Finalised: draft markers removed, sections in order, §10 scale-out and never-automate written. |
 | 2026-10-18 | Storage, time model and harness updated after D-017 (tech stack). |

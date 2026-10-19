@@ -106,7 +106,7 @@ report run); mutation test 4/4; headline recomputed independently from the outpu
 
 | Task | Status |
 |---|---|
-| Replay harness (deliver_at order, live + control events, model faults, latency) | ⏳ |
+| Replay harness (deliver_at order, live + control events, model faults, latency) | ✅ harness.py (D-035–D-039, D-048) |
 | Write decisions.jsonl and actions.jsonl | ✅ (+ control_log, latency_report, viewer_state) |
 | Run the simulator and judge outcomes | ✅ judge.py (D-042, D-043) |
 | Impact report (agent vs holdout) and latency report | ✅ impact.py, harness latency report (D-044) |
@@ -115,8 +115,8 @@ report run); mutation test 4/4; headline recomputed independently from the outpu
 
 | Task | Status |
 |---|---|
-| Required tests (late/duplicate trigger, conflicting source, tool failure, corrected goal rule) | ⏳ |
-| README, ARCHITECTURE, AI_COLLABORATION, KNOWN_LIMITATIONS (final versions) | 🟡 drafts |
+| Required tests (late/duplicate trigger, conflicting source, tool failure, corrected goal rule) | ✅ 192 tests (README "Required tests") |
+| README, ARCHITECTURE, AI_COLLABORATION, KNOWN_LIMITATIONS (final versions) | ✅ final (D-050); one-command `run` added |
 | final_report.md | ⏳ |
 | Fresh clone → setup → replay → end-to-end check | ⏳ |
 
@@ -129,6 +129,6 @@ report run); mutation test 4/4; headline recomputed independently from the outpu
 - [x] Every decision has evidence, confidence reason, assumptions, checks and timing (D-045: 0 gaps in 2,769 records)
 - [x] All decisions published within 60 seconds (latency report included; max 2.2 s)
 - [x] Impact measured agent arm vs holdout arm, with the pilot report's mistake explained
-- [x] Required tests pass (186)
-- [ ] All 4 docs written
+- [x] Required tests pass (192)
+- [x] All 4 docs written (D-050; every claim re-checked against the current run)
 - [ ] sample_run folder complete
