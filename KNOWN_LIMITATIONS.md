@@ -22,6 +22,12 @@
 
 ## Pending (to be filled in as decisions are made)
 
+- The verifier is separately written but implements the **same documented interpretations** (A-G0x-1, D-0xx) and
+  shares the event store and config thresholds; a misreading of the spec itself would be shared. Real-case unit tests
+  and the pack simulator are the outside checks.
+- Verifier rejections in the final replay are 0 because the one disagreement it found (D-041) was fixed; its ability to
+  reject is shown by tests and mutation testing, not by the replay.
+
 - The optional Ollama provider is implemented (HTTP, JSON-schema output) but was not run in this environment; all
   results use the deterministic mock, as the brief requires for evaluators.
 - With our 2 s store timeout, the degraded window (p95 8 s) fails most reads, so most decisions in it use the generic

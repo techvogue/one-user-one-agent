@@ -45,7 +45,7 @@ as evidence ([D-003](doc/decisions.md)).
 | 1 | Fact resolver (`facts.py`, `profiles.py`, `catalogue.py`) | Builds facts with source, `as_of`, freshness; per-fact precedence; conflicts kept visible | D-007, D-008, D-009, D-015 |
 | 2 | Goal planner | Measurability check; eligibility from cited evidence; one goal with start, deadline, success signal; or `NO_GOAL` | D-013, D-014, D-015 |
 | 3 | Intervention planner (`intervention.py`) | Home page builder (dialect, slug dedupe, variants, availability through TTL), message choice, or `NO_ACTION` | D-009, D-010, D-011 |
-| 4 | Verifier | Independent re-derivation of eligibility and every policy rule; can reject or downgrade | rules.md Rule 10, D-012 |
+| 4 | Verifier (`verifier.py`) | Independent re-derivation of eligibility and every policy rule; can reject or downgrade | rules.md Rule 10, D-012, D-040 |
 | 5 | Publisher | Writes actions (simulator schema) and decisions; `published_at = deliver_at + measured time` | FR-9, FR-13 |
 | 6 | Outcome judge | Succeeded / failed / inconclusive from attributable events; versioned rules; provisional + final verdicts | D-005, D-014 |
 | 7 | Impact reporter | ITT agent vs holdout with CI, per goal; pilot re-analysis; latency report | D-016 |
@@ -153,15 +153,26 @@ are marked uncertain (D-007).
 | state | `subscription_status`, consents, `message_dialect`, `app_language` | events are authoritative at any age; profile-sourced values usable only while the **snapshot** is ≤ 48 h old (`profile_max_age_h`), dated by `snapshot_at` (the value was true at export, even if the row last changed earlier); `uncertain` status is never usable |
 | history | `ever_paid`, watch history | always usable (records of the past); age reported |
 
-## 6. Verification
+## 6. Verification (Step 5: verify before acting)
 
-- The verifier runs **after** the decision step and **re-derives** what it checks from the data, rather than trusting
-  the planner's output.
-- Checks: holdout, measurable goal, eligibility (with evidence), dialect, availability through TTL, withdrawal,
-  quarantine, slug uniqueness, row/hero limits, consent (incl. opt-out events), quiet hours, daily cap, approved
-  templates, copy limits and forbidden phrases, prices, duplicate action, latency budget.
-- Verdicts: approve / downgrade (e.g. drop the message, keep the page) / reject. Results go to `checks.passed/failed`.
-- Model output is never evidence or approval (FR-7.4). Unsupported model claims are recorded as such.
+Implemented in `src/ott_agent/verifier.py` (D-040). **Separately written**: it imports only `config` (thresholds) and
+`timeutil` (date parsing), never the facts resolver, goal evaluator, planner or page builder (enforced by a test). It
+re-derives everything it checks from the stored events, raw profile/catalogue files and pack config, so it can
+disagree with the decision step.
+
+| When | What it checks |
+|---|---|
+| Before every publish, and for every holdout shadow | holdout / unknown arm (nothing may go out); duplicate (no second page for a trigger, own ledger); budget; 60 s limit; goal measurable; **goal eligibility re-derived from evidence** (model claims are never evidence: a goal equal to an unsupported model claim is rejected); page dialect = app setting; every title in that dialect, available through the TTL, not withdrawn, not quarantined (own instruction scan); unique slugs; row limits and types; message consent (latest profile row + opt-out events), quiet hours, one per IST day (sent **and** scheduled), approved template with catalogue variables, push copy limits / forbidden phrases / prices, deeplink, title in the viewer's message dialect, reminder goal and deadline |
+| Before republishing a page after a withdrawal | holdout + all page checks |
+| At send time, for every reminder | goal still open; viewer has not already played since the goal started; all message checks, dialect re-derived from events |
+
+**Verdicts:** approve; **downgrade** (only message checks failed → the message is dropped, the page goes out);
+**reject** (anything else → nothing published, goal not committed, `REJECTED_BY_VERIFIER`). Every check is recorded on
+the decision (`checks.passed` / `checks.failed`, details under `verifier`).
+
+**Evidence it works:** on its first real replay it rejected 157 decisions and was right: G07 goals had been set on the
+two quarantined titles (fixed in the planner, D-041; rejections now 0). 33 unit tests feed it proposals broken in one
+way each; mutation testing (disabling 6 different checks) made the tests fail every time.
 
 ## 7. Latency
 

@@ -1,7 +1,7 @@
 # One User, One Agent
 
 > **Status: in progress.** Implemented so far: ingestion (deduplication + corrected event time), the data quality
-> report, profile and catalogue loading, the per-viewer fact resolver, the goal planner, the intervention planner and the replay harness (budgets, faults, fallbacks). The one-command replay will be added once the agent loop exists. This README is updated as work progresses.
+> report, profile and catalogue loading, the per-viewer fact resolver, the goal planner, the intervention planner, the replay harness (budgets, faults, fallbacks) and the independent verifier. The one-command replay will be added once the agent loop exists. This README is updated as work progresses.
 
 An agentic system that gives every viewer of a regional-dialect OTT platform one dedicated agent. On each app open the
 agent chooses one measurable goal, decides what to change (home page, one message, or nothing) from evidence it can

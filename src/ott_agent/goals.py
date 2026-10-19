@@ -197,10 +197,10 @@ def evaluate(rule: GoalRule, vf: ViewerFacts, at: datetime, catalogue: Catalogue
         candidates = [
             s for s in vf.value("series_in_progress")
             if oldest <= parse_ts(s["last_play_at"]) <= cutoff
-            and any(catalogue.is_available(t, at) for t in catalogue.by_slug(s["slug"]))
+            and any(catalogue.is_promotable(t, at) for t in catalogue.by_slug(s["slug"]))  # D-041: not quarantined
         ]  # fmt: skip
         if not candidates:
-            return fail(f"no unfinished, available series last played between {cfg.g07_min_gap_h} h and "
+            return fail(f"no unfinished, promotable series last played between {cfg.g07_min_gap_h} h and "
                         f"{cfg.g07_max_age_days} days ago")  # fmt: skip
         detail["series"] = candidates[0]  # most recently played qualifying series
         evidence.append(candidates[0]["evidence"])

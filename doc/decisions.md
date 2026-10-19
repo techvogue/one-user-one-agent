@@ -523,6 +523,42 @@ Rules:
      runs except publish timestamps (measured compute time, a few ms).
 - Why: Make the fallback and audit behaviour explicit and testable.
 
+### D-040: Independent verifier (Step 5)
+- Date: 2026-10-19 · Status: Accepted · Decided by: candidate (accepted the recommendation)
+- Context: The brief: "Run independent checks, separate from the decision step … The checker must be able to reject the
+  decision. Model output is never proof." A checker that reuses the decision code (facts resolver, eligibility
+  function, page builder) cannot disagree with it: a bug there would pass its own check.
+- Options: (a) re-run the planner's functions as "checks"; (b) a separate verifier that re-derives what it checks
+  from the stored events, profile rows, raw catalogue fields and pack config, with its own code.
+- Decision: (b). `verifier.py` shares only file parsing and the event store; it does **not** import the facts resolver,
+  the goal evaluator, the planner or the intervention builder. It runs:
+  1. **before every publish** (agent arm) and for every holdout shadow decision, and
+  2. **at send time** for every pending reminder (D-021, D-034).
+  Checks: holdout (nothing published for holdout or unknown arm); duplicates (no second action for the same trigger,
+  no second page for one visit unless re-planned); goal measurable; **goal eligibility re-derived from evidence**
+  (never from model text: a goal the model claimed is rejected unless the evidence supports it); page dialect equals
+  the app's valid setting; every title in that dialect, available through the page TTL, not withdrawn, not flagged
+  (own scan of descriptions); page structure (hero ≤ 1, rows within limits, allowed row types, unique slugs); message
+  consent (latest profile row + any opt-out event; unknown = no), quiet hours, one push/WhatsApp per IST day, approved
+  template with catalogue-filled variables, push copy limits / forbidden phrases / no prices, deeplink format, title
+  dialect = the viewer's message dialect; budgets and the 60 s limit.
+- Verdicts: **approve**; **downgrade** (only message checks failed → the message is dropped, the page goes out);
+  **reject** (any goal, page, holdout or duplicate check failed → nothing published, goal not committed, status
+  `REJECTED_BY_VERIFIER`). Every check is listed as passed or failed with a reason on the decision record.
+- Why: Gives the brief's "checks that can disagree with the decision step" a concrete meaning: two separately written
+  implementations must agree before anything reaches a viewer.
+
+### D-041: G07 only for series that may be promoted (found by the verifier)
+- Date: 2026-10-19 · Status: Accepted · Decided by: candidate · Fixes D-014 / D-031 (A-G07-1)
+- Context: On its first real replay the independent verifier rejected **157 decisions**: G07 "resume series" goals set
+  on `hama-chudibha-d1` (T0002) and `guka-kosusa-d2` (T0522), the two titles quarantined for injected instructions
+  (D-012). The planner checked only availability, so it set goals around titles the page may never show.
+- Decision: A series qualifies for G07 only if a variant is **promotable** (available and not quarantined); an open G07
+  goal is re-planned if its series stops being promotable (withdrawn, ended or quarantined).
+- Effect: verifier rejections 157 → 0; those viewers get another goal.
+- Why: The decision step must not build goals on content it is not allowed to promote. This is the verifier working as
+  intended: a separately written check disagreed and was right.
+
 ---
 
 ## Pending (under discussion, not approved)
@@ -544,6 +580,8 @@ Rules:
 | 2026-10-18 | D-017 accepted (tech stack); P-001 closed. |
 | 2026-10-18 | D-018 accepted (repository layout). |
 | 2026-10-18 | D-019 accepted (goal priority); D-020 accepted (folder renamed to `submission/`). |
+| 2026-10-19 | D-041 accepted (G07 needs a promotable series; found by the verifier). |
+| 2026-10-19 | D-040 accepted (independent verifier). |
 | 2026-10-19 | D-039 accepted (Step 4 implementation details). |
 | 2026-10-19 | D-035 to D-038 accepted (Step 4: model role, fallback, timing, harness). |
 | 2026-10-19 | D-033, D-034 accepted (Step 3 intervention design; message timing replaces D-021's slot). |

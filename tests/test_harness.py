@@ -346,3 +346,45 @@ def test_reminder_is_sent_unless_the_viewer_already_came_back(tmp_path):
     assert not [a for a in r2.actions if a["type"] == "whatsapp"]
     assert "already played" in r2.decisions[0]["message"]["cancel_reason"]
     assert parse_ts(r2.decisions[0]["message"]["send_at"]).hour == 13
+
+
+# --- Step 5: the replay obeys the independent verifier ------------------------------------------------------------
+
+
+def test_verifier_rejection_stops_publishing(tmp_path, monkeypatch):
+    import ott_agent.harness as h
+
+    real = h.decide_intervention
+
+    def buggy(*a, **kw):  # simulate a bug in the decision step: page in the wrong dialect
+        iv = real(*a, **kw)
+        if iv.page:
+            iv.page = {**iv.page, "dialect": "d2"}
+        return iv
+
+    monkeypatch.setattr(h, "decide_intervention", buggy)
+    pack = build_pack(tmp_path, [trig("t1")])
+    r, _ = run(tmp_path, pack)
+    [d] = r.decisions
+    assert d["status"] == "REJECTED_BY_VERIFIER" and "dialect" in d["checks"]["failed"]
+    assert r.actions == [] and r.conn.execute("SELECT COUNT(*) FROM goal_instances").fetchone()[0] == 0
+
+
+def test_verifier_downgrade_drops_only_the_message(tmp_path, monkeypatch):
+    import ott_agent.harness as h
+
+    real = h.decide_intervention
+
+    def buggy(*a, **kw):  # simulate a bug: a reminder sent at 23:00 IST (quiet hours)
+        iv = real(*a, **kw)
+        if iv.message:
+            iv.message = {**iv.message, "send_at": "2026-10-02T17:30:00.000Z"}
+        return iv
+
+    monkeypatch.setattr(h, "decide_intervention", buggy)
+    pack = build_pack(tmp_path, [trig("t1")], profiles=[profile_row("U-1", whatsapp_opt_in="true")])
+    r, _ = run(tmp_path, pack)
+    [d] = r.decisions
+    assert d["status"] == PUBLISHED and d["verifier"]["verdict"] == "downgrade"
+    assert "message dropped by the verifier" in d["message_note"] and "quiet_hours" in d["message_note"]
+    assert [a["type"] for a in r.actions] == ["home_page"]

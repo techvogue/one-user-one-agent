@@ -350,7 +350,7 @@ def test_open_g07_goal_is_replanned_when_its_series_is_withdrawn(tmp_path, conn,
     assert again.outcome == REPLAN
     assert (
         again.closing["close_reason"]
-        == "situation_changed: series raloja-d1 is no longer available (withdrawn or ended)"
+        == "situation_changed: series raloja-d1 is no longer available (withdrawn, ended or quarantined)"
     )
     assert again.goal["goal_id"] != "G07"
 
@@ -423,3 +423,13 @@ def test_g09_play_days_count_any_playback(tmp_path, conn, cfg, goals):
     vf, cat = facts(tmp_path, conn, cfg, events, [profile_row(status="active")])
     assert vf.value("play_ist_days_14d") == ["2026-09-27", "2026-09-29"]
     assert "played on 2 IST days" in evaluate(goals.rules["G09"], vf, AT, cat, cfg).reason
+
+
+def test_g07_never_targets_a_quarantined_series(tmp_path, conn, cfg, goals):
+    # Found by the independent verifier on the replay (D-041): G07 goals were set on series whose only title is
+    # quarantined for injected instructions, which the page may never show.
+    vf, cat = facts(tmp_path, conn, cfg, [play("p1", "2026-09-27T10:00:00.000Z")], [profile_row()])
+    assert evaluate(goals.rules["G07"], vf, AT, cat, cfg).eligible
+    cat.flagged["T1"] = cat.flagged["T2"] = "instruction-like text (test)"
+    e = evaluate(goals.rules["G07"], vf, AT, cat, cfg)
+    assert not e.eligible and "promotable" in e.reason

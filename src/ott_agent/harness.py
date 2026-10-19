@@ -39,10 +39,11 @@ from .quality import build_report, write_report
 from .store import connect
 from .timeutil import IST, compute_event_time, iso, parse_ts
 from .tools import BudgetExceeded, Dependencies, DependencyFailed, ToolBox
+from .verifier import Verifier
 
 PUBLISHED, NO_ACTION_STATUS = "PUBLISHED", "NO_ACTION"
 DUPLICATE_IGNORED, SAME_SESSION, STALE_SKIPPED = "DUPLICATE_IGNORED", "SAME_SESSION", "STALE_SKIPPED"
-HOLDOUT_SHADOW, FAILED_LATE, REJECTED = "HOLDOUT_SHADOW", "FAILED_LATE", "REJECTED_BY_CHECKS"
+HOLDOUT_SHADOW, FAILED_LATE, REJECTED = "HOLDOUT_SHADOW", "FAILED_LATE", "REJECTED_BY_VERIFIER"
 # Events that change the viewer's situation enough to re-decide within the same session.
 STATE_CHANGE_EVENTS = (
     "purchase_completed",
@@ -96,6 +97,7 @@ class Replay:
         self.rules = PlatformRules.from_file(cfgdir / "interventions.json")
         self.plan_days = load_plan_days(cfgdir / "pricing.json")
         self.popularity = Popularity(self.cfg.popularity_days)
+        self.verifier = Verifier(self.pack, self.conn, self.cfg)  # Step 5: independent checks (D-040)
         with open(self.pack / "replay" / "arms.csv", encoding="utf-8", newline="") as f:
             self.arms = {r["user_id"]: r["arm"] for r in csv.DictReader(f)}
 
@@ -150,6 +152,7 @@ class Replay:
                 rule, affected = apply_rule_correction(
                     self.conn, self.goals, c["goal_id"], c["new_success"], at
                 )
+            self.verifier.correct(c["goal_id"], c["new_success"])
             entry["effect"] = f"{c['goal_id']} now {rule.version}; open goals updated: {len(affected)}"
             entry["affected_goal_instances"] = affected
         elif kind == "title_withdrawn":
@@ -161,6 +164,7 @@ class Replay:
     def withdraw(self, title_id: str, at: datetime) -> dict:
         """Stop using the title from `at`; fix only the live pages and pending messages that contain it (D-011)."""
         self.catalogue.withdraw(title_id, at)
+        self.verifier.withdraw(title_id, at)
         republished, cancelled = [], []
         pop = self.popularity.counts(self.conn, self.catalogue, at)
         for user, lp in list(self.live_pages.items()):
@@ -173,7 +177,12 @@ class Replay:
                 )
             if page is None:
                 continue
+            check = self.verifier.verify_page(page, lp["trigger"], at)
+            if check.verdict != "approve":
+                republished.append({"user_id": user, "rejected_by_verifier": check.failed})
+                continue
             action = self._page_action(lp["decision_id"], user, lp["trigger_event_id"], at, page)
+            self.verifier.record_published(action)
             self.live_pages[user] = {**lp, **self._live(page, action)}
             republished.append(
                 {"user_id": user, "action_id": action["action_id"], "replaces": lp["action_id"]}
@@ -181,6 +190,7 @@ class Replay:
         for m in self.pending_messages:
             if m["message"]["title_id"] == title_id and m.get("status") == "pending":
                 m["status"], m["cancel_reason"] = "cancelled", f"title {title_id} withdrawn at {iso(at)}"
+                self.verifier.unschedule(m["decision_id"])
                 self.msg_days[(m["user_id"], parse_ts(m["message"]["send_at"]).astimezone(IST).date())] -= 1
                 cancelled.append({"user_id": m["user_id"], "decision_id": m["decision_id"]})
         return {
@@ -318,7 +328,20 @@ class Replay:
             "latency_s": round(latency_s, 3),
             "published": published,
         }
-        checks = self._basic_checks(iv, holdout, t, tb, latency_s, vf)
+        # Step 5: the independent verifier (D-040). Holdout: nothing will be published, but the goal is still checked.
+        goal = plan.goal if (plan is not None and fallback is None) else None
+        verdict = self.verifier.verify({
+            "user": user, "trigger": t, "known_at": at, "publish_at": published,
+            "plan_outcome": plan.outcome if plan else None, "goal": goal,
+            "page": iv.page if (iv is not None and not holdout) else None,
+            "message": iv.message if (iv is not None and not holdout) else None,
+            "model": model_info, "model_calls": tb.model_calls, "tool_calls": tb.tool_calls,
+            "latency_s": latency_s, "fallback": fallback,
+        })  # fmt: skip
+        if verdict.verdict == "downgrade" and iv is not None:
+            dropped = "; ".join(f"{f['check']}: {f['detail']}" for f in verdict.failed)
+            iv.message, iv.message_note = None, f"message dropped by the verifier ({dropped})"
+        checks = {"passed": verdict.passed, "failed": [f["check"] for f in verdict.failed]}
         ctx = {
             **base,
             "vf": vf,
@@ -329,12 +352,13 @@ class Replay:
             "model": model_info,
             "timing": timing,
             "checks": checks,
+            "verifier": verdict.to_dict(),
             "notes": notes,
             "replan_reason": replan_reason,
         }
         if latency_s > self.cfg.publish_deadline_s:
             self._record_decision(ctx, FAILED_LATE)
-        elif checks["failed"]:
+        elif verdict.verdict == "reject":
             self._record_decision(ctx, REJECTED)
         elif holdout:
             if plan is not None and fallback is None:
@@ -441,26 +465,6 @@ class Replay:
                     )
             return info
         return info
-
-    def _basic_checks(self, iv, holdout, t, tb, latency_s, vf) -> dict:
-        """Step 4 basic checks. Step 5 replaces this with the independent verifier."""
-        passed, failed = [], []
-
-        def check(name, ok):
-            (passed if ok else failed).append(name)
-
-        check(
-            "budget", tb.model_calls <= self.cfg.max_model_calls and tb.tool_calls <= self.cfg.max_tool_calls
-        )
-        check("latency", latency_s <= self.cfg.publish_deadline_s)
-        if iv is not None and iv.page:
-            check("dialect", iv.page["dialect"] == t.get("app_dialect"))
-        if iv is not None and iv.message:
-            consent = vf.usable(f"{iv.message['channel']}_consent") if vf else None
-            check("consent", consent is True)
-        if holdout:
-            passed.append("holdout_no_action")
-        return {"passed": passed, "failed": failed}
 
     # --- records and actions -------------------------------------------------------------------------------------
 
@@ -609,6 +613,7 @@ class Replay:
             "evidence_detail": evidence_detail,
             "assumptions": list(dict.fromkeys(assumptions)),
             "checks": ctx["checks"],
+            "verifier": ctx.get("verifier"),
             "model": ctx["model"],
             "model_calls": tb.model_calls,
             "tool_calls": tb.tool_calls,
@@ -649,9 +654,11 @@ class Replay:
             action = self._page_action(
                 rec["decision_id"], t["user_id"], t["event_id"], timing["published"], iv.page
             )
+            self.verifier.record_published(action)
             self.live_pages[t["user_id"]] = {
                 "decision_id": rec["decision_id"],
                 "trigger_event_id": t["event_id"],
+                "trigger": t,
                 "vf": vf,
                 "goal": goal,
                 **self._live(iv.page, action),
@@ -659,6 +666,7 @@ class Replay:
             if iv.message:
                 day = parse_ts(iv.message["send_at"]).astimezone(IST).date()
                 self.msg_days[(t["user_id"], day)] += 1
+                self.verifier.schedule(rec["decision_id"], t["user_id"], parse_ts(iv.message["send_at"]))
                 self.pending_messages.append(
                     {
                         "decision_id": rec["decision_id"],
@@ -726,45 +734,24 @@ class Replay:
     # --- pending messages: re-check at send time (D-021, D-034) ---------------------------------------------------
 
     def flush_messages(self) -> None:
-        """Basic send-time re-check (Step 5 makes it the full independent verifier). Knowledge = events received by
-        min(send time, end of replay)."""
-        sent_days: Counter = Counter()
+        """Send-time re-check of every pending reminder by the independent verifier (D-021, D-034, D-040).
+        Knowledge = events received by the earlier of the send time and the end of the replay."""
         for m in sorted(self.pending_messages, key=lambda x: x["message"]["send_at"]):
             if m["status"] != "pending":
                 continue
             msg, user = m["message"], m["user_id"]
             send_at = parse_ts(msg["send_at"])
             know = min(send_at, self.replay_end) if self.replay_end else send_at
-            reason = None
             gi = self.conn.execute(
-                "SELECT status, close_reason FROM goal_instances WHERE goal_instance_id = ?",
-                (m["goal_instance_id"],),
+                "SELECT status FROM goal_instances WHERE goal_instance_id = ?", (m["goal_instance_id"],)
             ).fetchone()
-            if gi is None or gi["status"] != "open":
-                reason = f"goal closed ({gi['close_reason'] if gi else 'unknown'})"
-            if reason is None:
-                played = self.conn.execute(
-                    "SELECT event_id FROM events WHERE user_id = ? AND event = 'play_started' AND event_time >= ?"
-                    " AND first_received_at <= ? LIMIT 1",
-                    (user, m["goal"]["start"], iso(know)),
-                ).fetchone()
-                if played:
-                    reason = f"viewer already played after the goal started ({played['event_id']}): reminder not needed"
-            vf = resolve(self.conn, self.profiles, self.catalogue, user, know, None, self.cfg, self.plan_days)
-            if reason is None and vf.usable(f"{msg['channel']}_consent") is not True:
-                reason = f"{msg['channel']} consent no longer usable"
-            title = self.catalogue.titles.get(msg["title_id"])
-            if reason is None and (title is None or not self.catalogue.is_promotable(title, send_at)):
-                reason = f"title {msg['title_id']} not available at send time"
-            if reason is None and self.rules.in_quiet_hours(send_at):
-                reason = "send time in quiet hours"
-            day = send_at.astimezone(IST).date()
-            if reason is None and sent_days[(user, day)] >= 1:
-                reason = "frequency cap: already one message that IST day"
-            if reason:
-                m["status"], m["cancel_reason"] = "cancelled", reason
+            verdict = self.verifier.verify_send(m, know, goal_open=gi is not None and gi["status"] == "open")
+            m["send_check"] = verdict.to_dict()
+            self.verifier.unschedule(m["decision_id"])
+            if verdict.verdict != "approve":
+                m["status"] = "cancelled"
+                m["cancel_reason"] = "; ".join(f"{f['check']}: {f['detail']}" for f in verdict.failed)
                 continue
-            sent_days[(user, day)] += 1
             m["status"] = "sent"
             action = {
                 "action_id": self._next_id("A", self.actions),
@@ -782,11 +769,13 @@ class Replay:
             else:
                 action["text"] = msg["text"]
             self.actions.append(action)
+            self.verifier.record_published(action)
         by_id = {d["decision_id"]: d for d in self.decisions}
         for m in self.pending_messages:
             rec = by_id[m["decision_id"]]
             if rec.get("message"):
                 rec["message"]["status"] = m["status"]
+                rec["message"]["send_time_check"] = m.get("send_check")
                 if m.get("cancel_reason"):
                     rec["message"]["cancel_reason"] = m["cancel_reason"]
 

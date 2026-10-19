@@ -58,6 +58,15 @@ fallbacks for model faults/outage and data-store degradation (D-035–D-039).
 independent output validator: 0 violations (incl. 11/11 pages with withdrawn T0001 republished); **pack simulator:
 0 policy problems, 907/907 pages accepted, 828 shown**; two runs identical except publish timestamps (≤ 8 ms).
 
+## Guide loop step 5: Verify before acting ✅
+
+Separately written verifier (imports only config + date parsing) re-derives every check from raw data; runs before
+every publish, for holdout shadows, before republishing, and at send time; verdicts approve / downgrade / reject.
+**Verified:** 167 tests pass (33 verifier tests: one broken rule each; 2 harness tests: rejection stops publishing,
+downgrade drops only the message); mutation test: 6/6 disabled checks caught. First real replay: the verifier rejected
+157 G07 goals built on quarantined titles: a real planner bug, fixed (D-041) → 0 rejections. Replay: 0 decisions
+over 60 s; independent validators 0 violations; pack simulator 0 policy problems, 905/905 pages accepted.
+
 ## Step 2: Build the core
 
 | Task | Status |
@@ -67,7 +76,7 @@ independent output validator: 0 violations (incl. 11/11 pages with withdrawn T00
 | Fact resolver with precedence rules (D-007–D-009, D-015) | ✅ profiles.py, catalogue.py, facts.py |
 | Goal eligibility + selection (D-013, D-014) | ✅ goals.py, planner.py (D-029, D-030, D-031) |
 | Intervention planner (home page, message, no action) (D-009–D-011) | ✅ intervention.py (D-033, D-034) |
-| Independent verifier (rules.md Rule 10, D-012) | ⏳ |
+| Independent verifier (rules.md Rule 10, D-012) | ✅ verifier.py (D-040, D-041) |
 | Mock model provider (D-003) | ✅ model.py: mock reproduces model_faults.jsonl; optional Ollama (D-035) |
 
 ## Step 3: Replay and measure

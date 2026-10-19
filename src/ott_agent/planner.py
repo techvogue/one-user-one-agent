@@ -102,8 +102,8 @@ def _situation_changed(
     if not rule.measurable:
         return f"goal rule {rule.version} is no longer measurable: {rule.unmeasurable_reason}"
     series = (goal.get("detail") or {}).get("series")
-    if series and not any(catalogue.is_available(t, at) for t in catalogue.by_slug(series["slug"])):
-        return f"series {series['slug']} is no longer available (withdrawn or ended)"
+    if series and not any(catalogue.is_promotable(t, at) for t in catalogue.by_slug(series["slug"])):
+        return f"series {series['slug']} is no longer available (withdrawn, ended or quarantined)"
     el = rule.eligibility
     status = vf.usable("subscription_status")
     if "subscription_status" in el and status is not None and status not in el["subscription_status"]:
