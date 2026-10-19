@@ -28,6 +28,9 @@ class Config:
         14  # [A-G07-1] still "in progress" only if last played within this many days (D-031)
     )
     g09_max_play_days: int = 1  # [A-G09-1] "plays on at most 1 day in the last 14 days"
+    # D-051: a goal that failed for this viewer (pilot or our own judged goal) is not chosen again until this many
+    # days after the failed goal's deadline.
+    failed_goal_cooldown_days: int = 30
     g12_absence_days: int = 14  # [A-G12-1] "no app_open in the 14 days before the trigger"
     # Who counts as a new user for the activation funnel (D-019): signed up within this many days.
     new_user_days: int = 7

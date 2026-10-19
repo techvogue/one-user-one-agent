@@ -32,6 +32,7 @@ from .intervention import (
     decide_intervention,
 )
 from .model import MockProvider, build_request, parse_review
+from .past import load_pilot_outcomes
 from .planner import NO_GOAL, apply_rule_correction, commit_plan, get_open_goal, plan_goal
 from .pricing import load_plan_days
 from .profiles import load_profiles
@@ -149,6 +150,7 @@ class Replay:
         self.pending_messages: list[dict] = []
         self.msg_days: Counter = Counter()  # (user, IST date) -> planned/sent push+WhatsApp
         self.facts_cache: dict[str, tuple] = {}  # user -> (vf, plan, at) from the last successful read
+        self.pilot_outcomes = 0  # rows loaded from the pack's pilot results (D-051)
         self.worker_free: list[datetime] = []
         self.ingest_stats = {"trigger": IngestStats("trigger"), "live": IngestStats("live")}
 
@@ -166,6 +168,10 @@ class Replay:
         self.profiles = load_profiles(data / "profiles_snapshot.csv")
         self.catalogue = load_catalogue(data / "catalogue.csv", data / "episodes.csv")
         self.goals = GoalCatalogue.from_file(cfgdir / "goals.json")
+        pilot = self.pack / "pilot" / "pilot_outcomes.csv"
+        if pilot.exists():  # earlier results per viewer (D-051)
+            windows = {gid: rule.window for gid, rule in self.goals.rules.items()}
+            self.pilot_outcomes = load_pilot_outcomes(self.conn, pilot, windows)
         from . import __version__
 
         self.goals_version = json.loads((cfgdir / "goals.json").read_text(encoding="utf-8")).get(
@@ -474,6 +480,7 @@ class Replay:
                         self.cfg,
                         live_page=self.live_pages.get(user),
                         messages_on_day=(lambda d: 99) if no_msgs else (lambda d: self.msg_days[(user, d)]),
+                        not_repeated=plan.not_repeated(),
                     ),
                 )
         except BudgetExceeded as exc:
@@ -740,7 +747,10 @@ class Replay:
                 "signup_at",
                 "has_played",
                 "has_completed_episode",
+                "recent_failed_goals",
             ):
+                if name not in vf.facts or (name == "recent_failed_goals" and not vf.value(name)):
+                    continue
                 f = vf[name]
                 evidence_detail.append(
                     {
@@ -751,6 +761,7 @@ class Replay:
                         "age_s": f.age_s,
                         "freshness": f.freshness,
                         "usable": f.usable,
+                        **({"refs": f.evidence} if name == "recent_failed_goals" else {}),
                     }
                 )
         assumptions = (

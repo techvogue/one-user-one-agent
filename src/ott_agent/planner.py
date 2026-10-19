@@ -70,6 +70,11 @@ def select_goal(
         why += "; new-user funnel: next step not yet reached"
     if len(ranked) > 1:
         why += f"; also eligible, lower priority: {', '.join(ranked[1:])}"
+    order = [gid for gid, _ in _priority(goals, cfg)]
+    skipped = [gid for gid in order if gid in evals and "(D-051)" in evals[gid].reason]
+    above = [gid for gid in skipped if order.index(gid) < order.index(chosen)]
+    if above:  # the rule changed the choice: these would have been chosen otherwise
+        why += f"; not repeated after a recent failure for this viewer: {', '.join(above)} (D-051)"
     return Selection(goals.rules[chosen], evals[chosen], why, evals, ranked[1:])
 
 
@@ -85,6 +90,10 @@ class GoalPlan:
 
     def to_dict(self) -> dict:
         return asdict(self)
+
+    def not_repeated(self) -> list[str]:
+        """Goals that were otherwise eligible but recently failed for this viewer (D-051)."""
+        return [gid for gid, why in self.evaluations.items() if "(D-051)" in why]
 
 
 def get_open_goal(conn: sqlite3.Connection, user_id: str) -> sqlite3.Row | None:

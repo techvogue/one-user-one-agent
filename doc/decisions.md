@@ -710,6 +710,40 @@ Rules:
 - Why: One command makes the result reproducible end to end; re-checking found three outdated or false statements
   in KNOWN_LIMITATIONS (corrected, see its change log).
 
+### D-051: Past results feed back: a goal that recently failed for the viewer is not repeated
+- Date: 2026-10-19 · Status: Accepted · Decided by: candidate (chose option a, 30-day cooldown) · Extends D-019, D-043
+- Context: The judge stored a learning note per goal but the planner never read them ("results fed back into state"
+  only half done). The pack's `pilot/pilot_outcomes.csv` holds each pilot viewer's goal and whether it succeeded;
+  1,226 replay viewers were in the pilot and the agent repeated their pilot goal 268 times, 243 of them goals that had
+  failed, mostly G05 (first purchase) where G05 was the viewer's only eligible goal. On our own replay G05 succeeded
+  for 3/83 agent vs 3/82 holdout viewers: repeating it gains nothing measurable.
+- Options: (a) count any failure of the same goal, including viewers the pilot never served; (b) count only failures
+  after the viewer was shown our action (only 217 pilot viewers were served, so the rule would almost never apply).
+- Decision: (a). New fact `recent_failed_goals` (source `pilot_outcomes.csv` and/or `judge`, as-of = latest deadline,
+  evidence = file line or goal outcome id): goals that FAILED for the viewer with a deadline within
+  `failed_goal_cooldown_days` = 30 before the decision, each known only from the time it was known (pilot: from its
+  deadline; our judge: from `judged_at`). A goal that is otherwise eligible but in that list is not chosen; the next
+  eligible goal is, and if none is left the outcome is NO_GOAL with "recently failed for this viewer, so not
+  repeated: …". The check runs last in eligibility so only otherwise-eligible goals are reported as skipped; the goal's
+  `why` names skipped goals only when they would have outranked the chosen one. Same rule in both arms (holdout
+  shadows too). The verifier re-derives it from the raw pilot file and `goal_outcomes`. Open goals are not affected.
+- Why: Results now change the next decision and the reason is visible in the record; "do nothing" for a viewer who
+  did not respond to the same goal last time is the proportionate action. A failure is recorded as an observation,
+  not as proof that the action does not work.
+- Consequences: In the sample run 148 live decisions changed (agent 26 switched + 98 no goal; holdout 24 + 88);
+  published pages 895 → 810; impact unchanged within noise (+1.2 → +1.1 pts, still no detectable effect). Our own
+  verdicts arrive after the replay day, so within one run only the pilot's results act (KNOWN_LIMITATIONS L-33).
+
+### D-052: Final report generated from the run's own files
+- Date: 2026-10-19 · Status: Accepted · Decided by: candidate (approved the proposal) · Work plan §12
+- Context: The submission needs `sample_run/final_report.md`; the README promises that `sample_run/` is generated,
+  never hand-written; the checklist asks for "no-action reasons" in the sample run.
+- Decision: `python -m ott_agent final` (step 5 of `run`) builds the report only from the run's output files:
+  decisions by status, every no-action reason code with counts and meaning (and a count of non-published decisions
+  without a reason, expected 0), goals per arm and the effect of D-051, latency and budgets, verifier and simulator
+  safety, surprises, data traps, outcomes, impact, and where to find details.
+- Why: Numbers cannot drift from the run, and an unseen replay day reports its own.
+
 ---
 
 ## Pending (under discussion, not approved)
@@ -732,6 +766,7 @@ Rules:
 | 2026-10-18 | D-018 accepted (repository layout). |
 | 2026-10-18 | D-019 accepted (goal priority); D-020 accepted (folder renamed to `submission/`). |
 | 2026-10-19 | D-049 accepted (impact report: who is counted; trap on our data). |
+| 2026-10-19 | D-051, D-052 accepted (past failures not repeated; generated final report). |
 | 2026-10-19 | D-050 accepted (one-command `run`; final documentation). |
 | 2026-10-19 | D-049 accepted (impact: who is counted; served-vs-else on our data). |
 | 2026-10-19 | D-048 accepted (react to live state changes; notice bursts). |

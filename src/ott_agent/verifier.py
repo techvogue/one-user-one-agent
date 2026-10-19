@@ -94,6 +94,22 @@ class Verifier:
         self.plan_days = {p["plan_id"]: p["days"] for p in pricing["plans"]}
         with open(pack / "replay" / "arms.csv", encoding="utf-8", newline="") as f:
             self.arms = {r["user_id"]: r["arm"] for r in csv.DictReader(f)}
+        # Own read of the pilot's per-viewer results (D-051): user -> [(goal_id, deadline)] of failed goals.
+        self.pilot_failed: dict[str, list[tuple[str, datetime]]] = {}
+        pilot = pack / "pilot" / "pilot_outcomes.csv"
+        if pilot.exists():
+            with open(pilot, encoding="utf-8", newline="") as f:
+                for r in csv.DictReader(f):
+                    hours = ((self.goal_rules.get(r["goal_id"]) or {}).get("success") or {}).get(
+                        "window_hours"
+                    )
+                    try:
+                        start = parse_ts(r.get("goal_started_at"))
+                    except ValueError:
+                        continue
+                    if (r.get("succeeded") or "").strip().lower() != "true" and hours and start:
+                        end = start + timedelta(hours=float(hours))
+                        self.pilot_failed.setdefault(r["user_id"], []).append((r["goal_id"], end))
         self.withdrawn: dict[str, datetime] = {}
         self.published: list[dict] = []  # own ledger of what has gone out (duplicates, frequency cap)
         self.scheduled: dict[str, tuple[str, datetime]] = {}  # reminder key -> (user, send_at), not yet sent
@@ -147,6 +163,21 @@ class Verifier:
                         "props": json.loads(r["payload_json"]).get("properties") or {},
                         "received": parse_ts(r["first_received_at"])})  # fmt: skip
         return sorted(out, key=lambda e: e["received"])
+
+    def _failed_recently(self, user: str, gid: str, at: datetime) -> str | None:
+        """Own check of D-051: did this goal fail for the viewer with a deadline inside the cooldown?"""
+        since = at - timedelta(days=self.cfg.failed_goal_cooldown_days)
+        for g, end in self.pilot_failed.get(user, []):
+            if g == gid and since <= end <= at:
+                return f"pilot, deadline {iso(end)}"
+        if self.conn.execute("SELECT 1 FROM sqlite_master WHERE name = 'goal_outcomes'").fetchone():
+            for r in self.conn.execute(
+                "SELECT o.judged_at, g.deadline FROM goal_outcomes o JOIN goal_instances g"
+                " ON g.goal_instance_id = o.goal_instance_id WHERE o.user_id = ? AND o.goal_id = ?"
+                " AND o.verdict = 'FAILED'", (user, gid)):  # fmt: skip
+                if parse_ts(r["judged_at"]) <= at and parse_ts(r["deadline"]) >= since:
+                    return f"judged, deadline {r['deadline']}"
+        return None
 
     def _status(self, user: str, ev: list[dict], at: datetime) -> str | None:
         """Subscription status, or None when it cannot be trusted (D-007, D-015, D-027, D-028)."""
@@ -256,6 +287,11 @@ class Verifier:
             return "the viewer has paid before"
         if plan_outcome == "KEEP":
             return None  # entry windows are only checked when a goal starts (D-029)
+        failed = self._failed_recently(user, gid, at)
+        if failed:
+            return (
+                f"{gid} already failed for this viewer ({failed}); must not be repeated within the cooldown"
+            )
         signup = self._signup(user, ev)
         if "signed_up_within_days" in el:
             if signup is None:

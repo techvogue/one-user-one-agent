@@ -42,7 +42,7 @@ as evidence ([D-003](doc/decisions.md)).
 | Suggested component | Implemented in | Notes |
 |---|---|---|
 | Data loader | `ingest.py`, `store.py`, `quality.py`, `traps.py` | dedupe, corrected time, data quality + trap report (D-004, D-005, D-047) |
-| Viewer state store | SQLite: `events`, `facts_snapshots`, `goal_instances`, `goal_log`, `goal_outcomes`; `sample_run/viewer_state/*.json` | facts with provenance, goals, decisions, actions, outcomes, learnings |
+| Viewer state store | SQLite: `events`, `facts_snapshots`, `goal_instances`, `goal_log`, `goal_outcomes`, `past_outcomes`; `sample_run/viewer_state/*.json` | facts with provenance, goals, decisions, actions, outcomes, learnings |
 | Fact resolver | `facts.py`, `profiles.py`, `catalogue.py` | precedence, freshness, conflicts (§5.1) |
 | Goal planner | `goals.py`, `planner.py` | eligibility from evidence, priority, deadline (§4) |
 | Intervention planner | `intervention.py` | page / reminder / no action with a reason (§4b) |
@@ -65,12 +65,13 @@ used as evidence (D-035, D-040).
 |---|---|---|---|
 | 0 | Data loader / ingestion (`ingest.py`, `store.py`, `quality.py`, `traps.py`: trap summary in the run output, D-047) | Raw delivery log + canonical events (one per `event_id`); corrected `event_time`; same function for history, live events and triggers | D-004, D-005 |
 | 1 | Fact resolver (`facts.py`, `profiles.py`, `catalogue.py`) | Builds facts with source, `as_of`, freshness; per-fact precedence; conflicts kept visible | D-007, D-008, D-009, D-015 |
-| 2 | Goal planner | Measurability check; eligibility from cited evidence; one goal with start, deadline, success signal; or `NO_GOAL` | D-013, D-014, D-015 |
+| 2 | Goal planner (`goals.py`, `planner.py`, `past.py`) | Measurability check; eligibility from cited evidence; past failures not repeated; one goal with start, deadline, success signal; or `NO_GOAL` | D-013, D-014, D-015, D-051 |
 | 3 | Intervention planner (`intervention.py`) | Home page builder (dialect, slug dedupe, variants, availability through TTL), message choice, or `NO_ACTION` | D-009, D-010, D-011 |
 | 4 | Verifier (`verifier.py`) | Independent re-derivation of eligibility and every policy rule; can reject or downgrade | rules.md Rule 10, D-012, D-040 |
 | 5 | Publisher | Writes actions (simulator schema) and decisions; `published_at = deliver_at + measured time` | FR-9, FR-13 |
 | 6 | Outcome judge (`judge.py`) | Succeeded / failed / inconclusive from attributable events; versioned rules; provisional + final verdicts; learning notes | D-005, D-014, D-042, D-043 |
 | 7 | Impact reporter (`impact.py`) | ITT agent vs holdout with CI, per goal, secondary outcomes, seeds; pilot re-analysis | D-016, D-044 |
+| 8 | Final report (`final.py`) | One-page summary of a run, built only from its output files, incl. every no-action reason | D-052 |
 | — | Model provider | `ModelProvider` interface: mock/replay (default) + optional local Ollama | D-003 |
 | — | Replay harness (`harness.py`, `tools.py`, `model.py`) | Feeds triggers in `deliver_at` order with live and control events; injects failures; enforces budgets; measures latency; writes outputs | D-017, D-035–D-039 |
 
@@ -104,6 +105,12 @@ Implemented in `src/ott_agent/goals.py` and `src/ott_agent/planner.py` (D-013, D
    each change); closed goals and other goal types are untouched. If the corrected rule is unmeasurable, those goals
    are closed.
 8. `plan_goal` decides, `commit_plan` persists, so the verifier (Step 5) can reject a plan before it is written.
+9. **Past results feed back** (D-051): the fact `recent_failed_goals` lists the goals that failed for this viewer with a
+   deadline in the last 30 days, from the earlier pilot (`pilot_outcomes.csv`, loaded into `past_outcomes`) and from
+   our own judge (`goal_outcomes`), each known only from the time it was known. A goal that would otherwise be
+   eligible is skipped for the next eligible one; if none is left the outcome is `NO_GOAL` and the record says which
+   goals were not repeated. The check runs last, so only goals that were otherwise eligible are reported as skipped.
+   The same rule runs in both arms; the verifier re-checks it from the raw pilot file.
 
 ## 4b. Intervention (Step 3: decide the intervention)
 
@@ -137,7 +144,7 @@ SQLite is the source of truth, with a JSON export per viewer to `sample_run/view
 | Goals | Active / closed, rule version, start, deadline, verdicts (versioned) |
 | Decisions | Every trigger → exactly one record (incl. no action, duplicate, stale) |
 | Actions | Published actions in the simulator schema; cancellations |
-| Learnings | Short per-viewer notes from judged outcomes |
+| Learnings | Short per-viewer notes from judged outcomes; past failures (pilot + judge) read back as the fact `recent_failed_goals` (D-051) |
 
 Auditability: an evaluator can inspect what the agent knew (facts received by time T), decided and observed for any
 viewer at any moment: `python -m ott_agent inspect --viewer U-04215 --at 2026-10-01T10:00:00Z` (snapshots are
@@ -217,6 +224,10 @@ Implemented in `src/ott_agent/judge.py`; run with `python -m ott_agent judge` af
    `goal_outcomes`, `goal_log` (`judged`), `viewer_state/<user>.json` and `sample_run/outcomes.jsonl`.
 6. A success is not proof that the agent caused it (e.g. the scripted purchases arrive minutes after a goal starts in
    both arms); causation is only measured agent arm vs holdout in Step 7.
+7. **Fed back into the next decision** (D-051): a FAILED verdict is read by the fact resolver once it is known, and
+   the planner does not repeat that goal for the viewer for 30 days after its deadline (§4 item 9). In one replay
+   day our own verdicts arrive after the day ends, so in this run only the pilot's results change decisions; the
+   loop over our own verdicts is covered by tests.
 
 ## 6c. Proving impact (Step 7)
 
@@ -238,10 +249,13 @@ Output: `sample_run/impact_report.md` and `impact.json`.
 8. **Who is counted and why** (D-049): `arms.csv` → any trigger → fresh-trigger cohort per arm (30.2 % vs 30.0 %); the
    simulator only produces outcomes for viewers who opened the app; a sensitivity check covers **all** viewers who
    opened the app; and the biased "served vs everyone else" comparison is computed on our own replay
-   (+3.8 pts, interval excludes zero) next to the randomized result (+1.2 pts, includes zero).
+   (+3.9 pts) next to the randomized result (+1.1 pts); the biased estimate is over three times larger.
 
-Result on the sample run: agent 111/719 vs holdout 101/711, +1.2 pts [-2.5, +4.9], **no detectable effect**; goal-independent play within 7 days +2.5 pts [-2.2, +7.2]; all 8 seed
-estimates positive, 1 of 8 intervals excludes zero (within chance). Detectable effect size with one day ≈ ±3.7 pts.
+Result on the sample run: agent 105/657 vs holdout 96/647, +1.1 pts [-2.8, +5.1], **no detectable effect**;
+goal-independent play within 7 days +1.8 pts [-2.9, +6.5]; 7 of 8 seed estimates positive, none of the 8 intervals
+excludes zero. Detectable effect size with one day ≈ ±3.9 pts. Viewers with no goal at their first visit (including
+those whose only eligible goal had recently failed, D-051) are left out of the primary metric in both arms and
+counted in the goal-independent one.
 
 ## 7. Latency
 
@@ -323,4 +337,5 @@ in `latency_report.json` → `load`.
 |---|---|
 | 2026-10-18 | Draft created from requirements.md, rules.md and decisions D-001–D-016. |
 | 2026-10-19 | Finalised: draft markers removed, sections in order, §10 scale-out and never-automate written. |
+| 2026-10-19 | Past results feed back into goal choice (D-051, §4 item 9, §6b item 7); final report component (D-052); sample-run numbers updated. |
 | 2026-10-18 | Storage, time model and harness updated after D-017 (tech stack). |

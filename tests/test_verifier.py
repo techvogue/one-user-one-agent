@@ -259,3 +259,15 @@ def test_verifier_does_not_import_the_decision_code():
 def test_verifier_scans_for_instructions_independently(ver):
     assert "BAD" in ver.flagged and len(ver.flagged) == 1
     assert json.dumps(sorted(ver.flagged)) == '["BAD"]'
+
+
+def test_goal_that_recently_failed_for_the_viewer_is_rejected(tmp_path, ver):
+    (tmp_path / "pack" / "pilot").mkdir(exist_ok=True)
+    (tmp_path / "pack" / "pilot" / "pilot_outcomes.csv").write_text(
+        "user_id,arm,served,goal_id,goal_started_at,succeeded\nU-1,treatment,true,G12,2026-09-15T10:00:00.000Z,false\n"
+    )
+    v = Verifier(tmp_path / "pack", ver.conn, Config())
+    r = v.verify(proposal())
+    assert r.verdict == "reject" and "eligibility" in failed(r)
+    assert "already failed" in next(f["detail"] for f in r.failed if f["check"] == "eligibility")
+    assert ver.verify(proposal()).verdict == "approve"  # without the pilot row the same goal is fine

@@ -79,9 +79,22 @@ CREATE TABLE IF NOT EXISTS goal_log (
     detail_json       TEXT NOT NULL
 );
 
+-- Past goal outcomes from outside the replay, e.g. the earlier pilot (D-051). Our own verdicts live in goal_outcomes.
+CREATE TABLE IF NOT EXISTS past_outcomes (
+    source      TEXT NOT NULL,   -- e.g. pilot_outcomes.csv
+    ref         TEXT NOT NULL,   -- line in the source file
+    user_id     TEXT NOT NULL,
+    goal_id     TEXT NOT NULL,
+    started_at  TEXT NOT NULL,
+    deadline    TEXT NOT NULL,   -- start + the goal's success window; the result is known from then on
+    verdict     TEXT NOT NULL,   -- SUCCEEDED | FAILED
+    PRIMARY KEY (source, ref)
+);
+
 CREATE INDEX IF NOT EXISTS idx_events_user_time ON events (user_id, event_time);
 CREATE INDEX IF NOT EXISTS idx_events_user_received ON events (user_id, first_received_at);
 CREATE INDEX IF NOT EXISTS idx_events_type ON events (event);
+CREATE INDEX IF NOT EXISTS idx_past_outcomes_user ON past_outcomes (user_id);
 """
 
 

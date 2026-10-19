@@ -433,3 +433,108 @@ def test_g07_never_targets_a_quarantined_series(tmp_path, conn, cfg, goals):
     cat.flagged["T1"] = cat.flagged["T2"] = "instruction-like text (test)"
     e = evaluate(goals.rules["G07"], vf, AT, cat, cfg)
     assert not e.eligible and "promotable" in e.reason
+
+
+# --- past outcomes feed back into goal choice (D-051) -----------------------------------------------------------
+
+
+def pilot_csv(path, *rows):
+    """rows: (user, goal_id, started_at, succeeded)"""
+    path.write_text("user_id,arm,served,goal_id,goal_started_at,succeeded\n"
+                    + "".join(f"{u},treatment,false,{g},{s},{str(ok).lower()}\n" for u, g, s, ok in rows))  # fmt: skip
+    return path
+
+
+def with_pilot(tmp_path, conn, goals, *rows):
+    from ott_agent.past import load_pilot_outcomes
+
+    windows = {gid: r.window for gid, r in goals.rules.items()}
+    return load_pilot_outcomes(conn, pilot_csv(tmp_path / "pilot.csv", *rows), windows)
+
+
+NEW_USER = profile_row(signup_at="2026-09-30T10:00:00.000Z")  # eligible for G01, then G02, G03, G05
+
+
+def test_goal_that_failed_in_the_pilot_is_skipped_for_the_next_eligible(tmp_path, conn, cfg, goals):
+    with_pilot(tmp_path, conn, goals, ("U-1", "G01", "2026-09-10T10:00:00.000Z", False))
+    vf, cat = facts(tmp_path, conn, cfg, [], [NEW_USER])
+    assert (
+        vf.value("recent_failed_goals") == ["G01"]
+        and vf["recent_failed_goals"].source == "pilot_outcomes.csv"
+    )
+    e = evaluate(goals.rules["G01"], vf, AT, cat, cfg)
+    assert not e.eligible and "not repeated (D-051)" in e.reason and "pilot_outcomes.csv:line 2" in e.reason
+    sel = select_goal(vf, AT, goals, cat, cfg)
+    assert sel.rule.goal_id == "G02" and sel.evaluations["G01"].reason == e.reason
+    assert "not repeated after a recent failure for this viewer: G01 (D-051)" in sel.reason
+
+
+def test_no_other_eligible_goal_means_no_goal_with_the_reason(tmp_path, conn, cfg, goals):
+    events = [make_event("o", occurred="2026-09-29T10:00:00.000Z", received="2026-09-29T10:00:01.000Z")]
+    with_pilot(tmp_path, conn, goals, ("U-1", "G02", "2026-09-05T10:00:00.000Z", False),
+               ("U-1", "G05", "2026-09-12T10:00:00.000Z", False))  # fmt: skip
+    vf, cat = facts(tmp_path, conn, cfg, events, [profile_row(status="never")])
+    plan = plan_goal(conn, vf, AT, goals, cat, cfg)
+    assert plan.outcome == NO_GOAL and plan.not_repeated() == ["G02", "G05"]
+    assert "D-051" in plan.evaluations["G02"] and "D-051" in plan.evaluations["G05"]
+    from ott_agent.intervention import decide_intervention
+
+    iv = decide_intervention(vf, None, plan.outcome, cat, {}, AT, None, cfg, not_repeated=plan.not_repeated())
+    assert (
+        iv.action == "NO_ACTION" and "recently failed for this viewer, so not repeated: G02, G05" in iv.reason
+    )
+
+
+@pytest.mark.parametrize(
+    "row,why",
+    [
+        (("U-1", "G01", "2026-09-10T10:00:00.000Z", True), "succeeded: nothing to avoid"),
+        (("U-1", "G01", "2026-08-20T10:00:00.000Z", False), "deadline more than 30 days ago"),
+        (("U-1", "G01", "2026-10-01T09:30:00.000Z", False), "deadline still ahead: result not known yet"),
+        (("U-2", "G01", "2026-09-10T10:00:00.000Z", False), "another viewer"),
+    ],
+)
+def test_past_outcome_that_must_not_block(tmp_path, conn, cfg, goals, row, why):
+    with_pilot(tmp_path, conn, goals, row)
+    vf, cat = facts(tmp_path, conn, cfg, [], [NEW_USER])
+    assert vf.value("recent_failed_goals") == [], why
+    assert select_goal(vf, AT, goals, cat, cfg).rule.goal_id == "G01", why
+
+
+def test_our_own_judged_failure_feeds_back(tmp_path, conn, cfg, goals):
+    from ott_agent.judge import SCHEMA
+
+    conn.executescript(SCHEMA)
+    vf, cat = facts(tmp_path, conn, cfg, [], [NEW_USER], at=parse_ts("2026-09-30T11:00:00.000Z"))
+    plan = plan_goal(conn, vf, parse_ts("2026-09-30T11:00:00.000Z"), goals, cat, cfg)
+    with conn:
+        gi = commit_plan(conn, plan)
+        conn.execute("INSERT INTO goal_outcomes VALUES (?, 'U-1', 'G01', 0, 'FAILED', 'final', ?, '{}')",
+                     (gi, "2026-10-01T09:00:00.000Z"))  # fmt: skip
+        conn.execute("UPDATE goal_instances SET status = 'closed' WHERE goal_instance_id = ?", (gi,))
+    vf2, _ = facts(tmp_path, conn, cfg, [], [NEW_USER])
+    assert vf2.value("recent_failed_goals") == ["G01"] and vf2["recent_failed_goals"].source == "judge"
+    assert f"goal_outcome:{gi}" in vf2["recent_failed_goals"].evidence[0]
+    assert select_goal(vf2, AT, goals, cat, cfg).rule.goal_id == "G02"
+    # before the verdict was known, the same goal was still allowed
+    vf3, _ = facts(tmp_path, conn, cfg, [], [NEW_USER], at=parse_ts("2026-10-01T08:00:00.000Z"))
+    assert vf3.value("recent_failed_goals") == []
+
+
+def test_reloading_the_pilot_file_is_a_noop(tmp_path, conn, goals):
+    row = ("U-1", "G01", "2026-09-10T10:00:00.000Z", False)
+    with_pilot(tmp_path, conn, goals, row, ("U-1", "G01", "not-a-time", False))
+    with_pilot(tmp_path, conn, goals, row)
+    assert conn.execute("SELECT COUNT(*) FROM past_outcomes").fetchone()[0] == 1
+
+
+def test_failure_is_reported_only_where_it_changed_the_choice(tmp_path, conn, cfg, goals):
+    # G05 (lower priority than G01) failed: G01 is still chosen and the reason does not claim a skip
+    with_pilot(tmp_path, conn, goals, ("U-1", "G05", "2026-09-10T10:00:00.000Z", False),
+               ("U-1", "G04", "2026-09-10T10:00:00.000Z", False))  # fmt: skip
+    vf, cat = facts(tmp_path, conn, cfg, [], [NEW_USER])
+    plan = plan_goal(conn, vf, AT, goals, cat, cfg)
+    assert plan.goal["goal_id"] == "G01" and "D-051" not in plan.reason
+    # G04 needs a trial: its own rule fails first, so it is not reported as "not repeated"
+    assert plan.evaluations["G04"].startswith("subscription status is never")
+    assert plan.not_repeated() == ["G05"]

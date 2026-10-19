@@ -6,7 +6,7 @@ How AI tools were used to build this submission, how their output was checked, a
 
 **How the work was directed.** The assistant (Claude Code) wrote most of the code and drafts; the candidate set the
 order of work and approved every design choice before code was written (Rule 0). Each choice was presented as options
-with trade-offs and a recommendation, and all 50 are recorded with their reasons in [decisions.md](doc/decisions.md).
+with trade-offs and a recommendation, and all 52 are recorded with their reasons in [decisions.md](doc/decisions.md).
 Work went one guide step at a time; no step started until the previous one had been reviewed and tested at the
 candidate's request.
 
@@ -36,6 +36,8 @@ The most important:
    (entry 23), and a false limitation claiming a check existed when it did not (entry 26).
 7. Buyers with an open goal never re-planned, because the agent only reacted to app opens (entry 24).
 8. The assistant's own checking scripts were wrong twice (entries 17, 18). They were fixed instead of trusted.
+9. A generated report count that overstated the new learning rule by more than 5× (823 instead of 148), caught by
+   questioning a number that looked too large (entry 27).
 
 **What was rejected**: see the list at the end of this document.
 
@@ -83,6 +85,8 @@ The most important:
 | 24 | 2026-10-19 | Replay surprises checked one by one (candidate pasted the list); suggested architecture compared | Measured instead of assuming: **31 buyers with an open goal had 0 re-plans** because the agent only reacted at app opens; bursts were handled but not reported; the load-skip path had never run. Built event-time reactions for both arms, burst reporting and a load test (D-048). Mapped every suggested component and design tip to our code (ARCHITECTURE §1b), stating honestly that "one agent per viewer" is enforced by data + a single planner rather than a long-lived object | 191 tests; mutation (reaction disabled → 3 tests fail); real run: 31 reactions, 7 goals re-planned at purchase time, 5 bursts noticed; validators 0 violations; simulator 0 policy problems; first-goal impact unchanged | Gap **corrected** |
 | 25 | 2026-10-19 | Impact checked against "Measuring impact the right way" (candidate pasted it) | Took "all agent-arm vs all holdout users" literally and checked it: our cohort is 758/746 of 2,513/2,487 because the simulator only plays triggered viewers; the report did not say so. Computed independently: balance 30.2 % vs 30.0 %, all-triggered sensitivity +1.7 pts [−2.7, +6.2], and the pilot's biased comparison on our own data +3.8 pts [+0.1, +7.5] ("significant") vs randomized +1.2 [−2.5, +4.9]. Added all three to the report (D-049); fixed my own wording ("shares above" with no shares shown) | 191 tests; report numbers identical to the independent computation | Gap **corrected** |
 | 26 | 2026-10-19 | Work plan §12: one-command `run`, final documentation | Added `run` (replay → pack simulator → judge → report) with an end-to-end test (D-050); rewrote README, finalized ARCHITECTURE, KNOWN_LIMITATIONS and this log. Re-checked every claim in KNOWN_LIMITATIONS against the current run instead of carrying the draft over: the "before signup" plausibility check listed in D-005 **was described as running but does not exist** (grep: no code) → recorded as limitation L-8; "118 of 2,086 one-row pages" was outdated (now 55 of 905); the G01 count and ingestion time were outdated | 192 tests; ruff clean; `run` reproduces the sample run in ~1 minute; each corrected number recomputed from `sample_run/` | Docs **corrected** (1 false claim, 3 outdated numbers) |
+| 27 | 2026-10-19 | Scoring review → "results fed back into state" was only half done (notes stored, never read). D-051: a goal that recently failed for the viewer is not repeated | Before proposing, profiled the pack's pilot outcomes against the replay: 1,226 overlapping viewers, 243 repeats of a failed pilot goal, mostly G05 where it was the only eligible goal; checked on our own data that G05 gains nothing (3/83 vs 3/82). Candidate chose option (a). While building it, three mistakes of mine: (1) unreadable pilot rows crashed the load (caught by the tiny-pack test → skipped, never guessed); (2) the check ran **first** in eligibility, so goals that failed other rules were also reported as "not repeated", and the final report claimed **823** affected decisions; I doubted the number, found the cause and moved the check last, and the goal's reason now names a skipped goal only if it would have outranked the chosen one → **148**; (3) the report's "did nothing" count silently missed the holdout arm (its reason code is HOLDOUT) → counted per arm from the goal note: 98 vs 88. The no-action reason first listed every past failure, even irrelevant ones → now only the goals actually blocked | 202 tests (10 new); mutation 4/4 (rule removed, verifier check removed, cooldown window broken, "known by" check broken); independent goal cross-check extended with its own reading of the pilot file: 0 mismatches on 2,679 triggers; output validators 0 violations; simulator 0 policy problems. Impact reported as it came out: +1.1 pts [−2.8, +5.1], unchanged within noise | **Corrected** (3 own bugs, 1 misleading count) |
+| 28 | 2026-10-19 | `final_report.md` generated by `run` (D-052) | Built from the run's own files only, incl. a table of every no-action reason (the checklist asks for them in the sample run). Also found that the impact report's served-vs-everyone-else sentence read wrongly once both intervals included zero, and crashed when the difference could not be estimated (tiny pack) → reworded around the size of the two estimates, None handled | End-to-end `run` test now checks the final report's sections and that its trigger count equals the decisions file; 0 decisions without a reason | Accepted; own report text **corrected** |
 
 ## Suggestions rejected (summary for the technical discussion)
 
@@ -122,3 +126,4 @@ The most important:
 | 2026-10-19 | Entry 24 (replay surprises; architecture mapping). |
 | 2026-10-19 | Entry 25 (impact: who is counted; trap on our data). |
 | 2026-10-19 | Final version: summary added, entry 26, rejected list extended. |
+| 2026-10-19 | Entries 27 (past results feed back, D-051) and 28 (final report, D-052). |

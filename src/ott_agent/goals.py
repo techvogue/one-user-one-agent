@@ -228,4 +228,11 @@ def evaluate(rule: GoalRule, vf: ViewerFacts, at: datetime, catalogue: Catalogue
         assumptions.append(f"[A-G12-1] absence = no app_open and no other activity in the {cfg.g12_absence_days} "
                            f"days before the trigger; user signed up more than {cfg.g12_absence_days} days ago")  # fmt: skip
 
+    # Last check, so a goal is reported as "not repeated" only when it would otherwise be eligible (D-051).
+    past = vf.facts.get("recent_failed_goals")
+    if past is not None and past.usable and gid in (past.value or []):
+        refs = [e for e in past.evidence if e.startswith(f"{gid} ")]
+        evidence += refs
+        return fail(f"failed for this viewer within the last {cfg.failed_goal_cooldown_days} days "
+                    f"({'; '.join(refs)}); not repeated (D-051)")  # fmt: skip
     return Eligibility(gid, True, "eligible", evidence, assumptions, detail)

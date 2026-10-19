@@ -17,6 +17,7 @@ from typing import Any
 
 from .catalogue import VALID_DIALECTS, Catalogue
 from .config import Config
+from .past import recent_failures
 from .profiles import Profile
 from .timeutil import compute_event_time, iso, ist_day, parse_ts
 
@@ -51,6 +52,7 @@ FACT_CLASS = {
     "last_activity_at": "history",
     "watched_slugs": "history",
     "finished_slugs": "history",
+    "recent_failed_goals": "history",
 }
 
 
@@ -207,7 +209,23 @@ def resolve(
         add(_consent(channel, field_name, profile, events, props))
     _dialects(add, vf, profile, events, trigger)
     _history(add, catalogue, events, props, at, trigger_id)
+    add(_failed_goals(conn, user_id, at, cfg))
     return vf
+
+
+def _failed_goals(conn: sqlite3.Connection, user_id: str, at: datetime, cfg: Config) -> Fact:
+    """Goals that failed for this viewer within the cooldown (D-051): from the pilot and from our own judge."""
+    fails = recent_failures(conn, user_id, at, cfg.failed_goal_cooldown_days)
+    if not fails:
+        return Fact("recent_failed_goals", [], "derived:past_outcomes", None)
+    sources = sorted({f["source"] for f in fails})
+    return Fact(
+        "recent_failed_goals",
+        sorted({f["goal_id"] for f in fails}),
+        "+".join(sources),
+        fails[-1]["deadline"],
+        evidence=[f"{f['goal_id']} failed ({f['ref']}, deadline {f['deadline']})" for f in fails],
+    )
 
 
 def _signup(profile: Profile | None, events) -> Fact:

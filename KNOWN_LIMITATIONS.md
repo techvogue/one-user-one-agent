@@ -27,7 +27,7 @@ point to [doc/decisions.md](doc/decisions.md), where the options considered are 
 
 | # | Limitation | Why | A full version would |
 |---|---|---|---|
-| L-11 | **Thin dialects get thin pages**: d3 has 13 titles; 55 of 905 published pages have a single row | Rows with fewer than 3 valid titles are never published; other dialects are never used (D-011) | Report content gaps per dialect to the content team |
+| L-11 | **Thin dialects get thin pages**: d3 has 13 titles; 48 of 819 published pages have a single row | Rows with fewer than 3 valid titles are never published; other dialects are never used (D-011) | Report content gaps per dialect to the content team |
 | L-12 | **A `next_episode` row is rare**: it needs 3+ unfinished series in the page dialect | Platform minimum of 3 titles per row; G07 pages carry the series as the hero instead | — |
 | L-13 | **Reactions to live events never publish a page** | Without a visit there is nothing to show it in; only purchase, renewal, lapse, opt-out and dialect-change events trigger them (D-048) | — |
 | L-14 | **Same-session re-decisions** use a fixed list of state-changing event types | Simple and auditable (D-039) | Learn which changes matter |
@@ -69,11 +69,14 @@ point to [doc/decisions.md](doc/decisions.md), where the options considered are 
 
 | # | Limitation | Why | A full version would |
 |---|---|---|---|
-| L-28 | **No detectable effect: +1.2 pts [−2.5, +4.9]** on one replay day; the study can only detect effects larger than about ±3.7 points | ~720 judged viewers per arm | More replay days |
+| L-28 | **No detectable effect: +1.1 pts [−2.8, +5.1]** on one replay day; the study can only detect effects larger than about ±3.9 points | ~650 judged viewers per arm | More replay days |
 | L-29 | **Outcomes come from the pack's simulator** | Its behaviour model, not real viewers, decides the effect size | Real outcomes |
 | L-30 | **14-day goals (G06, G09) are mostly INCONCLUSIVE** | The data ends on their deadline, so deadline + 24 h is never observed | A longer observation period |
 | L-31 | **A per-viewer SUCCEEDED does not mean the agent caused it** (e.g. scripted organic purchases) | Causation is only measured agent arm vs holdout (D-044); learning notes record observations, never causes | — |
 | L-32 | **Final verdicts at deadline + 7 days cover ~99 % of late events** | Completeness vs learning speed (D-005) | Longer final window or re-statements |
+| L-33 | **Our own verdicts cannot change decisions within this run**: they are known only after the replay day, so here only the pilot's results do (148 live decisions across both arms); the loop over our own verdicts is shown by tests | One replay day (D-051) | Run several days back to back; the store already carries the verdicts forward |
+| L-34 | **"Don't repeat a failed goal" is a fixed 30-day rule**, and it counts failures the viewer was never served (pilot holdout, unserved) | The viewer did not reach the goal on their own; pushing it again is not proportionate. A per-viewer failure is an observation, not proof the action does not work (D-051) | Learn per goal and segment from the holdout comparison which repeats help |
+| L-35 | **The primary metric leaves out viewers with no goal at their first visit**, now including those whose only eligible goal had recently failed | Same rule in both arms (77 vs 74 viewers), so the comparison stays fair; the goal-independent metric counts them | — |
 
 ## Change log
 
@@ -83,3 +86,4 @@ point to [doc/decisions.md](doc/decisions.md), where the options considered are 
 | 2026-10-18 | L-9, L-10 added after D-017 (tech stack). |
 | 2026-10-18 | L-11, L-12 added in the Step 1 review. |
 | 2026-10-19 | Final version: grouped by area, every entry re-checked against the current run; three outdated or false entries corrected (the unimplemented before-signup check, the 1-row page count, the G01 count). |
+| 2026-10-19 | L-33 to L-35 added with D-051 (past results feed back); L-11, L-28 numbers updated to the new run. |

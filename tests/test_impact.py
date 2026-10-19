@@ -243,5 +243,12 @@ def test_run_command_does_everything_with_the_pack_simulator(tmp_path):
         "impact_report.md",
         "latency_report.json",
         "data_quality_report.json",
+        "final_report.md",
     ):
         assert (out / name).exists(), name
+    final = (out / "final_report.md").read_text()
+    for section in ("## 2. Decisions", "No-action reasons", "## 5. Verification and safety", "## 9. Impact"):
+        assert section in final, section
+    assert "without a recorded reason: **0**" in final and "Actions for holdout viewers | **0**" in final
+    decisions = [json.loads(x) for x in (out / "decisions.jsonl").read_text().splitlines()]
+    assert f"Triggers: {len(decisions)} for 2 viewers" in final  # numbers come from the run's own files

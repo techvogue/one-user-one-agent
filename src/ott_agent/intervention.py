@@ -360,6 +360,7 @@ def decide_intervention(
     cfg: Config,
     live_page: dict | None = None,
     messages_on_day=lambda day: 0,
+    not_repeated: list[str] | tuple = (),
 ) -> Intervention:
     """Decide the intervention for this trigger. live_page: the viewer's latest published page
     ({goal_instance_id, dialect, live_until}) if any; messages_on_day: planned/sent messages count per IST day."""
@@ -374,6 +375,9 @@ def decide_intervention(
             STALE_TRIGGER,
         )
     if goal is None:
+        if not_repeated:  # the only eligible goals recently failed for this viewer
+            why = f"no eligible measurable goal; recently failed for this viewer, so not repeated: {', '.join(not_repeated)} (D-051)"
+            return Intervention(NO_ACTION, why, NO_GOAL)
         return Intervention(NO_ACTION, "no eligible measurable goal", NO_GOAL)
     if page_dialect.value is None:
         return Intervention(

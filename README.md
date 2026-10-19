@@ -16,14 +16,14 @@ deterministic mock by default. The data pack must sit next to this folder at `..
 uv venv --python 3.10 .venv && uv pip install --python .venv/bin/python -e '.[dev]'
 #   or: python3 -m venv .venv && .venv/bin/pip install -e '.[dev]'
 
-# 2. run everything: replay -> the pack's simulator -> judge -> impact report (about 1 minute)
+# 2. run everything: replay -> the pack's simulator -> judge -> impact report -> final report (about 1 minute)
 .venv/bin/python -m ott_agent run --pack ../one_user_one_agent_pack --out sample_run
 
-# 3. run the tests (192)
+# 3. run the tests (202)
 .venv/bin/python -m pytest -q
 ```
 
-`run` does four steps; each also exists on its own:
+`run` does five steps; each also exists on its own:
 
 | Command | What it does | Writes |
 |---|---|---|
@@ -31,6 +31,7 @@ uv venv --python 3.10 .venv && uv pip install --python .venv/bin/python -e '.[de
 | *(simulator)* | The pack's `simulator/simulate_outcomes.py` on our `actions.jsonl` | `sim/outcome_events.jsonl`, `sim/simulator_report.json` |
 | `judge` | Judges every goal from the outcome events; stores outcomes and learning notes | `outcomes.jsonl`, adds to `viewer_state/` |
 | `report` | Agent arm vs randomized holdout (+ 3 extra simulator seeds, pilot re-analysis) | `impact_report.md`, `impact.json` |
+| `final` | One-page summary built only from the files above, incl. every no-action reason | `final_report.md` |
 
 Other commands: `load` (history only + data quality report) and `inspect` (what the agent knows about one viewer at a
 moment, which goal it would choose and why, and the page/reminder it would publish for a given app open):
@@ -49,11 +50,12 @@ Options: `--provider ollama --ollama-model qwen2.5:3b-instruct` uses a local mod
 
 | | |
 |---|---|
-| Triggers decided | 2,769: 895 pages published, 1,016 holdout shadows (nothing published), 186 no action with a reason, 424 stale app opens skipped, 90 duplicates ignored, 158 second triggers of the same visit |
+| Triggers decided | 2,769: 810 pages published, 1,016 holdout shadows (nothing published), 271 no action with a reason, 424 stale app opens skipped, 90 duplicates ignored, 158 second triggers of the same visit |
 | Latency | published pages p50 0.84 s, max 2.2 s; **0 decisions over 60 s**; max 2 model / 6 tool calls per decision (limits 8 / 20) |
-| Safety | pack simulator: **0 policy problems**, 905/905 pages accepted; independent rules audit of every published action: 0 violations |
+| Safety | pack simulator: **0 policy problems**, 819/819 pages accepted (incl. 9 republished after a withdrawal); independent rules audit of every published action: 0 violations; 0 actions for holdout viewers |
 | Injected surprises | false model eligibility claim rejected; broken JSON retried then rules only; 45 s model hang cut at 3 s; model and data-store outages handled with fallbacks; withdrawn title removed from 10 live pages; G03 rule correction applied to open goals only; purchases re-plan the buyer's goal when they arrive |
-| **Impact** | first goal succeeded: agent **15.4 %** vs holdout **14.2 %**, **+1.2 pts [−2.5, +4.9]**: **no detectable effect**; same picture on 3 other simulator seeds. The biased "served vs everyone else" comparison would have claimed +3.8 pts. |
+| Learning | results feed back: a goal that recently failed for the viewer (pilot or our own judge) is not repeated (D-051): 26 agent-arm decisions got another goal, 98 got "do nothing" (holdout shadows: 24 / 88) |
+| **Impact** | first goal succeeded: agent **16.0 %** vs holdout **14.8 %**, **+1.1 pts [−2.8, +5.1]**: **no detectable effect**; same picture on 3 other simulator seeds. The biased "served vs everyone else" comparison estimates +3.9 pts on the same data. |
 
 ## Where to find what
 
@@ -67,9 +69,9 @@ Options: `--provider ollama --ollama-model qwen2.5:3b-instruct` uses a local mod
 | Latency, budgets, traffic bursts, model outcomes, fallbacks | `sample_run/latency_report.json` |
 | Goal verdicts and learning notes | `sample_run/outcomes.jsonl` |
 | Impact vs holdout, why served-vs-not misleads, pilot re-analysis | `sample_run/impact_report.md` |
-| Overall summary | `sample_run/final_report.md` |
+| Overall summary, incl. every no-action reason with counts | `sample_run/final_report.md` |
 | Design | [ARCHITECTURE.md](ARCHITECTURE.md) |
-| Every design decision, with options and reasons (D-001 … D-050) | [doc/decisions.md](doc/decisions.md) |
+| Every design decision, with options and reasons (D-001 … D-052) | [doc/decisions.md](doc/decisions.md) |
 | How AI tools were used, checked, corrected and rejected | [AI_COLLABORATION.md](AI_COLLABORATION.md) |
 | What was left out on purpose | [KNOWN_LIMITATIONS.md](KNOWN_LIMITATIONS.md) |
 
@@ -84,7 +86,8 @@ Options: `--provider ollama --ollama-model qwen2.5:3b-instruct` uses a local mod
 
 Also covered: quiet hours, frequency cap, holdout gets nothing, injected instruction ignored, unsupported model claim
 rejected, rows with fewer than 3 titles never published, withdrawn titles not used, every decision record complete,
-verifier rejections (mutation-tested), and an end-to-end `run`.
+verifier rejections (mutation-tested), a recently failed goal not repeated (pilot and own judge), and an end-to-end
+`run` that checks the final report.
 
 ## Repository layout
 
@@ -94,8 +97,8 @@ submission/
   doc/            requirements.md, rules.md, decisions.md, data_traps.md, techstack.md, work_plan.md
   pyproject.toml  package metadata (no runtime dependencies; pytest + ruff for development)
   src/ott_agent/  ingest, store, facts, goals, planner, intervention, model, tools, verifier,
-                  harness, judge, impact, traps, quality, … (see ARCHITECTURE.md §1b)
-  tests/          192 tests
+                  harness, judge, past, impact, final, traps, quality, … (see ARCHITECTURE.md §1b)
+  tests/          202 tests
   sample_run/     generated by `run`, never hand-written
 ```
 

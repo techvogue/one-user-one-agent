@@ -2,10 +2,11 @@
 
 Commands so far:
   load     ingest the pack's 30-day history into the state store and write data_quality_report.json
-  run      everything in one command: replay -> pack simulator -> judge -> impact report
+  run      everything in one command: replay -> pack simulator -> judge -> impact report -> final report
   replay   run the whole replay day: decisions, actions, latency and quality reports
   judge    after the simulator: ingest its outcome events, judge every goal, store outcomes and learnings
   report   impact: agent arm vs holdout (+ seeds, pilot re-analysis) -> impact_report.md, impact.json
+  final    one-page summary of a finished run -> final_report.md
   inspect  show what the agent knows about one viewer at a moment (facts with source, freshness, conflicts)
            and which goal it would choose (dry run)
 """
@@ -26,6 +27,7 @@ from .facts import resolve, save_snapshot
 from .goals import GoalCatalogue
 from .ingest import ingest_file
 from .intervention import PlatformRules, Popularity, decide_intervention
+from .past import load_pilot_outcomes
 from .planner import plan_goal
 from .pricing import load_plan_days
 from .profiles import load_profiles
@@ -50,6 +52,12 @@ def cmd_load(args: argparse.Namespace) -> int:
     conn = connect(args.db or out / "state.sqlite")
     t0 = time.perf_counter()
     stats = ingest_file(conn, history, "history", cfg)
+    pilot = cfg.pack_path / "pilot" / "pilot_outcomes.csv"
+    goals_file = cfg.pack_path / "config" / "goals.json"
+    pilot_rows = 0
+    if pilot.exists() and goals_file.exists():  # earlier results per viewer (D-051)
+        windows = {gid: r.window for gid, r in GoalCatalogue.from_file(goals_file).rules.items()}
+        pilot_rows = load_pilot_outcomes(conn, pilot, windows)
     elapsed = time.perf_counter() - t0
 
     report = build_report(conn, cfg, [stats])
@@ -62,6 +70,7 @@ def cmd_load(args: argparse.Namespace) -> int:
         f"  skewed clocks: {clk['skewed_clock_users']} users / {clk['skewed_clock_events']} events;"
         f" buffered >1 day: {clk['buffered_over_1day']}; anomalies: {clk['clock_anomalies']}"
     )
+    print(f"  pilot outcomes loaded: {pilot_rows} (D-051)")
     print(f"  report: {path}")
     return 0
 
@@ -111,7 +120,17 @@ def cmd_inspect(args: argparse.Namespace) -> int:
     if iv_rules.exists():
         rules = PlatformRules.from_file(iv_rules)
         popularity = Popularity(cfg.popularity_days).counts(conn, catalogue, at)
-        iv = decide_intervention(vf, plan.goal, plan.outcome, catalogue, popularity, at, rules, cfg)
+        iv = decide_intervention(
+            vf,
+            plan.goal,
+            plan.outcome,
+            catalogue,
+            popularity,
+            at,
+            rules,
+            cfg,
+            not_repeated=plan.not_repeated(),
+        )
     if args.json:
         out = {**vf.to_dict(), "goal_plan": plan.to_dict(), "intervention": iv.to_dict() if iv else None}
         print(json.dumps(out, indent=2, ensure_ascii=False))
@@ -244,10 +263,10 @@ def cmd_run(args: argparse.Namespace) -> int:
     common = ["--pack", str(cfg.pack_path), "--out", args.out] + (
         ["--config", args.config] if args.config else []
     )
-    print("1/4 replay")
+    print("1/5 replay")
     if main(["replay", *common, "--provider", args.provider]) != 0:
         return 1
-    print("2/4 simulator (the pack's simulate_outcomes.py)")
+    print("2/5 simulator (the pack's simulate_outcomes.py)")
     sim = cfg.pack_path / "simulator" / "simulate_outcomes.py"
     done = subprocess.run(
         [
@@ -267,11 +286,21 @@ def cmd_run(args: argparse.Namespace) -> int:
     if done.returncode != 0:
         print("error: the simulator failed", file=sys.stderr)
         return 1
-    print("3/4 judge")
+    print("3/5 judge")
     if main(["judge", *common]) != 0:
         return 1
-    print("4/4 report")
-    return main(["report", *common, "--seeds", args.seeds])
+    print("4/5 report")
+    if main(["report", *common, "--seeds", args.seeds]) != 0:
+        return 1
+    print("5/5 final report")
+    return main(["final", "--out", args.out])
+
+
+def cmd_final(args: argparse.Namespace) -> int:
+    from .final import write_final
+
+    print(f"final report: {write_final(Path(args.out))}")
+    return 0
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -316,6 +345,10 @@ def main(argv: list[str] | None = None) -> int:
         "--seeds", default="seed-a,seed-b,seed-c", help="extra simulator seeds, comma-separated ('' = none)"
     )
     p.set_defaults(func=cmd_report)
+
+    p = sub.add_parser("final", help="one-page summary of a finished run -> final_report.md")
+    p.add_argument("--out", default="sample_run", help="the run's output folder")
+    p.set_defaults(func=cmd_final)
 
     p = sub.add_parser("inspect", help="show what the agent knows about a viewer at a moment")
     common(p)

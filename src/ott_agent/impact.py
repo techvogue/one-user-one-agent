@@ -647,8 +647,13 @@ def _markdown(d: dict, cfg) -> str:
             _row("Agent arm vs holdout arm, randomized (**correct**)", j),
             "",
             (
-                f"The biased comparison shows {_verdict(sv['difference'])}; the randomized one shows "
-                f"{_verdict(j['difference'])}. The gap is who gets served, not what serving does."
+                f"The biased comparison estimates {_pts(sv['difference'])}, the randomized one "
+                f"{_pts(j['difference'])}. "
+                + (
+                    "The biased estimate is larger because of who gets served, not because of what serving does."
+                    if (sv["difference"].get("diff") or 0) > (j["difference"].get("diff") or 0)
+                    else "Only the randomized one measures the agent's effect."
+                )
             ),
             "",
         ]
